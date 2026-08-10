@@ -13,7 +13,7 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /** Random sequence with no cell repeated back to back — a double-flash on the
  *  same cell is ambiguous to watch and unfairly hard to reproduce. */
-function makeSequence(cells: number, length: number): number[] {
+export function makeSequence(cells: number, length: number): number[] {
   const seq: number[] = [];
   while (seq.length < length) {
     const next = Math.floor(Math.random() * cells);
@@ -22,7 +22,12 @@ function makeSequence(cells: number, length: number): number[] {
   return seq;
 }
 
-export function BlinkTrail({ level, onRoundComplete }: GamePlayProps) {
+type Props = GamePlayProps & {
+  /** Injection seam so tests can pin the sequence instead of stubbing Math.random. */
+  makeSeq?: (cells: number, length: number) => number[];
+};
+
+export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: Props) {
   const spec = blinkLevel(level);
   const cellCount = spec.grid * spec.grid;
 
@@ -31,7 +36,7 @@ export function BlinkTrail({ level, onRoundComplete }: GamePlayProps) {
   const gap = space.sm;
   const cellSize = (boardWidth - gap * (spec.grid - 1)) / spec.grid;
 
-  const [sequence] = useState(() => makeSequence(cellCount, spec.length));
+  const [sequence] = useState(() => makeSeq(cellCount, spec.length));
   const [phase, setPhase] = useState<Phase>('watch');
   /** Bumped to replay. The trial runner keys off this, never off `phase` —
    *  the runner sets `phase` itself, so depending on it would cancel the
@@ -45,6 +50,12 @@ export function BlinkTrail({ level, onRoundComplete }: GamePlayProps) {
   const lastTapAt = useRef<number>(0);
   const latencies = useRef<number[]>([]);
   const finished = useRef(false);
+  /**
+   * Authoritative position in the sequence. The `inputIndex` state exists only
+   * to drive the "2 of 5" label — two taps inside one render tick would both
+   * read the same stale state value and the second would score as an error.
+   */
+  const indexRef = useRef(0);
 
   /* ------------------------------ show sequence ----------------------------- */
 
@@ -71,6 +82,7 @@ export function BlinkTrail({ level, onRoundComplete }: GamePlayProps) {
       await wait(1000); // the deck's blank interval — this is the memory load
       if (cancelled) return;
 
+      indexRef.current = 0;
       setInputIndex(0);
       latencies.current = [];
       lastTapAt.current = Date.now();
@@ -118,27 +130,31 @@ export function BlinkTrail({ level, onRoundComplete }: GamePlayProps) {
       const latency = now - lastTapAt.current;
       lastTapAt.current = now;
 
-      if (cell === sequence[inputIndex]) {
+      const at = indexRef.current;
+
+      if (cell === sequence[at]) {
         latencies.current.push(latency);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setFeedback({ cell, ok: true });
         setTimeout(() => setFeedback(null), 220);
 
-        const next = inputIndex + 1;
+        const next = at + 1;
+        indexRef.current = next;
         setInputIndex(next);
         if (next === sequence.length) finish(sequence.length, 0);
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         setFeedback({ cell, ok: false });
-        finish(inputIndex, 1);
+        finish(at, 1);
       }
     },
-    [phase, inputIndex, sequence, finish]
+    [phase, sequence, finish]
   );
 
   const replay = useCallback(() => {
     if (replaysLeft <= 0) return;
     setReplaysLeft((n) => n - 1);
+    indexRef.current = 0;
     setInputIndex(0);
     setRunId((n) => n + 1); // re-runs the trial effect from the top
   }, [replaysLeft]);
