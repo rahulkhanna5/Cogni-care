@@ -12,6 +12,10 @@ import { PathFinder } from '@/games/path-finder/PathFinder';
 import { getGame, type GameId } from '@/games/registry';
 import { GameShell } from '@/games/shell/GameShell';
 import type { GamePlayProps } from '@/games/shell/types';
+import { DualTaskFlow } from '@/games/dual-task-flow/DualTaskFlow';
+import { describeDualLevel, DUAL_MAX_LEVEL } from '@/games/dual-task-flow/levels';
+import { describeForestLevel, FOREST_MAX_LEVEL, FOREST_ROUNDS } from '@/games/sound-forest/levels';
+import { SoundForest } from '@/games/sound-forest/SoundForest';
 import { describeCurrentLevel, CURRENT_MAX_LEVEL } from '@/games/speedy-current/levels';
 import { SpeedyCurrent } from '@/games/speedy-current/SpeedyCurrent';
 import { space } from '@/theme/tokens';
@@ -84,6 +88,28 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
       'Grey squares are blocked. Try to find the shortest way.',
     ],
     play: (p) => <PathFinder key={p.roundNo} {...p} />,
+  },
+  'sound-forest': {
+    maxLevel: FOREST_MAX_LEVEL,
+    rounds: FOREST_ROUNDS,
+    describeLevel: describeForestLevel,
+    instructions: [
+      'Put your headphones in — sounds come from your left and right.',
+      'Sometimes you say which side a sound came from.',
+      'Sometimes you listen for one animal, or repeat what you heard.',
+    ],
+    play: (p) => <SoundForest key={p.roundNo} {...p} />,
+  },
+  'dual-task-flow': {
+    maxLevel: DUAL_MAX_LEVEL,
+    rounds: 3,
+    describeLevel: describeDualLevel,
+    instructions: [
+      'Two things happen at once: numbers appear and sounds play.',
+      'Tap "Odd number" whenever the number on screen is odd.',
+      'Tap "High sound" whenever you hear the higher beep.',
+    ],
+    play: (p) => <DualTaskFlow key={p.roundNo} {...p} />,
   },
 };
 

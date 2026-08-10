@@ -51,7 +51,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Listen to the forest and find where each sound came from.',
     domains: ['attention', 'stm'],
     needsHeadphones: true,
-    ready: false,
+    ready: true,
   },
   {
     id: 'path-finder',
@@ -75,7 +75,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Two things at once — watch and listen at the same time.',
     domains: ['attention', 'speed'],
     alsoTrains: ['Task switching'],
-    ready: false,
+    ready: true,
   },
 ];
 

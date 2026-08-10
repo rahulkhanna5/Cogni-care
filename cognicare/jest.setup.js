@@ -9,6 +9,16 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
 }));
 
+jest.mock('expo-audio', () => ({
+  createAudioPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    seekTo: jest.fn(),
+    remove: jest.fn(),
+  })),
+  setAudioModeAsync: jest.fn(() => Promise.resolve()),
+}));
+
 jest.mock('expo-keep-awake', () => ({
   useKeepAwake: jest.fn(),
   activateKeepAwakeAsync: jest.fn(),
