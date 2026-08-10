@@ -1,6 +1,12 @@
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 
-import { colors } from '@/theme/tokens';
+/**
+ * Face ink is fixed dark, deliberately NOT the theme's text colour. The face
+ * itself is always a light circle, so on the dark theme a light text colour
+ * would draw the eyes, brows and mouth in near-invisible ink on a pale face.
+ * Features must contrast with the face, not with the page behind it.
+ */
+const INK = '#221F20';
 
 export type Emotion = 'happy' | 'sad' | 'angry' | 'surprised' | 'worried' | 'calm';
 
@@ -97,10 +103,10 @@ export function Face({ emotion, size, intensity = 1 }: Props) {
 
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Circle cx="50" cy="50" r="46" fill={fill} stroke={colors.text} strokeWidth={2.5} />
+      <Circle cx="50" cy="50" r="46" fill={fill} stroke={INK} strokeWidth={2.5} />
 
-      <Ellipse cx="35" cy="47" rx="6" ry={eyeRy} fill={colors.text} />
-      <Ellipse cx="65" cy="47" rx="6" ry={eyeRy} fill={colors.text} />
+      <Ellipse cx="35" cy="47" rx="6" ry={eyeRy} fill={INK} />
+      <Ellipse cx="65" cy="47" rx="6" ry={eyeRy} fill={INK} />
 
       {s.tear && k > 0.5 && (
         <Path
@@ -111,13 +117,13 @@ export function Face({ emotion, size, intensity = 1 }: Props) {
         />
       )}
 
-      <Path d={leftBrow} stroke={colors.text} strokeWidth={3.4} fill="none" strokeLinecap="round" />
-      <Path d={rightBrow} stroke={colors.text} strokeWidth={3.4} fill="none" strokeLinecap="round" />
+      <Path d={leftBrow} stroke={INK} strokeWidth={3.4} fill="none" strokeLinecap="round" />
+      <Path d={rightBrow} stroke={INK} strokeWidth={3.4} fill="none" strokeLinecap="round" />
 
       {mouthOpen > 1 ? (
-        <Ellipse cx="50" cy="69" rx="11" ry={mouthOpen} fill={colors.text} />
+        <Ellipse cx="50" cy="69" rx="11" ry={mouthOpen} fill={INK} />
       ) : (
-        <Path d={mouth} stroke={colors.text} strokeWidth={3.8} fill="none" strokeLinecap="round" />
+        <Path d={mouth} stroke={INK} strokeWidth={3.8} fill="none" strokeLinecap="round" />
       )}
     </Svg>
   );

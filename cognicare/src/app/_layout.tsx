@@ -23,7 +23,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <Suspense fallback={<Booting />}>
           <SQLiteProvider databaseName="cognicare.db" onInit={migrate} useSuspense>
-            <StatusBar style="dark" />
+            <StatusBar style="light" />
             <Stack
               screenOptions={{
                 headerShown: false,

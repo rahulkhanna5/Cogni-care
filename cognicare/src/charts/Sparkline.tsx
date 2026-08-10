@@ -55,7 +55,7 @@ export function Sparkline({ values, width, height = 40 }: Props) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={lastX} cy={lastY} r={mark.dot / 2} fill={chart.now} stroke="#FFFFFF" strokeWidth={2} />
+      <Circle cx={lastX} cy={lastY} r={mark.dot / 2} fill={chart.now} stroke={chart.ring} strokeWidth={2} />
     </Svg>
   );
 }

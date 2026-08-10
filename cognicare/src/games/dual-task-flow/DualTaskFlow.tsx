@@ -106,7 +106,7 @@ export function DualTaskFlow({ level, onRoundComplete, random = Math.random }: P
           flex: 1,
           borderRadius: radius.lg,
           backgroundColor:
-            flash === 'hit' ? colors.accentSoft : flash === 'wrong' ? '#F6E3E0' : colors.surface,
+            flash === 'hit' ? colors.accentSoft : flash === 'wrong' ? colors.dangerSoft : colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
           alignItems: 'center',

@@ -73,7 +73,7 @@ export function Dumbbell({ rows, max, width }: Props) {
                   fill={chart.before}
                   // A 2px surface ring keeps the two dots readable when a
                   // score has not moved and they sit on top of each other.
-                  stroke="#FFFFFF"
+                  stroke={chart.ring}
                   strokeWidth={2}
                 />
               )}
@@ -83,7 +83,7 @@ export function Dumbbell({ rows, max, width }: Props) {
                 cy={rowHeight / 2}
                 r={mark.dot / 2 + 1}
                 fill={chart.now}
-                stroke="#FFFFFF"
+                stroke={chart.ring}
                 strokeWidth={2}
               />
             </Svg>

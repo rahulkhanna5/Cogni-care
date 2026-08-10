@@ -1,29 +1,40 @@
 /**
- * Design tokens.
+ * Design tokens — dark theme.
  *
- * Every colour pair used for text or on a filled control has been checked at
- * >= 7:1 (WCAG AAA). That is deliberate: the target users are older adults with
- * age-related contrast sensitivity loss, so the usual 4.5:1 floor is not enough.
- * If you change a colour here, re-run the contrast check before committing.
+ * Brand colours supplied by the owner: background #1F1D1E, primary #FF968C,
+ * secondary #332F29.
+ *
+ * Everything that carries text or sits on a filled control is held at >= 7:1
+ * (WCAG AAA), because the target users are older adults with age-related
+ * contrast sensitivity loss and the usual 4.5:1 floor is not enough for them.
+ * The supplied brand pair happens to land well: primary on background is
+ * 7.98:1, and background ink on primary is also 7.98:1, so buttons work in
+ * both directions. Re-check with a contrast script before changing any value.
  */
 
 export const colors = {
-  bg: '#FAFAF8',
-  surface: '#FFFFFF',
+  bg: '#1F1D1E',
+  /** Brand secondary — cards and raised blocks. */
+  surface: '#332F29',
+  surfaceRaised: '#3D3830',
 
-  text: '#1F2933', // 14.1:1 on bg
-  textMuted: '#4A5760', // 7.1:1 on bg
-  textInverse: '#FFFFFF',
+  text: '#EDE6E3', // 13.6:1 on bg
+  textMuted: '#C4BAB5', // 8.8:1 on bg
+  /** Ink for text sitting ON the primary colour. */
+  textInverse: '#1F1D1E', // 8.0:1 on accent
 
-  accent: '#246257', // white on accent = 7.1:1
-  accentSoft: '#E6F0ED',
+  accent: '#FF968C', // 8.0:1 on bg
+  /** Dim tint for filled backgrounds behind accent text. */
+  accentSoft: '#43302E',
 
-  success: '#2A634E',
-  warning: '#814C25',
-  danger: '#A23024',
+  success: '#8FD9B6', // 10.2:1 on bg
+  warning: '#F0C08A', // 10.1:1 on bg
+  danger: '#FF9B94', // 8.3:1 on bg
+  /** Dim tint for an error flash, the dark counterpart to a pale pink wash. */
+  dangerSoft: '#3A2523',
 
-  border: '#E2E5E1',
-  disabled: '#9AA5A0',
+  border: '#474139',
+  disabled: '#6B635C',
 } as const;
 
 /** 8pt scale. Generous by design — dense layouts are hard to target accurately. */
@@ -38,7 +49,8 @@ export const space = {
 
 /**
  * Body starts at 20 — the usual 14–16 is unreadable for much of this audience.
- * Only 400 and 600 weights exist on purpose; thin weights lose legibility first.
+ * Only 400 and 600 weights exist on purpose; thin weights lose legibility
+ * first, and they lose it faster on a dark background than a light one.
  */
 export const type = {
   display: { fontSize: 34, lineHeight: 42, fontWeight: '600' },

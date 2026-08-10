@@ -29,7 +29,9 @@ export function Button({
     quiet: 'transparent',
   }[variant];
 
-  const textColor = variant === 'primary' ? 'textInverse' : 'accent';
+  // Dark ink on the mid-grey disabled fill measured 2.85:1. A dim raised
+  // surface with muted text reads as unavailable and stays legible.
+  const textColor = disabled ? 'textMuted' : variant === 'primary' ? 'textInverse' : 'accent';
 
   return (
     <Pressable
@@ -50,16 +52,16 @@ export function Button({
           paddingHorizontal: space.lg,
           paddingVertical: space.md,
           borderRadius: radius.md,
-          backgroundColor: disabled ? colors.disabled : fill,
+          backgroundColor: disabled ? colors.surfaceRaised : fill,
           borderWidth: variant === 'secondary' ? 2 : 0,
-          borderColor: colors.accent,
+          borderColor: disabled ? colors.border : colors.accent,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
           opacity: pressed ? 0.85 : 1,
         },
         style,
       ]}
     >
-      <Text variant="label" color={disabled ? 'textInverse' : textColor}>
+      <Text variant="label" color={textColor}>
         {label}
       </Text>
     </Pressable>
