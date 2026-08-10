@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { GameProgress, GameSession, Player } from './types';
+import type { Assessment, GameProgress, GameSession, Player } from './types';
 
 /* ---------------------------------- players --------------------------------- */
 
@@ -172,6 +172,75 @@ export async function recentSessions(
       WHERE player_id = ? AND ended_at IS NOT NULL
       ORDER BY started_at DESC
       LIMIT ?`,
+    playerId,
+    limit
+  );
+}
+
+/* ------------------------------- assessments -------------------------------- */
+
+export async function saveAssessment(
+  db: SQLiteDatabase,
+  playerId: number,
+  answers: Record<number, number>,
+  score: {
+    total: number;
+    band: string;
+    domains: { attention: number; stm: number; ltm: number; speed: number; adl: number };
+  },
+  items: { no: number; domain: string }[]
+): Promise<number> {
+  let id = 0;
+
+  // The header and its 25 answers must land together — a half-written
+  // assessment would score wrongly and silently forever after.
+  await db.withTransactionAsync(async () => {
+    const res = await db.runAsync(
+      `INSERT INTO assessments
+         (player_id, total_score, band, attention, stm, ltm, speed, adl)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      playerId,
+      score.total,
+      score.band,
+      score.domains.attention,
+      score.domains.stm,
+      score.domains.ltm,
+      score.domains.speed,
+      score.domains.adl
+    );
+    id = res.lastInsertRowId;
+
+    for (const item of items) {
+      await db.runAsync(
+        'INSERT INTO assessment_answers (assessment_id, item_no, domain, value) VALUES (?, ?, ?, ?)',
+        id,
+        item.no,
+        item.domain,
+        answers[item.no] ?? 0
+      );
+    }
+  });
+
+  return id;
+}
+
+export async function latestAssessment(
+  db: SQLiteDatabase,
+  playerId: number
+): Promise<Assessment | null> {
+  return db.getFirstAsync<Assessment>(
+    'SELECT * FROM assessments WHERE player_id = ? ORDER BY taken_at DESC, id DESC LIMIT 1',
+    playerId
+  );
+}
+
+export async function assessmentHistory(
+  db: SQLiteDatabase,
+  playerId: number,
+  limit = 12
+): Promise<Assessment[]> {
+  return db.getAllAsync<Assessment>(
+    'SELECT * FROM assessments WHERE player_id = ? ORDER BY taken_at DESC, id DESC LIMIT ?',
     playerId,
     limit
   );
