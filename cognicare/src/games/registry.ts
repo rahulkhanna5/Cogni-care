@@ -36,14 +36,14 @@ export const GAMES: GameMeta[] = [
     title: 'Market Rush',
     blurb: 'Remember the shopping list, then pick those items out of the crowd.',
     domains: ['stm', 'speed', 'attention'],
-    ready: false,
+    ready: true,
   },
   {
     id: 'speedy-current',
     title: 'Speedy Current',
     blurb: 'Tap only the fish swimming against the current.',
     domains: ['speed', 'attention'],
-    ready: false,
+    ready: true,
   },
   {
     id: 'sound-forest',
@@ -59,7 +59,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Plan the shortest safe route across town.',
     domains: ['adl'],
     alsoTrains: ['Planning', 'Problem solving'],
-    ready: false,
+    ready: true,
   },
   {
     id: 'emotion-meadow',
@@ -67,7 +67,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Find the face showing the feeling you are asked for.',
     domains: [],
     alsoTrains: ['Social cognition', 'Emotion recognition'],
-    ready: false,
+    ready: true,
   },
   {
     id: 'dual-task-flow',
