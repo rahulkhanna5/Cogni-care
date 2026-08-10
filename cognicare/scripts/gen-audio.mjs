@@ -16,19 +16,32 @@ import { fileURLToPath } from 'node:url';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'audio');
 const RATE = 22050;
 
-/** Distinct timbres so the animals stay tellable apart by ear alone. */
+/**
+ * Soft bell-like tones, one per animal.
+ *
+ * The first version modulated each voice (up to 40Hz on the cricket) to
+ * imitate a call. It read as wobbling and buzzing rather than as an animal,
+ * so there is no modulation now at all — just a sine with a quiet second
+ * harmonic for warmth and a long, smooth release.
+ *
+ * Voices are told apart by PITCH, not timbre, and the pitches are a C major
+ * pentatonic so that any two heard together are consonant rather than
+ * clashing. Everything sits between 260Hz and 660Hz: age-related hearing
+ * loss takes the high frequencies first, and the old cricket at 2100Hz was
+ * both piercing and the first thing this audience would stop hearing.
+ */
 const VOICES = {
-  owl: { freq: 400, harmonics: [1, 0.35], warble: 5, durationMs: 900 },
-  bird: { freq: 1300, harmonics: [1, 0.2], warble: 18, durationMs: 550 },
-  frog: { freq: 220, harmonics: [1, 0.6, 0.3], warble: 9, durationMs: 700 },
-  cricket: { freq: 2100, harmonics: [1, 0.15], warble: 40, durationMs: 500 },
-  duck: { freq: 620, harmonics: [1, 0.5, 0.25], warble: 14, durationMs: 650 },
+  owl: { freq: 262, harmonic2: 0.12, durationMs: 900 }, // C4
+  frog: { freq: 330, harmonic2: 0.14, durationMs: 850 }, // E4
+  duck: { freq: 392, harmonic2: 0.12, durationMs: 850 }, // G4
+  bird: { freq: 523, harmonic2: 0.1, durationMs: 800 }, // C5
+  cricket: { freq: 659, harmonic2: 0.1, durationMs: 800 }, // E5
 };
 
-/** Pure tones for the Dual Task Flow auditory stream. */
+/** Dual Task Flow's two-way choice: a clean octave apart, unmistakable. */
 const TONES = {
-  'tone-high': { freq: 1000, harmonics: [1], warble: 0, durationMs: 350 },
-  'tone-low': { freq: 350, harmonics: [1], warble: 0, durationMs: 350 },
+  'tone-high': { freq: 660, harmonic2: 0.08, durationMs: 420 },
+  'tone-low': { freq: 330, harmonic2: 0.08, durationMs: 420 },
 };
 
 /** gainL, gainR, and which side leads (inter-aural time difference). */
@@ -38,21 +51,25 @@ const POSITIONS = {
   centre: { gainL: 0.7, gainR: 0.7, leadMs: 0 },
 };
 
+/**
+ * Raised-cosine attack and release. A linear ramp leaves an audible click at
+ * each end, and a click is exactly the harshness we are removing.
+ */
 function envelope(i, total) {
-  const attack = total * 0.08;
-  const release = total * 0.35;
-  if (i < attack) return i / attack;
-  if (i > total - release) return (total - i) / release;
+  const attack = total * 0.12;
+  const release = total * 0.55; // long tail — the tone fades rather than stops
+  if (i < attack) return 0.5 * (1 - Math.cos(Math.PI * (i / attack)));
+  if (i > total - release) {
+    const x = (total - i) / release;
+    return 0.5 * (1 - Math.cos(Math.PI * x));
+  }
   return 1;
 }
 
 function sample(voice, t) {
-  const wobble = voice.warble ? 1 + 0.06 * Math.sin(2 * Math.PI * voice.warble * t) : 1;
-  let v = 0;
-  voice.harmonics.forEach((amp, n) => {
-    v += amp * Math.sin(2 * Math.PI * voice.freq * wobble * (n + 1) * t);
-  });
-  return v / voice.harmonics.reduce((a, b) => a + b, 0);
+  const fundamental = Math.sin(2 * Math.PI * voice.freq * t);
+  const second = Math.sin(2 * Math.PI * voice.freq * 2 * t) * voice.harmonic2;
+  return (fundamental + second) / (1 + voice.harmonic2);
 }
 
 function buildWav(voice, position) {
