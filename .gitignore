@@ -42,3 +42,9 @@ yarn-error.*
 # ---------------------------------------------------------------------------
 Questionnare.docx
 ppt for cse students.pptx
+
+# Stray Xcode scaffold created outside the Expo app, plus Xcode user state.
+# Untracked, not deleted — the files remain on disk.
+cognicare/Cogni care/
+*.xcuserstate
+xcuserdata/
