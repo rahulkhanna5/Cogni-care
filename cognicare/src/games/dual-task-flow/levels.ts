@@ -1,35 +1,38 @@
 export type DualLevel = {
-  /** how long a number stays on screen */
-  visualIntervalMs: number;
-  /** how often a tone plays */
-  audioIntervalMs: number;
-  /** total items in the visual stream */
-  visualCount: number;
-  /** numbers are drawn from 1..range; a wider range makes them harder to read fast */
+  /** how long each item stays on screen / audible before the next one */
+  stepMs: number;
+  /** total items across both streams */
+  totalItems: number;
+  /** numbers are drawn from 1..range; a wider range is harder to read quickly */
   range: number;
 };
 
 /**
- * The two streams run on deliberately different periods so they drift in and
- * out of phase. Locking them together would let the player treat it as one
- * rhythm, which is exactly the divided-attention load we want to keep.
+ * The two streams take turns — never at the same time.
+ *
+ * They originally ran concurrently on different periods, which is closer to
+ * the classic divided-attention paradigm but is unanswerable in practice: a
+ * number and a tone landing together give the player no way to know which
+ * button the moment belongs to. Alternating keeps the task-switching load,
+ * which is the other target this game was built for, and makes every moment
+ * unambiguous.
  */
 export const DUAL_LEVELS: DualLevel[] = [
-  { visualIntervalMs: 2200, audioIntervalMs: 3100, visualCount: 12, range: 9 },
-  { visualIntervalMs: 2000, audioIntervalMs: 2900, visualCount: 14, range: 9 },
-  { visualIntervalMs: 1900, audioIntervalMs: 2700, visualCount: 15, range: 19 },
-  { visualIntervalMs: 1800, audioIntervalMs: 2600, visualCount: 16, range: 19 },
-  { visualIntervalMs: 1700, audioIntervalMs: 2400, visualCount: 17, range: 19 },
-  { visualIntervalMs: 1600, audioIntervalMs: 2300, visualCount: 18, range: 19 },
-  { visualIntervalMs: 1500, audioIntervalMs: 2200, visualCount: 19, range: 39 },
-  { visualIntervalMs: 1400, audioIntervalMs: 2100, visualCount: 20, range: 39 },
-  { visualIntervalMs: 1300, audioIntervalMs: 2000, visualCount: 21, range: 39 },
-  { visualIntervalMs: 1250, audioIntervalMs: 1900, visualCount: 22, range: 59 },
-  { visualIntervalMs: 1200, audioIntervalMs: 1800, visualCount: 23, range: 59 },
-  { visualIntervalMs: 1100, audioIntervalMs: 1700, visualCount: 24, range: 79 },
-  { visualIntervalMs: 1050, audioIntervalMs: 1600, visualCount: 25, range: 79 },
-  { visualIntervalMs: 1000, audioIntervalMs: 1500, visualCount: 26, range: 99 },
-  { visualIntervalMs: 950, audioIntervalMs: 1400, visualCount: 28, range: 99 },
+  { stepMs: 2600, totalItems: 12, range: 9 },
+  { stepMs: 2400, totalItems: 14, range: 9 },
+  { stepMs: 2250, totalItems: 15, range: 19 },
+  { stepMs: 2100, totalItems: 16, range: 19 },
+  { stepMs: 2000, totalItems: 17, range: 19 },
+  { stepMs: 1900, totalItems: 18, range: 19 },
+  { stepMs: 1800, totalItems: 19, range: 39 },
+  { stepMs: 1700, totalItems: 20, range: 39 },
+  { stepMs: 1600, totalItems: 21, range: 39 },
+  { stepMs: 1500, totalItems: 22, range: 59 },
+  { stepMs: 1450, totalItems: 23, range: 59 },
+  { stepMs: 1400, totalItems: 24, range: 79 },
+  { stepMs: 1300, totalItems: 25, range: 79 },
+  { stepMs: 1250, totalItems: 26, range: 99 },
+  { stepMs: 1200, totalItems: 28, range: 99 },
 ];
 
 export const DUAL_MAX_LEVEL = DUAL_LEVELS.length;
@@ -39,23 +42,40 @@ export const dualLevel = (level: number): DualLevel =>
 
 export const describeDualLevel = (level: number): string => {
   const s = dualLevel(level);
-  return `Numbers up to ${s.range}, one every ${(s.visualIntervalMs / 1000).toFixed(1)}s`;
+  return `Numbers up to ${s.range}, one item every ${(s.stepMs / 1000).toFixed(1)}s`;
 };
 
-export type Stream = { value: number; isTarget: boolean }[];
+export type DualEvent = {
+  modality: 'visual' | 'audio';
+  /** the number shown, or 1 for a high tone and 0 for a low one */
+  value: number;
+  isTarget: boolean;
+};
 
-/** Visual stream: tap the odd numbers. */
-export function buildNumbers(spec: DualLevel, rnd = Math.random): Stream {
-  return Array.from({ length: spec.visualCount }, () => {
-    const value = 1 + Math.floor(rnd() * spec.range);
-    return { value, isTarget: value % 2 === 1 };
-  });
-}
+/**
+ * One item at a time, modality chosen at random so the player cannot settle
+ * into a rhythm — strict alternation would let them predict every switch.
+ * A run of four of the same modality is broken up for the same reason.
+ */
+export function buildTimeline(spec: DualLevel, rnd = Math.random): DualEvent[] {
+  const events: DualEvent[] = [];
+  let run = 0;
 
-/** Auditory stream: tap only on the high tone. */
-export function buildTones(count: number, rnd = Math.random): Stream {
-  return Array.from({ length: count }, () => {
-    const high = rnd() < 0.4;
-    return { value: high ? 1 : 0, isTarget: high };
-  });
+  for (let i = 0; i < spec.totalItems; i++) {
+    const previous = events[events.length - 1]?.modality;
+    const forced = run >= 3 ? (previous === 'visual' ? 'audio' : 'visual') : null;
+    const modality = forced ?? (rnd() < 0.5 ? 'visual' : 'audio');
+
+    run = modality === previous ? run + 1 : 1;
+
+    if (modality === 'visual') {
+      const value = 1 + Math.floor(rnd() * spec.range);
+      events.push({ modality, value, isTarget: value % 2 === 1 });
+    } else {
+      const high = rnd() < 0.45;
+      events.push({ modality, value: high ? 1 : 0, isTarget: high });
+    }
+  }
+
+  return events;
 }

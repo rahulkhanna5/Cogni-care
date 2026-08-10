@@ -12,7 +12,7 @@ type Props = GamePlayProps & { random?: () => number };
 
 type Trial = { faces: Emotion[]; answer: number };
 
-function buildTrials(
+export function buildTrials(
   pool: Emotion[],
   faceCount: number,
   trials: number,

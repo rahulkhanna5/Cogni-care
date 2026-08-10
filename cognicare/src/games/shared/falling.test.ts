@@ -150,6 +150,31 @@ describe('schedule', () => {
     }
   });
 
+  it('spawns every target at least once', () => {
+    // Regression: targets used to be drawn at random from the pool, so a
+    // 3-item shopping list could spawn one item twice and omit the third
+    // entirely — the player was asked to find something never shown.
+    const list = [
+      { label: 'Fish', emoji: '🐟' },
+      { label: 'Honey', emoji: '🍯' },
+      { label: 'Butter', emoji: '🧈' },
+    ];
+
+    for (let run = 0; run < 100; run++) {
+      const specs = schedule({
+        durationMs: 24_000,
+        travelMs: 6000,
+        targetCount: list.length,
+        distractorCount: 6,
+        targets: list,
+        distractors: pool,
+      });
+
+      const spawned = specs.filter((s) => s.kind === 'target').map((s) => s.label).sort();
+      expect(spawned).toEqual(['Butter', 'Fish', 'Honey']);
+    }
+  });
+
   it('is ordered by spawn time', () => {
     const specs = schedule({
       durationMs: 20_000,

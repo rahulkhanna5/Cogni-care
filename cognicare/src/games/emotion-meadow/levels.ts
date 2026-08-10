@@ -18,8 +18,8 @@ const FULL: Emotion[] = ['happy', 'sad', 'angry', 'surprised', 'worried', 'calm'
  * confused with "sad" and "happy" at low intensity.
  */
 export const MEADOW_LEVELS: MeadowLevel[] = [
-  { faceCount: 3, intensity: 1, pool: EASY },
-  { faceCount: 4, intensity: 1, pool: EASY },
+  { faceCount: 3, intensity: 1.0, pool: EASY },
+  { faceCount: 4, intensity: 1.0, pool: EASY },
   { faceCount: 4, intensity: 0.9, pool: EASY },
   { faceCount: 5, intensity: 0.9, pool: EASY },
   { faceCount: 4, intensity: 0.85, pool: FULL },
@@ -28,11 +28,11 @@ export const MEADOW_LEVELS: MeadowLevel[] = [
   { faceCount: 6, intensity: 0.68, pool: FULL },
   { faceCount: 6, intensity: 0.6, pool: FULL },
   { faceCount: 6, intensity: 0.54, pool: FULL },
-  { faceCount: 6, intensity: 0.48, pool: FULL },
-  { faceCount: 6, intensity: 0.44, pool: FULL },
-  { faceCount: 6, intensity: 0.4, pool: FULL },
-  { faceCount: 6, intensity: 0.36, pool: FULL },
-  { faceCount: 6, intensity: 0.32, pool: FULL },
+  { faceCount: 6, intensity: 0.5, pool: FULL },
+  { faceCount: 6, intensity: 0.5, pool: FULL },
+  { faceCount: 6, intensity: 0.5, pool: FULL },
+  { faceCount: 6, intensity: 0.5, pool: FULL },
+  { faceCount: 6, intensity: 0.5, pool: FULL },
 ];
 
 export const MEADOW_MAX_LEVEL = MEADOW_LEVELS.length;

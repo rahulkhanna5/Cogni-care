@@ -164,10 +164,17 @@ export function schedule(opts: ScheduleOptions): FallerSpec[] {
     kind: FallerKind,
     pool: { label: string; emoji: string }[],
     count: number,
-    direction: 'down' | 'up'
+    direction: 'down' | 'up',
+    /**
+     * Targets walk the pool in order instead of being drawn at random.
+     * Drawing randomly meant a 3-item shopping list could spawn the same
+     * item twice and never spawn the third — the player is then asked to
+     * find something that never appears. Distractors stay random.
+     */
+    cycle = false
   ) => {
     for (let i = 0; i < count; i++) {
-      const pick = pool[Math.floor(rnd() * pool.length) % pool.length];
+      const pick = cycle ? pool[i % pool.length] : pool[Math.floor(rnd() * pool.length) % pool.length];
       specs.push({
         id: id++,
         kind,
@@ -182,7 +189,7 @@ export function schedule(opts: ScheduleOptions): FallerSpec[] {
     }
   };
 
-  push('target', opts.targets, opts.targetCount, opts.direction ?? 'down');
+  push('target', opts.targets, opts.targetCount, opts.direction ?? 'down', true);
   push(
     'distractor',
     opts.distractors,
