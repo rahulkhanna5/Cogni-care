@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# native
+.kotlin/
+/cognicare/ios
+/cognicare/android
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# local env
+.env*.local
+*.tsbuildinfo
+
+# Claude Code local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# ---------------------------------------------------------------------------
+# Source research documents — deliberately excluded while the GitHub repo is
+# public. These are the unpublished study instrument and study design.
+# If the repo is made private, delete these two lines and commit them.
+# ---------------------------------------------------------------------------
+Questionnare.docx
+ppt for cse students.pptx
