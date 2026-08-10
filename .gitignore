@@ -35,14 +35,6 @@ yarn-error.*
 # Claude Code local settings (machine-specific permissions)
 .claude/settings.local.json
 
-# ---------------------------------------------------------------------------
-# Source research documents — deliberately excluded while the GitHub repo is
-# public. These are the unpublished study instrument and study design.
-# If the repo is made private, delete these two lines and commit them.
-# ---------------------------------------------------------------------------
-Questionnare.docx
-ppt for cse students.pptx
-
 # Stray Xcode scaffold created outside the Expo app, plus Xcode user state.
 # Untracked, not deleted — the files remain on disk.
 cognicare/Cogni care/
