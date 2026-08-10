@@ -41,6 +41,11 @@ patientRoutes.get('/', async (req, res, next) => {
     }
 
     if (user.role === 'DOCTOR') {
+      // An unapproved doctor gets the explicit pending code, not an empty
+      // list. "No patients yet" and "your account is still under review" are
+      // different situations and the app must be able to say which.
+      if (!user.approvedAt) throw Errors.doctorPendingApproval();
+
       const ids = await assignedPatientIds(user);
       if (ids.length === 0) {
         await logAccess({
