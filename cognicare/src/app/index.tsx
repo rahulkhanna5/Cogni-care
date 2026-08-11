@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { getPlayer, getSetting } from '@/db/queries';
 import { useAuth } from '@/store/auth';
+import { pushPending } from '@/sync/sync';
 import { ACTIVE_PLAYER_KEY, useSession } from '@/store/session';
 import { colors } from '@/theme/tokens';
 
@@ -23,7 +24,7 @@ export default function Index() {
   const db = useSQLiteContext();
   const router = useRouter();
   const setPlayer = useSession((s) => s.setPlayer);
-  const { hydrate, hydrated, user, pendingApproval } = useAuth();
+  const { hydrate, hydrated, user, pendingApproval, authedFetch } = useAuth();
 
   useEffect(() => {
     hydrate();
@@ -44,26 +45,35 @@ export default function Index() {
         const local = saved ? await getPlayer(db, Number(saved)) : null;
         if (cancelled) return;
         if (local) setPlayer(local);
+
+        // Opportunistic catch-up push for anything played offline. Failures
+        // are ignored on purpose — this must never block getting into the app.
+        if (local && user.role === 'PATIENT') {
+          authedFetch((token) => pushPending(db, local.id, user.id, token)).catch(
+            () => undefined
+          );
+        }
+
         router.replace(local ? '/dashboard' : '/welcome');
         return;
       }
 
+      // Not signed in: authentication is the entry point. A local player is
+      // still restored so "Continue without an account" lands straight back
+      // where they were, but the app no longer skips the sign-in screen just
+      // because someone played once before.
       const saved = await getSetting(db, ACTIVE_PLAYER_KEY);
       const local = saved ? await getPlayer(db, Number(saved)) : null;
       if (cancelled) return;
 
-      if (local) {
-        setPlayer(local);
-        router.replace('/dashboard');
-      } else {
-        router.replace('/login');
-      }
+      if (local) setPlayer(local);
+      router.replace('/login');
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [db, hydrated, user, pendingApproval, router, setPlayer]);
+  }, [db, hydrated, user, pendingApproval, router, setPlayer, authedFetch]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center' }}>

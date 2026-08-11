@@ -48,6 +48,59 @@ export const rejectAssignmentSchema = z.object({ reason: z.string().trim().max(5
 export const revokeAssignmentSchema = z.object({ reason: z.string().trim().max(500).optional() });
 export const approveDoctorSchema = z.object({ note: z.string().trim().max(500).optional() });
 
+/* --------------------------- clinical data uploads -------------------------- */
+
+const isoDate = z.string().datetime({ offset: true });
+
+export const sessionSchema = z.object({
+  gameId: z.string().min(1).max(64),
+  startedAt: isoDate,
+  endedAt: isoDate,
+  levelStart: z.number().int().min(1),
+  levelEnd: z.number().int().min(1),
+  accuracy: z.number().min(0).max(1),
+  score: z.number().int().min(0),
+  avgReactionMs: z.number().int().min(0).nullable(),
+  rounds: z
+    .array(
+      z.object({
+        roundNo: z.number().int().min(1),
+        level: z.number().int().min(1),
+        hits: z.number().int().min(0),
+        // Kept apart from hits and from each other all the way to the server.
+        misses: z.number().int().min(0),
+        falseAlarms: z.number().int().min(0),
+        accuracy: z.number().min(0).max(1),
+        avgReactionMs: z.number().int().min(0).nullable(),
+      })
+    )
+    .max(50)
+    .optional(),
+});
+
+export const assessmentSchema = z.object({
+  takenAt: isoDate,
+  totalScore: z.number().int().min(0).max(100),
+  band: z.enum(['normal', 'mild', 'moderate', 'severe']),
+  domains: z.object({
+    attention: z.number().int().min(0).max(20),
+    stm: z.number().int().min(0).max(20),
+    ltm: z.number().int().min(0).max(20),
+    speed: z.number().int().min(0).max(20),
+    adl: z.number().int().min(0).max(20),
+  }),
+  answers: z
+    .array(
+      z.object({
+        itemNo: z.number().int().min(1).max(25),
+        domain: z.string().min(1).max(20),
+        value: z.number().int().min(0).max(4),
+      })
+    )
+    .max(25)
+    .optional(),
+});
+
 export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

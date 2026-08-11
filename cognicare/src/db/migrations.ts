@@ -99,6 +99,20 @@ const MIGRATIONS: ((db: SQLiteDatabase) => Promise<void>)[] = [
       ALTER TABLE game_progress ADD COLUMN last_direction TEXT;
     `);
   },
+
+  // v3 — upload tracking. The device stays the source of truth: a row is
+  // written locally first and pushed afterwards, so play never depends on a
+  // connection and nothing is lost when the network is absent.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE game_sessions ADD COLUMN synced_at TEXT;
+      ALTER TABLE assessments   ADD COLUMN synced_at TEXT;
+      CREATE INDEX idx_sessions_unsynced
+        ON game_sessions(player_id) WHERE synced_at IS NULL AND ended_at IS NOT NULL;
+      CREATE INDEX idx_assessments_unsynced
+        ON assessments(player_id) WHERE synced_at IS NULL;
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

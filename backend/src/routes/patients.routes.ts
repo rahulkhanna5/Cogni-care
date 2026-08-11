@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Request, type Response } from 'express';
 
 import { query, queryOne } from '../db/pool.js';
 import { Errors } from '../lib/errors.js';
-import { paginationSchema } from '../lib/schemas.js';
+import { assessmentSchema, paginationSchema, sessionSchema } from '../lib/schemas.js';
 import { authenticate, requireVerifiedEmail } from '../middleware/authenticate.js';
 import {
   assignedPatientIds,
@@ -138,6 +138,123 @@ patientRoutes.get('/:patientId/assessments', requirePatientAccess(), async (req,
     next(error);
   }
 });
+
+/* ------------------------------ patient writes ----------------------------- */
+
+/**
+ * Clinical data is written by the patient's own device and by nobody else.
+ *
+ * requirePatientAccess would also admit an assigned doctor and any admin, which
+ * is right for reading and wrong for writing: a record of what someone scored
+ * must not be creatable by a third party. Read and write authority are
+ * different questions and are answered separately.
+ */
+function requireSelf(req: Request, _res: Response, next: NextFunction) {
+  const { patientId } = patientScope(req);
+  if (req.user!.id !== patientId) {
+    return next(Errors.forbidden('Only the patient can submit their own results.'));
+  }
+  next();
+}
+
+patientRoutes.post(
+  '/:patientId/sessions',
+  requirePatientAccess(),
+  requireSelf,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const body = sessionSchema.parse(req.body);
+
+      const row = await queryOne<{ id: string }>(
+        `INSERT INTO game_sessions
+           (patient_id, game_id, started_at, ended_at, level_start, level_end,
+            accuracy, score, avg_reaction_ms)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         RETURNING id`,
+        [
+          patientId,
+          body.gameId,
+          body.startedAt,
+          body.endedAt,
+          body.levelStart,
+          body.levelEnd,
+          body.accuracy,
+          body.score,
+          body.avgReactionMs,
+        ]
+      );
+
+      // Rounds carry the misses / false-alarms split, which is the part of
+      // this data that is actually worth analysing.
+      for (const round of body.rounds ?? []) {
+        await query(
+          `INSERT INTO game_rounds
+             (session_id, round_no, level, hits, misses, false_alarms, accuracy, avg_reaction_ms)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+           ON CONFLICT (session_id, round_no) DO NOTHING`,
+          [
+            row!.id,
+            round.roundNo,
+            round.level,
+            round.hits,
+            round.misses,
+            round.falseAlarms,
+            round.accuracy,
+            round.avgReactionMs,
+          ]
+        );
+      }
+
+      res.status(201).json({ id: row!.id });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+patientRoutes.post(
+  '/:patientId/assessments',
+  requirePatientAccess(),
+  requireSelf,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const body = assessmentSchema.parse(req.body);
+
+      const row = await queryOne<{ id: string }>(
+        `INSERT INTO assessments
+           (patient_id, taken_at, total_score, band, attention, stm, ltm, speed, adl)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         RETURNING id`,
+        [
+          patientId,
+          body.takenAt,
+          body.totalScore,
+          body.band,
+          body.domains.attention,
+          body.domains.stm,
+          body.domains.ltm,
+          body.domains.speed,
+          body.domains.adl,
+        ]
+      );
+
+      for (const answer of body.answers ?? []) {
+        await query(
+          `INSERT INTO assessment_answers (assessment_id, item_no, domain, value)
+           VALUES ($1,$2,$3,$4)
+           ON CONFLICT (assessment_id, item_no) DO NOTHING`,
+          [row!.id, answer.itemNo, answer.domain, answer.value]
+        );
+      }
+
+      res.status(201).json({ id: row!.id });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 patientRoutes.get('/:patientId/sessions', requirePatientAccess(), async (req, res, next) => {
   try {
