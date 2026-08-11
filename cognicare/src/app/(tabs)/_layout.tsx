@@ -7,6 +7,8 @@ import { colors } from '@/theme/tokens';
 export default function TabsLayout() {
   const role = useAuth((s) => s.user?.role);
   const isDoctor = role === 'DOCTOR';
+  const isAdmin = role === 'ADMIN';
+  const isPatientLike = !isDoctor && !isAdmin;
 
   /**
    * The tab bar changes shape by role. A doctor has no exercises to play and
@@ -35,6 +37,16 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Review',
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="shield-checkmark-outline" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="patients"
         options={{
           title: 'Patients',
@@ -46,7 +58,7 @@ export default function TabsLayout() {
         name="dashboard"
         options={{
           title: 'Today',
-          href: isDoctor ? null : undefined,
+          href: isPatientLike ? undefined : null,
           tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={28} color={color} />,
         }}
       />
@@ -54,7 +66,7 @@ export default function TabsLayout() {
         name="games"
         options={{
           title: 'Games',
-          href: isDoctor ? null : undefined,
+          href: isPatientLike ? undefined : null,
           tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={28} color={color} />,
         }}
       />
@@ -62,7 +74,7 @@ export default function TabsLayout() {
         name="assess"
         options={{
           title: 'Check-in',
-          href: isDoctor ? null : undefined,
+          href: isPatientLike ? undefined : null,
           tabBarIcon: ({ color }) => (
             <Ionicons name="clipboard-outline" size={28} color={color} />
           ),

@@ -47,6 +47,11 @@ export default function Index() {
           router.replace('/patients');
           return;
         }
+
+        if (user.role === 'ADMIN') {
+          router.replace('/admin');
+          return;
+        }
         // Keep the local player in step so the games and dashboard still work.
         const saved = await getSetting(db, ACTIVE_PLAYER_KEY);
         const local = saved ? await getPlayer(db, Number(saved)) : null;

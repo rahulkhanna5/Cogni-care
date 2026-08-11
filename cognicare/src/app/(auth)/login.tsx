@@ -34,6 +34,11 @@ export default function Login() {
         return;
       }
 
+      if (user.role === 'ADMIN') {
+        router.replace('/admin');
+        return;
+      }
+
       router.replace('/dashboard');
     } catch (e) {
       setError(

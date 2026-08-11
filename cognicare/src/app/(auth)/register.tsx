@@ -122,11 +122,20 @@ export default function Register() {
             <Field label="Short bio (optional)" value={bio} onChange={setBio} multiline />
 
             <Card>
-              <Text variant="label">Doctor accounts are reviewed</Text>
+              <Text variant="label">What happens next</Text>
               <Text variant="body" color="textMuted">
-                Your details are checked by an administrator before you can be
-                connected to any patient. You can sign in meanwhile, but patient
-                information stays hidden until you are approved.
+                1. Confirm your email address.
+              </Text>
+              <Text variant="body" color="textMuted">
+                2. An administrator checks your registration number against the medical
+                council register.
+              </Text>
+              <Text variant="body" color="textMuted">
+                3. Once approved, patients can ask to be connected to you.
+              </Text>
+              <Text variant="caption" color="textMuted">
+                You can sign in while you wait. No patient information is visible until
+                both your account and each patient connection are approved.
               </Text>
             </Card>
           </>
