@@ -48,6 +48,9 @@ export function play(key: string): void {
   let player = cache.get(key);
   if (!player) {
     player = createAudioPlayer(source);
+    // Set explicitly rather than trusting the default — these were reported
+    // as inaudible on a real handset.
+    player.volume = 1;
     cache.set(key, player);
   }
   player.seekTo(0);

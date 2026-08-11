@@ -201,15 +201,43 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
 
   if (!ready) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: space.lg, justifyContent: 'center', gap: space.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: space.lg, justifyContent: 'center', gap: space.md }}>
         <Text variant="heading" center>
           Headphones needed
         </Text>
         <Text variant="body" color="textMuted" center>
-          This game plays sounds from your left and right. Please put your headphones in
-          before you start.
+          This game plays sounds from your left and right. A phone speaker cannot do
+          that — without headphones every sound arrives in the middle.
         </Text>
-        <Button label="I have my headphones on" onPress={() => setReady(true)} />
+
+        {/* Check the sound works BEFORE a scored round starts. Failing the
+            first trials because the volume was down is not a memory problem,
+            but it looks exactly like one in the data. */}
+        <Text variant="label" center style={{ marginTop: space.md }}>
+          Try it first
+        </Text>
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <Button
+            label="◀ Left"
+            variant="secondary"
+            onPress={() => playAnimal(animals[0] ?? 'owl', 'left')}
+          />
+          <Button
+            label="Right ▶"
+            variant="secondary"
+            onPress={() => playAnimal(animals[0] ?? 'owl', 'right')}
+          />
+        </View>
+        <Text variant="caption" color="textMuted" center>
+          Turn the volume up if you hear nothing. Each should clearly come from one
+          side only.
+        </Text>
+
+        <Button
+          label="I can hear the difference — start"
+          onPress={() => setReady(true)}
+          style={{ marginTop: space.md }}
+        />
       </View>
     );
   }

@@ -17,75 +17,115 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'audio
 const RATE = 22050;
 
 /**
- * Soft bell-like tones, one per animal.
+ * Short pip trains, one voice per animal.
  *
- * The first version modulated each voice (up to 40Hz on the cricket) to
- * imitate a call. It read as wobbling and buzzing rather than as an animal,
- * so there is no modulation now at all — just a sine with a quiet second
- * harmonic for warmth and a long, smooth release.
+ * Three earlier attempts and what each got wrong:
  *
- * Voices are told apart by PITCH, not timbre, and the pitches are a C major
- * pentatonic so that any two heard together are consonant rather than
- * clashing. Everything sits between 260Hz and 660Hz: age-related hearing
- * loss takes the high frequencies first, and the old cricket at 2100Hz was
- * both piercing and the first thing this audience would stop hearing.
+ * 1. Modulated tones imitating calls — read as wobbling and buzzing.
+ * 2. Pure sines at 260-660Hz with a long soft fade. Calm, but inaudible in
+ *    practice: a phone speaker rolls off steeply below ~500Hz, so the 262Hz
+ *    owl barely existed. Protecting against age-related hearing loss by going
+ *    LOW ignored what the hardware can actually reproduce.
+ * 3. That same slow fade-in also destroyed localisation. The auditory system
+ *    locates a sound from its ONSET — interaural time and level differences
+ *    are computed at the attack. A gentle 100ms ramp removes exactly the cue
+ *    Sound Forest is built on.
+ *
+ * So: 500-1050Hz, which small speakers handle well and still sits an octave
+ * below where presbycusis bites; three short pips with a 6ms attack, giving
+ * three sharp onsets to localise instead of one blurred one; and harmonics,
+ * because a pure sine is the quietest waveform there is for a given peak.
  */
 const VOICES = {
-  owl: { freq: 262, harmonic2: 0.12, durationMs: 900 }, // C4
-  frog: { freq: 330, harmonic2: 0.14, durationMs: 850 }, // E4
-  duck: { freq: 392, harmonic2: 0.12, durationMs: 850 }, // G4
-  bird: { freq: 523, harmonic2: 0.1, durationMs: 800 }, // C5
-  cricket: { freq: 659, harmonic2: 0.1, durationMs: 800 }, // E5
+  owl: { freq: 523, pips: 3 }, // C5
+  frog: { freq: 587, pips: 3 }, // D5
+  duck: { freq: 698, pips: 3 }, // F5
+  bird: { freq: 784, pips: 3 }, // G5
+  cricket: { freq: 1046, pips: 3 }, // C6
 };
 
-/** Dual Task Flow's two-way choice: a clean octave apart, unmistakable. */
+/** Dual Task Flow's two-way choice: an octave apart, unmistakable. */
 const TONES = {
-  'tone-high': { freq: 660, harmonic2: 0.08, durationMs: 420 },
-  'tone-low': { freq: 330, harmonic2: 0.08, durationMs: 420 },
+  'tone-high': { freq: 1046, pips: 1 },
+  'tone-low': { freq: 523, pips: 1 },
 };
 
-/** gainL, gainR, and which side leads (inter-aural time difference). */
+const PIP_MS = 110;
+const PIP_GAP_MS = 70;
+/** Near the ceiling — these were far too quiet on a handset. */
+const PEAK = 0.92;
+
+/**
+ * gainL, gainR, and which side leads (interaural time difference).
+ *
+ * The quiet side is at 4%, about 28dB down — wider than a real head shadow,
+ * deliberately, because this is a training task and the direction must be
+ * unmistakable rather than realistic. 0.65ms is near the maximum real ITD.
+ */
 const POSITIONS = {
-  left: { gainL: 1, gainR: 0.08, leadMs: 0.6 },
-  right: { gainL: 0.08, gainR: 1, leadMs: -0.6 },
-  centre: { gainL: 0.7, gainR: 0.7, leadMs: 0 },
+  left: { gainL: 1, gainR: 0.04, leadMs: 0.65 },
+  right: { gainL: 0.04, gainR: 1, leadMs: -0.65 },
+  centre: { gainL: 0.78, gainR: 0.78, leadMs: 0 },
 };
 
 /**
- * Raised-cosine attack and release. A linear ramp leaves an audible click at
- * each end, and a click is exactly the harshness we are removing.
+ * Per-pip envelope: 6ms attack, then decay to silence.
+ *
+ * The attack is short enough to give the auditory system a crisp onset to
+ * localise, and still long enough (about 260 samples at 22kHz) to avoid the
+ * click a hard edge would produce.
  */
-function envelope(i, total) {
-  const attack = total * 0.12;
-  const release = total * 0.55; // long tail — the tone fades rather than stops
+function pipEnvelope(i, pipSamples, rate) {
+  const attack = Math.max(1, Math.round(0.006 * rate));
   if (i < attack) return 0.5 * (1 - Math.cos(Math.PI * (i / attack)));
-  if (i > total - release) {
-    const x = (total - i) / release;
-    return 0.5 * (1 - Math.cos(Math.PI * x));
-  }
-  return 1;
+  const x = (i - attack) / Math.max(1, pipSamples - attack);
+  return Math.max(0, Math.cos((Math.PI / 2) * x)); // smooth decay to zero
 }
 
-function sample(voice, t) {
-  const fundamental = Math.sin(2 * Math.PI * voice.freq * t);
-  const second = Math.sin(2 * Math.PI * voice.freq * 2 * t) * voice.harmonic2;
-  return (fundamental + second) / (1 + voice.harmonic2);
+/** Fundamental plus two harmonics. A bare sine is the quietest waveform there
+ *  is for a given peak, and small speakers reproduce harmonics better than
+ *  the fundamental anyway. */
+function tone(freq, t) {
+  return (
+    Math.sin(2 * Math.PI * freq * t) +
+    0.35 * Math.sin(2 * Math.PI * freq * 2 * t) +
+    0.15 * Math.sin(2 * Math.PI * freq * 3 * t)
+  ) / 1.5;
 }
+
+/** Soft clip — keeps the level high without the crackle of hard clipping. */
+const softClip = (x) => Math.tanh(x * 1.2);
+
+/** Amplitude of the whole pip train at sample i, plus the tone itself. */
+function sample(voice, i, rate) {
+  const pipSamples = Math.round((PIP_MS / 1000) * rate);
+  const gapSamples = Math.round((PIP_GAP_MS / 1000) * rate);
+  const stride = pipSamples + gapSamples;
+
+  const index = Math.floor(i / stride);
+  if (index >= voice.pips) return 0;
+
+  const withinPip = i - index * stride;
+  if (withinPip >= pipSamples) return 0; // in the gap
+
+  return tone(voice.freq, i / rate) * pipEnvelope(withinPip, pipSamples, rate);
+}
+
+const totalSamples = (voice, rate) =>
+  voice.pips * Math.round(((PIP_MS + PIP_GAP_MS) / 1000) * rate);
 
 function buildWav(voice, position) {
-  const frames = Math.floor((voice.durationMs / 1000) * RATE);
   const delay = Math.round((Math.abs(position.leadMs) / 1000) * RATE);
+  const frames = totalSamples(voice, RATE) + delay;
   const data = Buffer.alloc(frames * 4); // 2 channels x 16-bit
 
   for (let i = 0; i < frames; i++) {
-    const env = envelope(i, frames);
-
     // The lagging ear hears the same sound a fraction of a millisecond later.
     const iL = position.leadMs >= 0 ? i : i - delay;
     const iR = position.leadMs <= 0 ? i : i - delay;
 
-    const l = iL < 0 ? 0 : sample(voice, iL / RATE) * env * position.gainL * 0.7;
-    const r = iR < 0 ? 0 : sample(voice, iR / RATE) * env * position.gainR * 0.7;
+    const l = iL < 0 ? 0 : softClip(sample(voice, iL, RATE) * position.gainL) * PEAK;
+    const r = iR < 0 ? 0 : softClip(sample(voice, iR, RATE) * position.gainR) * PEAK;
 
     data.writeInt16LE(Math.max(-32767, Math.min(32767, Math.round(l * 32767))), i * 4);
     data.writeInt16LE(Math.max(-32767, Math.min(32767, Math.round(r * 32767))), i * 4 + 2);
