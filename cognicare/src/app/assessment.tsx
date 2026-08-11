@@ -35,7 +35,14 @@ export default function Assessment() {
      audience to get in one sitting, and losing the lot to a phone call would
      mean they simply never finish it. */
   useEffect(() => {
-    if (!player) return;
+    // Without this the screen loads forever: the early return skipped
+    // setLoading(false), so reaching this route with no local player — a
+    // reload, a deep link, or a signed-in user who never made one — showed a
+    // permanently blank page.
+    if (!player) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
 
     (async () => {
@@ -100,6 +107,21 @@ export default function Assessment() {
     return (
       <Screen scroll={false}>
         <View />
+      </Screen>
+    );
+  }
+
+  if (!player) {
+    return (
+      <Screen>
+        <Text variant="display" style={{ marginTop: space.lg }}>
+          Almost there
+        </Text>
+        <Text variant="body" color="textMuted">
+          The check-in saves your answers against a name, so tell us who you are
+          first.
+        </Text>
+        <Button label="Set up" onPress={() => router.replace('/welcome')} />
       </Screen>
     );
   }
