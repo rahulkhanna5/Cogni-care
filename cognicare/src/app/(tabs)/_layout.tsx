@@ -1,9 +1,21 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
+import { useAuth } from '@/store/auth';
 import { colors } from '@/theme/tokens';
 
 export default function TabsLayout() {
+  const role = useAuth((s) => s.user?.role);
+  const isDoctor = role === 'DOCTOR';
+
+  /**
+   * The tab bar changes shape by role. A doctor has no exercises to play and
+   * no check-in to fill in, so showing those tabs would offer them screens
+   * that are meaningless for their account.
+   *
+   * `href: null` removes a tab from the bar without unregistering the route,
+   * so it stays reachable programmatically and cannot 404.
+   */
   return (
     <Tabs
       screenOptions={{
@@ -23,9 +35,18 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="patients"
+        options={{
+          title: 'Patients',
+          href: isDoctor ? undefined : null,
+          tabBarIcon: ({ color }) => <Ionicons name="people-outline" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="dashboard"
         options={{
           title: 'Today',
+          href: isDoctor ? null : undefined,
           tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={28} color={color} />,
         }}
       />
@@ -33,6 +54,7 @@ export default function TabsLayout() {
         name="games"
         options={{
           title: 'Games',
+          href: isDoctor ? null : undefined,
           tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={28} color={color} />,
         }}
       />
@@ -40,6 +62,7 @@ export default function TabsLayout() {
         name="assess"
         options={{
           title: 'Check-in',
+          href: isDoctor ? null : undefined,
           tabBarIcon: ({ color }) => (
             <Ionicons name="clipboard-outline" size={28} color={color} />
           ),

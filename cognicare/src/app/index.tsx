@@ -40,6 +40,13 @@ export default function Index() {
           router.replace('/pending');
           return;
         }
+
+        // An approved doctor has no local player and no exercises — their
+        // home is the patient list, not the dashboard.
+        if (user.role === 'DOCTOR') {
+          router.replace('/patients');
+          return;
+        }
         // Keep the local player in step so the games and dashboard still work.
         const saved = await getSetting(db, ACTIVE_PLAYER_KEY);
         const local = saved ? await getPlayer(db, Number(saved)) : null;

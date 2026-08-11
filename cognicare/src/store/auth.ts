@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 
 import * as api from '@/api/auth.api';
@@ -6,6 +7,31 @@ import { ApiError } from '@/api/client';
 
 const ACCESS_KEY = 'cognicare.accessToken';
 const REFRESH_KEY = 'cognicare.refreshToken';
+
+/**
+ * expo-secure-store is native-only — on web every call throws, which made
+ * signing in fail after a successful login response, with no error in the
+ * console to explain it.
+ *
+ * The web path uses localStorage, which is NOT secure storage: it is readable
+ * by any script on the origin. That is acceptable only because the web build
+ * exists to preview the UI in a browser. Ship a real web client and this
+ * needs httpOnly cookies instead.
+ */
+const store = {
+  get: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(globalThis.localStorage?.getItem(key) ?? null)
+      : SecureStore.getItemAsync(key),
+  set: (key: string, value: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(globalThis.localStorage?.setItem(key, value))
+      : SecureStore.setItemAsync(key, value),
+  remove: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(globalThis.localStorage?.removeItem(key))
+      : SecureStore.deleteItemAsync(key),
+};
 
 type AuthState = {
   user: api.ApiUser | null;
@@ -25,11 +51,11 @@ type AuthState = {
 /** Tokens go in the keychain / keystore, never AsyncStorage — that is plain
  *  text on a rooted device. */
 async function persist(accessToken: string | null, refreshToken: string | null) {
-  if (accessToken) await SecureStore.setItemAsync(ACCESS_KEY, accessToken);
-  else await SecureStore.deleteItemAsync(ACCESS_KEY);
+  if (accessToken) await store.set(ACCESS_KEY, accessToken);
+  else await store.remove(ACCESS_KEY);
 
-  if (refreshToken) await SecureStore.setItemAsync(REFRESH_KEY, refreshToken);
-  else await SecureStore.deleteItemAsync(REFRESH_KEY);
+  if (refreshToken) await store.set(REFRESH_KEY, refreshToken);
+  else await store.remove(REFRESH_KEY);
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -42,8 +68,8 @@ export const useAuth = create<AuthState>((set, get) => ({
   hydrate: async () => {
     try {
       const [accessToken, refreshToken] = await Promise.all([
-        SecureStore.getItemAsync(ACCESS_KEY),
-        SecureStore.getItemAsync(REFRESH_KEY),
+        store.get(ACCESS_KEY),
+        store.get(REFRESH_KEY),
       ]);
 
       if (!accessToken || !refreshToken) {

@@ -45,7 +45,7 @@ export default function Pending() {
 
       <Card>
         <Text variant="body">
-          Thanks {user?.name?.split(' ')[0] ?? 'doctor'} — your account has been created and
+          Thanks{user?.name ? `, ${user.name}` : ''} — your account has been created and
           your email is confirmed.
         </Text>
         <Text variant="body" color="textMuted">

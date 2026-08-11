@@ -23,10 +23,18 @@ export default function Login() {
     setError(null);
     try {
       const user = await signIn(email.trim(), password);
-      // A doctor awaiting approval signs in successfully but has nowhere to
-      // go yet, so they get a screen that explains the wait rather than an
-      // empty dashboard that looks broken.
-      router.replace(user.role === 'DOCTOR' ? '/pending' : '/dashboard');
+
+      if (user.role === 'DOCTOR') {
+        // Only an UNAPPROVED doctor belongs on the waiting screen. Routing
+        // every doctor there sent approved ones to "Awaiting approval" even
+        // though their patient list was ready — read the flag the login
+        // response already returns.
+        const { pendingApproval } = useAuth.getState();
+        router.replace(pendingApproval ? '/pending' : '/patients');
+        return;
+      }
+
+      router.replace('/dashboard');
     } catch (e) {
       setError(
         e instanceof ApiError ? e.message : 'Could not sign in. Please try again.'

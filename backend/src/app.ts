@@ -13,8 +13,26 @@ export function createApp() {
   const app = express();
 
   app.set('trust proxy', 1); // rate limiting keys on req.ip behind a proxy
-  app.use(helmet());
-  app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true }));
+
+  app.use(
+    helmet({
+      // This is an API consumed from another origin — a mobile app and, in
+      // development, a web build served by Metro. Helmet's default of
+      // same-origin makes the browser discard every response once the calling
+      // page is cross-origin isolated (which the web build is, because
+      // expo-sqlite's WASM worker requires COEP). CORS still decides who may
+      // call; this only stops the browser throwing the reply away.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+  );
+  // An empty CORS_ORIGIN means "not configured", not "allow nothing".
+  // `''.split(',')` yields [''], an allowlist that matches no origin, which
+  // silently rejected every browser request while looking like valid config.
+  const allowedOrigins = process.env.CORS_ORIGIN?.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  app.use(cors({ origin: allowedOrigins?.length ? allowedOrigins : true }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
