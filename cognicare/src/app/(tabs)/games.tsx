@@ -13,7 +13,10 @@ export default function Games() {
       <View style={{ gap: space.xs, marginTop: space.sm }}>
         <Text variant="display">Games</Text>
         <Text variant="body" color="textMuted">
-          Seven exercises. Each one trains something different.
+          {/* Counted, not written out — the last hard-coded number went stale
+              the moment an eighth game was added. */}
+          {GAMES.filter((g) => g.ready).length} exercises. Each one trains something
+          different.
         </Text>
       </View>
 
