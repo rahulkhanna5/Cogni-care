@@ -158,6 +158,11 @@ export default function Profile() {
           These exercises are for practice and tracking. They are not a medical
           diagnosis.
         </Text>
+        <Button
+          label="Why this works"
+          variant="secondary"
+          onPress={() => router.push('/about')}
+        />
       </Card>
 
       {user && (

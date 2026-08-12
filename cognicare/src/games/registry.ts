@@ -7,7 +7,8 @@ export type GameId =
   | 'emotion-meadow'
   | 'sound-forest'
   | 'path-finder'
-  | 'dual-task-flow';
+  | 'dual-task-flow'
+  | 'daily-order';
 
 export type GameMeta = {
   id: GameId;
@@ -67,6 +68,14 @@ export const GAMES: GameMeta[] = [
     blurb: 'Find the face showing the feeling you are asked for.',
     domains: [],
     alsoTrains: ['Social cognition', 'Emotion recognition'],
+    ready: true,
+  },
+  {
+    id: 'daily-order',
+    title: 'Daily Order',
+    blurb: 'Put the steps of an everyday task into the right order.',
+    domains: ['adl', 'ltm'],
+    alsoTrains: ['Sequencing', 'Planning'],
     ready: true,
   },
   {

@@ -164,6 +164,25 @@ export function GameShell({
   // excluded from stats. A half-played session should not count as data.
   const quit = () => router.back();
 
+  // Without a local player there is nowhere to record a session, so Start
+  // silently did nothing — a dead button with no explanation. Same failure as
+  // the check-in screen had: an early return that leaves the user stuck.
+  if (!player) {
+    return (
+      <Screen>
+        <Header title={meta.title} onClose={quit} />
+        <Card>
+          <Text variant="heading">Almost there</Text>
+          <Text variant="body" color="textMuted">
+            Your results are saved against a name, so tell us who you are before
+            playing.
+          </Text>
+        </Card>
+        <Button label="Set up" onPress={() => router.replace('/welcome')} />
+      </Screen>
+    );
+  }
+
   if (phase === 'intro') {
     return (
       <Screen>

@@ -2,6 +2,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { ReactElement } from 'react';
 
 import { BlinkTrail } from '@/games/blink-trail/BlinkTrail';
+import { DailyOrder } from '@/games/daily-order/DailyOrder';
+import { DAILY_MAX_LEVEL, describeDailyLevel } from '@/games/daily-order/levels';
 import { BLINK_MAX_LEVEL, describeBlinkLevel } from '@/games/blink-trail/levels';
 import { EmotionMeadow } from '@/games/emotion-meadow/EmotionMeadow';
 import { describeMeadowLevel, MEADOW_MAX_LEVEL } from '@/games/emotion-meadow/levels';
@@ -99,6 +101,17 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
       'Sometimes you listen for one animal, or repeat what you heard.',
     ],
     play: (p) => <SoundForest key={p.roundNo} {...p} />,
+  },
+  'daily-order': {
+    maxLevel: DAILY_MAX_LEVEL,
+    rounds: 4,
+    describeLevel: describeDailyLevel,
+    instructions: [
+      'You will see the steps of an everyday task, jumbled up.',
+      'Tap them in the order you would really do them.',
+      'Some levels include a step that does not belong — leave it alone.',
+    ],
+    play: (p) => <DailyOrder key={p.roundNo} {...p} />,
   },
   'dual-task-flow': {
     maxLevel: DUAL_MAX_LEVEL,

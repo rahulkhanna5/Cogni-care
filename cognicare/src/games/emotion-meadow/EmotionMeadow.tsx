@@ -1,12 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, useWindowDimensions, View } from 'react-native';
 
 import type { GamePlayProps } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 import { EMOTION_LABELS, Face, type Emotion } from './Face';
 import { meadowLevel, TRIALS_PER_ROUND } from './levels';
+import { hasPhotosFor, pickPhoto } from './photos';
 
 type Props = GamePlayProps & { random?: () => number };
 
@@ -49,6 +50,10 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
 
   const trial = trials[index];
   const target = trial.faces[trial.answer];
+
+  // All-or-nothing: mixing photographs with drawings would make the odd one
+  // out solvable without reading a single expression.
+  const usePhotos = hasPhotosFor(trial.faces);
 
   const columns = trial.faces.length <= 4 ? 2 : 3;
   const faceSize = Math.min((width - space.lg * 2 - space.md * (columns - 1)) / columns, 150);
@@ -137,7 +142,16 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
                 backgroundColor: colors.surface,
               }}
             >
-              <Face emotion={emotion} size={faceSize} intensity={spec.intensity} />
+              {usePhotos ? (
+                <Image
+                  source={pickPhoto(emotion, i + index)!}
+                  style={{ width: faceSize, height: faceSize, borderRadius: radius.md }}
+                  resizeMode="cover"
+                  accessibilityIgnoresInvertColors
+                />
+              ) : (
+                <Face emotion={emotion} size={faceSize} intensity={spec.intensity} />
+              )}
             </Pressable>
           );
         })}
