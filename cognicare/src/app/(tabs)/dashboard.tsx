@@ -143,6 +143,14 @@ export default function Dashboard() {
         )}
       </Card>
 
+      <Card>
+        <Text variant="heading">Have a question?</Text>
+        <Text variant="body" color="textMuted">
+          Ask about your practice results in plain language.
+        </Text>
+        <Button label="Ask about your results" variant="secondary" onPress={() => router.push('/chat')} />
+      </Card>
+
       {/* Panel 2 of 2. */}
       <Card>
         <Text variant="heading">Self-reported</Text>

@@ -2,14 +2,23 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 
 import { query, queryOne } from '../db/pool.js';
 import { Errors } from '../lib/errors.js';
-import { assessmentSchema, paginationSchema, sessionSchema } from '../lib/schemas.js';
+import {
+  assessmentSchema,
+  chatSchema,
+  paginationSchema,
+  saveRemarkSchema,
+  sessionSchema,
+} from '../lib/schemas.js';
 import { authenticate, requireVerifiedEmail } from '../middleware/authenticate.js';
 import {
   assignedPatientIds,
   patientScope,
   requirePatientAccess,
 } from '../middleware/canAccessPatient.js';
+import { aiLimiter } from '../middleware/rateLimit.js';
 import { logAccess } from '../services/audit.service.js';
+import { buildPatientSummary } from '../services/patient-summary.service.js';
+import { answerChat, draftRemark } from '../services/remarks.service.js';
 
 export const patientRoutes = Router();
 patientRoutes.use(authenticate, requireVerifiedEmail);
@@ -270,3 +279,135 @@ patientRoutes.get('/:patientId/sessions', requirePatientAccess(), async (req, re
     next(error);
   }
 });
+
+/* --------------------------------- remarks --------------------------------- */
+
+/**
+ * The mirror of requireSelf. requirePatientAccess admits the patient too,
+ * which is right for reading their own dashboard and wrong for writing a
+ * clinical note about them.
+ */
+function requireClinician(req: Request, _res: Response, next: NextFunction) {
+  if (req.user!.role !== 'DOCTOR' && req.user!.role !== 'ADMIN') {
+    return next(Errors.forbidden('Only a clinician can write remarks.'));
+  }
+  next();
+}
+
+/**
+ * Drafts a note. Deliberately writes NOTHING.
+ *
+ * The draft goes back to the doctor to edit and save through the next
+ * endpoint. Persisting here would put unreviewed model output into a
+ * patient's record, which is the one thing this whole flow exists to prevent.
+ */
+patientRoutes.post(
+  '/:patientId/remarks/draft',
+  requirePatientAccess(),
+  requireClinician,
+  aiLimiter,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const summary = await buildPatientSummary(patientId);
+
+      // Nothing to summarise means nothing to draft. Asking the model anyway
+      // invites it to fill the silence with something invented.
+      if (summary.games.length === 0 && summary.checkIns.length === 0) {
+        throw Errors.conflict(
+          'NO_DATA',
+          'This patient has not shared any results yet, so there is nothing to summarise.'
+        );
+      }
+
+      // The model actually used, not the configured first choice — the
+      // fallback chain means those differ whenever a free pool is busy.
+      res.json(await draftRemark(summary));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+patientRoutes.post(
+  '/:patientId/remarks',
+  requirePatientAccess(),
+  requireClinician,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const input = saveRemarkSchema.parse(req.body);
+
+      const row = await queryOne(
+        `INSERT INTO remarks (patient_id, author_id, body, plan, ai_draft, ai_model)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         RETURNING id, body, plan, created_at`,
+        [
+          patientId,
+          req.user!.id,
+          input.body,
+          input.plan ?? null,
+          input.aiDraft ?? null,
+          input.aiModel ?? null,
+        ]
+      );
+
+      res.status(201).json({ remark: row });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+patientRoutes.get('/:patientId/remarks', requirePatientAccess(), async (req, res, next) => {
+  try {
+    const { patientId } = patientScope(req);
+
+    // Remarks are clinician-facing by default. A patient sees only the ones
+    // explicitly marked visible, filtered in the query rather than after it.
+    const patientOnly = req.user!.role === 'PATIENT';
+
+    const rows = await query(
+      `SELECT r.id, r.body, r.plan, r.created_at, r.visible_to_patient,
+              u.name AS author_name
+         FROM remarks r
+         JOIN users u ON u.id = r.author_id
+        WHERE r.patient_id = $1
+          AND ($2::boolean IS FALSE OR r.visible_to_patient IS TRUE)
+        ORDER BY r.created_at DESC
+        LIMIT 50`,
+      [patientId, patientOnly]
+    );
+
+    res.json({ remarks: rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* ---------------------------------- chat ----------------------------------- */
+
+/**
+ * Same guard as every other patient route, so the model can only ever be told
+ * about someone the caller could already read. The audience switch changes
+ * how it writes, not what it may see.
+ */
+patientRoutes.post(
+  '/:patientId/chat',
+  requirePatientAccess(),
+  aiLimiter,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const { messages } = chatSchema.parse(req.body);
+
+      const summary = await buildPatientSummary(patientId);
+      const audience = req.user!.role === 'PATIENT' ? 'PATIENT' : 'DOCTOR';
+      const reply = await answerChat(summary, messages, audience);
+
+      res.json({ reply });
+    } catch (error) {
+      next(error);
+    }
+  }
+);

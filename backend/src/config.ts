@@ -37,4 +37,38 @@ export const config = {
    * See README "Admin bootstrap" for why.
    */
   allowAdminSelfRegistration: false,
+
+  /**
+   * Not `required()` — the AI features are optional. Without a key the server
+   * still boots and every non-AI route works; only the remark and chat
+   * endpoints answer 503. Making this mandatory would take the whole API down
+   * over a feature nobody has to use.
+   */
+  llm: {
+    apiKey: process.env.OPENROUTER_API_KEY ?? '',
+    /**
+     * Tried in order, first to answer wins.
+     *
+     * Free models share a pool across every OpenRouter user, so a single one
+     * returns 429 fairly often through no fault of this key — a one-model
+     * config makes the whole feature look broken when it is just busy.
+     *
+     * Order matters for a second reason: some models (the nemotron family in
+     * particular) emit their reasoning into the reply text, which is unusable
+     * for a clinical note. The instruction-tuned Gemmas answer cleanly, so
+     * they lead.
+     */
+    models: (
+      process.env.OPENROUTER_MODEL ??
+      'google/gemma-4-26b-a4b-it:free,google/gemma-4-31b-it:free,openai/gpt-oss-20b:free'
+    )
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean),
+    baseUrl: 'https://openrouter.ai/api/v1',
+    /** A model that hangs must not hold an Express handler open forever. */
+    timeoutMs: Number(process.env.OPENROUTER_TIMEOUT_MS ?? 45_000),
+  },
 } as const;
+
+export const llmConfigured = () => config.llm.apiKey.length > 0;

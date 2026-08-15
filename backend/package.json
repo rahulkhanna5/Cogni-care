@@ -10,7 +10,7 @@
     "migrate": "tsx src/db/migrate.ts",
     "seed:admin": "tsx scripts/seed-admin.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "tsx --test src/**/*.test.ts"
   },
   "keywords": [],
   "author": "",

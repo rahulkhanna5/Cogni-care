@@ -55,4 +55,13 @@ export const me = (accessToken: string) =>
   request<{ user: ApiUser; pendingApproval: boolean }>('/auth/me', { accessToken });
 
 export const forgotPassword = (email: string) =>
-  request<{ message: string }>('/auth/forgot-password', { method: 'POST', body: { email } });
+  request<{ message: string; devResetToken?: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  });
+
+export const resetPassword = (token: string, password: string) =>
+  request<{ message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: { token, password },
+  });

@@ -101,6 +101,28 @@ export const assessmentSchema = z.object({
     .optional(),
 });
 
+/* --------------------------------- remarks --------------------------------- */
+
+export const saveRemarkSchema = z.object({
+  body: z.string().trim().min(1, 'A remark cannot be empty.').max(5000),
+  plan: z.string().trim().max(5000).optional(),
+  /** Kept so the record shows what the model said before the doctor edited it. */
+  aiDraft: z.string().max(8000).optional(),
+  aiModel: z.string().max(120).optional(),
+});
+
+export const chatSchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().trim().min(1).max(2000),
+      })
+    )
+    .min(1)
+    .max(20),
+});
+
 export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

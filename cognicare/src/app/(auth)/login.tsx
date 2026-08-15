@@ -89,6 +89,13 @@ export default function Login() {
         </View>
       </View>
 
+      <Button
+        label="Forgot password?"
+        variant="quiet"
+        onPress={() => router.push('/forgot-password')}
+        style={{ marginTop: space.xs, alignSelf: 'flex-start' }}
+      />
+
       {error && (
         <View
           style={{
@@ -114,7 +121,7 @@ export default function Login() {
       />
 
       <Button
-        label="Create an account"
+        label="New here? Create a patient or doctor account"
         variant="secondary"
         onPress={() => router.push('/register')}
         style={{ marginTop: space.sm }}

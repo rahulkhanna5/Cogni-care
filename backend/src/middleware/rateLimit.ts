@@ -35,3 +35,18 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
   handler,
 });
+
+/**
+ * Every AI call spends someone else's quota, so it is limited per signed-in
+ * user rather than per IP — a household or clinic behind one address should
+ * not share a budget. Falls back to IP for the unauthenticated case, which
+ * these routes reject anyway.
+ */
+export const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id ?? req.ip ?? 'anonymous',
+  handler,
+});

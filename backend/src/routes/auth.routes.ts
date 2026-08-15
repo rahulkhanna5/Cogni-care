@@ -154,6 +154,7 @@ authRoutes.post('/forgot-password', forgotPasswordLimiter, async (req, res, next
     const { email } = forgotPasswordSchema.parse(req.body);
     const user = await queryOne<UserRow>('SELECT * FROM users WHERE email = $1', [email]);
 
+    let devResetToken: string | undefined;
     if (user?.is_active) {
       const token = await issueOneTimeToken(
         user.id,
@@ -161,11 +162,22 @@ authRoutes.post('/forgot-password', forgotPasswordLimiter, async (req, res, next
         config.tokens.passwordResetTtlMinutes
       );
       console.log(`[email] reset token for ${user.email}: ${token}`);
+      // TODO(email): hand token to the mail provider instead. Returned in the
+      // response only outside production, same convention as
+      // devEmailVerifyToken on /register, so the flow is testable without SMTP.
+      if (config.env !== 'production') devResetToken = token;
     }
 
-    // Always the same response. Telling the caller whether an address is
-    // registered turns this endpoint into an account-enumeration oracle.
-    res.json({ message: 'If that email is registered, a reset link has been sent.' });
+    // Always the same response shape and the same delay-free path whether or
+    // not the address is registered — telling the caller which turns this
+    // endpoint into an account-enumeration oracle. devResetToken is the one
+    // exception, and only outside production: a dev build needs SOME way to
+    // see the token, and only ever seeing it for real accounts is the whole
+    // point of testing the enumeration-safe path in the first place.
+    res.json({
+      message: 'If that email is registered, a reset link has been sent.',
+      ...(devResetToken ? { devResetToken } : {}),
+    });
   } catch (error) {
     next(error);
   }

@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { bandInfo } from '@/assessment/scoring';
 import { ApiError } from '@/api/client';
@@ -13,7 +13,7 @@ import { Sparkline } from '@/charts/Sparkline';
 import { DOMAIN_LABELS, type Domain } from '@/db/types';
 import { getGame } from '@/games/registry';
 import { useAuth } from '@/store/auth';
-import { colors, space, TOUCH_MIN } from '@/theme/tokens';
+import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
 import { Button, Card, Screen, Text } from '@/ui';
 
 const MAX_LEVEL = 15;
@@ -35,14 +35,25 @@ type GameRollup = {
 export default function PatientDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { authedFetch } = useAuth();
+  const { authedFetch, user } = useAuth();
   const { width } = useWindowDimensions();
 
   const [patient, setPatient] = useState<doctorApi.PatientSummary | null>(null);
   const [assessments, setAssessments] = useState<doctorApi.ServerAssessment[]>([]);
   const [sessions, setSessions] = useState<doctorApi.ServerSession[]>([]);
+  const [remarks, setRemarks] = useState<doctorApi.Remark[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Remark composer. Kept apart from the read-only state above since it is
+  // the one piece of this screen the doctor writes to, not just reads.
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [draftBody, setDraftBody] = useState('');
+  const [draftPlan, setDraftPlan] = useState('');
+  const [aiProvenance, setAiProvenance] = useState<{ raw: string; model: string } | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [remarkError, setRemarkError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -51,15 +62,17 @@ export default function PatientDetail() {
     (async () => {
       setLoading(true);
       try {
-        const [p, a, s] = await Promise.all([
+        const [p, a, s, r] = await Promise.all([
           authedFetch((t) => doctorApi.getPatient(t, id)),
           authedFetch((t) => doctorApi.getAssessments(t, id)),
           authedFetch((t) => doctorApi.getSessions(t, id)),
+          authedFetch((t) => doctorApi.listRemarks(t, id)),
         ]);
         if (cancelled) return;
         setPatient(p.patient);
         setAssessments(a.assessments);
         setSessions(s.sessions);
+        setRemarks(r.remarks);
       } catch (e) {
         if (!cancelled) {
           setError(
@@ -75,6 +88,64 @@ export default function PatientDetail() {
       cancelled = true;
     };
   }, [id, authedFetch]);
+
+  function openComposer() {
+    setDraftBody('');
+    setDraftPlan('');
+    setAiProvenance(null);
+    setRemarkError(null);
+    setComposerOpen(true);
+  }
+
+  async function draftWithAi() {
+    setDrafting(true);
+    setRemarkError(null);
+    try {
+      const draft = await authedFetch((t) => doctorApi.draftRemark(t, id));
+      setDraftBody(draft.body);
+      setDraftPlan(draft.plan);
+      setAiProvenance({ raw: draft.raw, model: draft.model });
+    } catch (e) {
+      setRemarkError(e instanceof ApiError ? e.message : 'Could not draft a remark right now.');
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+  async function saveRemark() {
+    if (!draftBody.trim()) return;
+    setSaving(true);
+    setRemarkError(null);
+    try {
+      const { remark } = await authedFetch((t) =>
+        doctorApi.saveRemark(t, id, {
+          body: draftBody.trim(),
+          plan: draftPlan.trim() || undefined,
+          // Recorded only when this save actually came from an AI draft —
+          // free-hand edits after drafting still count, but a remark typed
+          // from scratch must not claim an AI origin it does not have.
+          aiDraft: aiProvenance?.raw,
+          aiModel: aiProvenance?.model,
+        })
+      );
+      setRemarks((prev) => [
+        {
+          ...remark,
+          plan: remark.plan ?? null,
+          visible_to_patient: false,
+          // The name on the account that just authenticated this save — the
+          // same value the server would return if this list were re-fetched.
+          author_name: user?.name ?? 'You',
+        },
+        ...prev,
+      ]);
+      setComposerOpen(false);
+    } catch (e) {
+      setRemarkError(e instanceof ApiError ? e.message : 'Could not save the remark.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const cardWidth = Math.min(width, 520) - space.lg * 4;
 
@@ -142,6 +213,14 @@ export default function PatientDetail() {
   return (
     <Screen>
       <Header onBack={() => router.back()} title={patient?.name ?? 'Patient'} />
+
+      <Button
+        label="Chat about this patient"
+        variant="secondary"
+        onPress={() =>
+          router.push({ pathname: '/patient/[id]/chat', params: { id, name: patient?.name ?? '' } })
+        }
+      />
 
       <Card>
         <Text variant="caption" color="textMuted">
@@ -246,6 +325,137 @@ export default function PatientDetail() {
         </Card>
       )}
 
+      {/* A third panel, distinct in kind from the two above: those are raw
+          data, this is a clinician's interpretation of it. An AI draft can
+          seed it, but nothing here was written by the AI unedited — see
+          draftWithAi / saveRemark. */}
+      <Card>
+        <Text variant="heading">Remarks</Text>
+        <Text variant="body" color="textMuted">
+          Notes for the care team. Not shown to the patient.
+        </Text>
+
+        {remarks.length === 0 && !composerOpen && (
+          <Text variant="body" color="textMuted" style={{ marginTop: space.sm }}>
+            No remarks yet.
+          </Text>
+        )}
+
+        {!composerOpen && (
+          <View style={{ gap: space.md, marginTop: space.sm }}>
+            {remarks.map((r) => (
+              <View
+                key={r.id}
+                style={{
+                  gap: space.xs,
+                  paddingTop: space.sm,
+                  borderTopWidth: remarks[0] === r ? 0 : 1,
+                  borderTopColor: colors.border,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text variant="label">{r.author_name}</Text>
+                  <Text variant="caption" color="textMuted">
+                    {formatDate(r.created_at)}
+                  </Text>
+                </View>
+                <Text variant="body">{r.body}</Text>
+                {r.plan && (
+                  <View
+                    style={{
+                      marginTop: space.xs,
+                      padding: space.sm,
+                      borderRadius: radius.md,
+                      backgroundColor: colors.accentSoft,
+                    }}
+                  >
+                    <Text variant="caption" color="accent">
+                      Training plan
+                    </Text>
+                    <Text variant="body">{r.plan}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {composerOpen ? (
+          <View style={{ gap: space.md, marginTop: space.md }}>
+            <Button
+              label={drafting ? 'Drafting…' : 'Draft with AI'}
+              variant="secondary"
+              onPress={draftWithAi}
+              disabled={drafting || saving}
+            />
+
+            {aiProvenance && (
+              <Text variant="caption" color="textMuted">
+                Drafted by {aiProvenance.model}. Read it over — edit anything before saving.
+              </Text>
+            )}
+
+            <View style={{ gap: space.sm }}>
+              <Text variant="label">Observations</Text>
+              <TextInput
+                value={draftBody}
+                onChangeText={setDraftBody}
+                placeholder="What you are seeing in this patient's results…"
+                placeholderTextColor={colors.disabled}
+                multiline
+                style={composerInputStyle}
+              />
+            </View>
+
+            <View style={{ gap: space.sm }}>
+              <Text variant="label">Training plan (optional)</Text>
+              <TextInput
+                value={draftPlan}
+                onChangeText={setDraftPlan}
+                placeholder="Which exercises, how often…"
+                placeholderTextColor={colors.disabled}
+                multiline
+                style={composerInputStyle}
+              />
+            </View>
+
+            {remarkError && (
+              <View
+                style={{
+                  backgroundColor: colors.dangerSoft,
+                  borderRadius: radius.md,
+                  borderWidth: 2,
+                  borderColor: colors.danger,
+                  padding: space.md,
+                }}
+              >
+                <Text variant="body" color="danger">
+                  {remarkError}
+                </Text>
+              </View>
+            )}
+
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              <Button
+                label={saving ? 'Saving…' : 'Save remark'}
+                onPress={saveRemark}
+                disabled={!draftBody.trim() || saving || drafting}
+                style={{ flex: 1 }}
+              />
+              <Button
+                label="Cancel"
+                variant="quiet"
+                onPress={() => setComposerOpen(false)}
+                disabled={saving}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        ) : (
+          <Button label="Write a remark" onPress={openComposer} style={{ marginTop: space.sm }} />
+        )}
+      </Card>
+
       <Text variant="caption" color="textMuted">
         These scores are practice and self-report data, not a diagnostic
         assessment.
@@ -253,6 +463,19 @@ export default function PatientDetail() {
     </Screen>
   );
 }
+
+const composerInputStyle = {
+  minHeight: TOUCH_MIN * 1.6,
+  borderWidth: 2,
+  borderColor: colors.border,
+  borderRadius: radius.md,
+  backgroundColor: colors.surface,
+  paddingHorizontal: space.md,
+  paddingTop: space.sm,
+  fontSize: 20,
+  color: colors.text,
+  textAlignVertical: 'top',
+} as const;
 
 function Header({ title, onBack }: { title: string; onBack: () => void }) {
   return (

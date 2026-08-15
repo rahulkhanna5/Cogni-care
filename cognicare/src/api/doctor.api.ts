@@ -53,3 +53,34 @@ export const getAssessments = (accessToken: string, id: string) =>
 
 export const getSessions = (accessToken: string, id: string) =>
   request<{ sessions: ServerSession[] }>(`/patients/${id}/sessions?limit=100`, { accessToken });
+
+/* --------------------------------- remarks --------------------------------- */
+
+export type Remark = {
+  id: string;
+  body: string;
+  plan: string | null;
+  created_at: string;
+  visible_to_patient: boolean;
+  author_name: string;
+};
+
+export type RemarkDraft = { body: string; plan: string; raw: string; model: string };
+
+/** Asks the AI for a draft. Saves nothing — see saveRemark. */
+export const draftRemark = (accessToken: string, patientId: string) =>
+  request<RemarkDraft>(`/patients/${patientId}/remarks/draft`, { method: 'POST', accessToken });
+
+export const saveRemark = (
+  accessToken: string,
+  patientId: string,
+  body: { body: string; plan?: string; aiDraft?: string; aiModel?: string }
+) =>
+  request<{ remark: Remark }>(`/patients/${patientId}/remarks`, {
+    method: 'POST',
+    body,
+    accessToken,
+  });
+
+export const listRemarks = (accessToken: string, patientId: string) =>
+  request<{ remarks: Remark[] }>(`/patients/${patientId}/remarks`, { accessToken });
