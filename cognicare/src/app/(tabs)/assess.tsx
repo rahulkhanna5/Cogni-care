@@ -5,11 +5,12 @@ import { View } from 'react-native';
 
 import { TOTAL_QUESTIONS } from '@/assessment/questions';
 import { bandInfo, firstUnanswered, type Answers } from '@/assessment/scoring';
+import { AreaBars } from '@/charts/AreaBars';
 import { assessmentHistory, getSetting } from '@/db/queries';
-import { DOMAIN_LABELS, type Assessment } from '@/db/types';
+import { DOMAIN_LABELS, type Assessment, type Domain } from '@/db/types';
 import { useSession } from '@/store/session';
-import { colors, space } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Button, Card, InfoRow, Score, Screen, Text } from '@/ui';
 
 const draftKey = (playerId: number) => `assessment_draft_${playerId}`;
 
@@ -73,15 +74,14 @@ export default function Assess() {
       </View>
 
       {latest ? (
-        <Card>
-          <Text variant="body" color="textMuted">
+        <Card style={{ gap: space.sm }}>
+          <Text variant="caption" color="textMuted">
             Last check-in · {formatDate(latest.taken_at)}
           </Text>
-          <Text variant="display">{latest.total_score} / 100</Text>
-          <Text variant="heading" color="accent">
+          <Score value={latest.total_score} max={100} />
+          <Text variant="heading" color="warning">
             {bandInfo(latest.band).label}
           </Text>
-
           {previous && (
             <Text variant="body" color="textMuted">
               {describeChange(latest.total_score, previous.total_score)}
@@ -97,47 +97,35 @@ export default function Assess() {
         </Card>
       )}
 
-      {latest && (
-        <Card>
-          <Text variant="heading">By area</Text>
-          {(Object.keys(DOMAIN_LABELS) as (keyof typeof DOMAIN_LABELS)[]).map((domain) => (
-            <View key={domain} style={{ gap: space.xs }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text variant="body">{DOMAIN_LABELS[domain]}</Text>
-                <Text variant="label">{latest[domain]} / 20</Text>
-              </View>
-              <View style={{ height: 12, borderRadius: 6, backgroundColor: colors.border, overflow: 'hidden' }}>
-                <View
-                  style={{
-                    width: `${(latest[domain] / 20) * 100}%`,
-                    height: '100%',
-                    backgroundColor: colors.accent,
-                  }}
-                />
-              </View>
-            </View>
-          ))}
-          <Text variant="caption" color="textMuted">
-            A higher number means more difficulty in that area.
-          </Text>
-        </Card>
-      )}
-
       <Button
         label={resumeAt ? `Continue from question ${resumeAt}` : 'Start check-in'}
+        icon={resumeAt ? 'arrow-forward' : 'clipboard-outline'}
         onPress={() => router.push('/assessment')}
       />
+
+      {latest && (
+        <Card style={{ gap: space.md }}>
+          <View style={{ gap: space.xs }}>
+            <Text variant="heading">By area</Text>
+            <Text variant="body" color="textMuted">
+              A higher number means more difficulty in that area.
+            </Text>
+          </View>
+          <AreaBars
+            max={20}
+            rows={(Object.keys(DOMAIN_LABELS) as Domain[]).map((d) => ({
+              label: DOMAIN_LABELS[d],
+              value: latest[d],
+            }))}
+          />
+        </Card>
+      )}
 
       {history.length > 1 && (
         <Card>
           <Text variant="heading">Earlier check-ins</Text>
           {history.slice(1).map((row) => (
-            <View key={row.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="body" color="textMuted">
-                {formatDate(row.taken_at)}
-              </Text>
-              <Text variant="label">{row.total_score} / 100</Text>
-            </View>
+            <InfoRow key={row.id} label={formatDate(row.taken_at)} value={`${row.total_score} / 100`} />
           ))}
         </Card>
       )}

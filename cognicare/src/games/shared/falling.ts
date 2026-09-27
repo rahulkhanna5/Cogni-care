@@ -6,13 +6,15 @@
  * which is where the Blink Trail bugs hid.
  */
 
+import type { ArtName } from '@/art/names';
+
 export type FallerKind = 'target' | 'distractor' | 'forbidden';
 
 export type FallerSpec = {
   id: number;
   kind: FallerKind;
   label: string;
-  emoji: string;
+  art: ArtName;
   /** 0..1 across the board width */
   x: number;
   spawnAtMs: number;
@@ -40,6 +42,11 @@ export type EngineState = {
   score: number;
   latencies: number[];
 };
+
+/** The box FallingBoard draws an item in: a 56dp tile plus its word. The
+ *  lane layout keeps boxes of exactly this size from overlapping. */
+export const SPRITE_W = 72;
+export const SPRITE_H = 82;
 
 export const SCORE_HIT = 10;
 export const SCORE_PENALTY = 5;
@@ -142,9 +149,9 @@ export type ScheduleOptions = {
   travelMs: number;
   direction?: 'down' | 'up';
   distractorDirection?: 'down' | 'up';
-  targets: { label: string; emoji: string }[];
-  distractors: { label: string; emoji: string }[];
-  forbidden?: { label: string; emoji: string }[];
+  targets: { label: string; art: ArtName }[];
+  distractors: { label: string; art: ArtName }[];
+  forbidden?: { label: string; art: ArtName }[];
   random?: () => number;
 };
 
@@ -162,7 +169,7 @@ export function schedule(opts: ScheduleOptions): FallerSpec[] {
 
   const push = (
     kind: FallerKind,
-    pool: { label: string; emoji: string }[],
+    pool: { label: string; art: ArtName }[],
     count: number,
     direction: 'down' | 'up',
     /**
@@ -179,7 +186,7 @@ export function schedule(opts: ScheduleOptions): FallerSpec[] {
         id: id++,
         kind,
         label: pick.label,
-        emoji: pick.emoji,
+        art: pick.art,
         // Keep clear of the edges so nothing sits under a rounded corner.
         x: 0.1 + rnd() * 0.8,
         spawnAtMs: Math.floor(rnd() * window),

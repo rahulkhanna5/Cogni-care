@@ -1,11 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { PatientChat } from '@/chat/PatientChat';
 import { useAuth } from '@/store/auth';
-import { colors, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Button, Card, Screen, ScreenHeader, Text } from '@/ui';
 
 export default function OwnChatScreen() {
   const router = useRouter();
@@ -17,7 +16,7 @@ export default function OwnChatScreen() {
   if (!user) {
     return (
       <Screen>
-        <Header title="Ask about your results" onBack={() => router.back()} />
+        <ScreenHeader title="Ask about your results" onBack={() => router.back()} />
         <Card>
           <Text variant="heading">Sign in to ask about your results</Text>
           <Text variant="body" color="textMuted">
@@ -31,8 +30,8 @@ export default function OwnChatScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
-        <Header title="Ask about your results" onBack={() => router.back()} />
+      <View style={{ paddingHorizontal: space.gutter, paddingTop: space.md }}>
+        <ScreenHeader title="Ask about your results" onBack={() => router.back()} />
       </View>
 
       <PatientChat
@@ -44,31 +43,5 @@ export default function OwnChatScreen() {
         ]}
       />
     </Screen>
-  );
-}
-
-function Header({ title, onBack }: { title: string; onBack: () => void }) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: space.sm,
-        marginBottom: space.md,
-      }}
-    >
-      <Pressable
-        onPress={onBack}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        hitSlop={12}
-        style={{ width: TOUCH_MIN, height: TOUCH_MIN, justifyContent: 'center' }}
-      >
-        <Ionicons name="chevron-back" size={30} color={colors.text} />
-      </Pressable>
-      <Text variant="title" style={{ flex: 1 }} numberOfLines={1}>
-        {title}
-      </Text>
-    </View>
   );
 }

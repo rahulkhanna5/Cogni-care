@@ -11,7 +11,7 @@ import {
 const spec = (over: Partial<FallerSpec> & { id: number }): FallerSpec => ({
   kind: 'target',
   label: 'Bread',
-  emoji: '🍞',
+  art: 'bread' as const,
   x: 0.5,
   spawnAtMs: 0,
   travelMs: 2000,
@@ -122,7 +122,7 @@ describe('falling engine', () => {
 });
 
 describe('schedule', () => {
-  const pool = [{ label: 'Bread', emoji: '🍞' }];
+  const pool = [{ label: 'Bread', art: 'bread' as const }];
 
   it('creates the requested mix and leaves room for the last item to cross', () => {
     let seed = 0;
@@ -155,9 +155,9 @@ describe('schedule', () => {
     // 3-item shopping list could spawn one item twice and omit the third
     // entirely — the player was asked to find something never shown.
     const list = [
-      { label: 'Fish', emoji: '🐟' },
-      { label: 'Honey', emoji: '🍯' },
-      { label: 'Butter', emoji: '🧈' },
+      { label: 'Fish', art: 'fish' as const },
+      { label: 'Honey', art: 'honey' as const },
+      { label: 'Butter', art: 'butter' as const },
     ];
 
     for (let run = 0; run < 100; run++) {

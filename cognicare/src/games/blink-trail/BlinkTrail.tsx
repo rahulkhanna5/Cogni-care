@@ -1,15 +1,19 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 
+import { GridCell, type CellState } from '@/games/shared/pieces';
 import type { GamePlayProps } from '@/games/shell/types';
-import { colors, radius, space } from '@/theme/tokens';
+import { space, TOUCH_LARGE, TOUCH_MIN } from '@/theme/tokens';
 import { Button, Text } from '@/ui';
 import { blinkLevel } from './levels';
 
 type Phase = 'watch' | 'blank' | 'input' | 'done';
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** How long a correct tap stays green — long enough to register, per the design. */
+const CORRECT_HOLD_MS = 400;
 
 /** Random sequence with no cell repeated back to back — a double-flash on the
  *  same cell is ambiguous to watch and unfairly hard to reproduce. */
@@ -29,12 +33,18 @@ type Props = GamePlayProps & {
 
 export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: Props) {
   const spec = blinkLevel(level);
-  const cellCount = spec.grid * spec.grid;
+  const cellCount = spec.cols * spec.rows;
 
   const { width } = useWindowDimensions();
-  const boardWidth = Math.min(width, 460) - space.lg * 2;
+  const boardWidth = Math.min(width, 460) - space.gutter * 2;
   const gap = space.sm;
-  const cellSize = (boardWidth - gap * (spec.grid - 1)) / spec.grid;
+  // The board is taller than it is wide, so width alone would push the
+  // bottom row off a short phone. Fit whichever runs out first; until the
+  // space is measured, go by width.
+  const [area, setArea] = useState<{ width: number; height: number } | null>(null);
+  const byWidth = (Math.min(boardWidth, area?.width ?? boardWidth) - gap * (spec.cols - 1)) / spec.cols;
+  const byHeight = area ? (area.height - gap * (spec.rows - 1)) / spec.rows : Infinity;
+  const cellSize = Math.max(TOUCH_MIN, Math.floor(Math.min(byWidth, byHeight)));
 
   const [sequence] = useState(() => makeSeq(cellCount, spec.length));
   const [phase, setPhase] = useState<Phase>('watch');
@@ -108,7 +118,7 @@ export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: P
         ? Math.round(latencies.current.reduce((a, b) => a + b, 0) / latencies.current.length)
         : null;
 
-      await wait(700); // let the last cell's feedback colour register
+      await wait(700); // let the last cell's feedback register
 
       onRoundComplete({
         hits,
@@ -136,7 +146,7 @@ export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: P
         latencies.current.push(latency);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setFeedback({ cell, ok: true });
-        setTimeout(() => setFeedback(null), 220);
+        setTimeout(() => setFeedback((f) => (f?.cell === cell ? null : f)), CORRECT_HOLD_MS);
 
         const next = at + 1;
         indexRef.current = next;
@@ -170,8 +180,14 @@ export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: P
           ? 'Your turn — tap them in order'
           : '';
 
+  const stateOf = (index: number): CellState => {
+    if (feedback?.cell === index) return feedback.ok ? 'correct' : 'mistake';
+    if (activeCell === index) return 'lit';
+    return 'idle';
+  };
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: space.lg }}>
+    <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: space.gutter }}>
       <Text variant="heading" center style={{ marginBottom: space.xs }}>
         {prompt}
       </Text>
@@ -179,53 +195,47 @@ export function BlinkTrail({ level, onRoundComplete, makeSeq = makeSequence }: P
         {phase === 'input' ? `${inputIndex} of ${sequence.length}` : `${sequence.length} lights`}
       </Text>
 
-      <View style={{ width: boardWidth, gap }}>
-        {Array.from({ length: spec.grid }).map((_, row) => (
-          <View key={row} style={{ flexDirection: 'row', gap }}>
-            {Array.from({ length: spec.grid }).map((__, col) => {
-              const index = row * spec.grid + col;
-              const isActive = activeCell === index;
-              const fb = feedback?.cell === index ? feedback : null;
-
-              const background = fb
-                ? fb.ok
-                  ? colors.success
-                  : colors.danger
-                : isActive
-                  ? colors.accent
-                  : colors.surface;
-
-              return (
-                <Pressable
-                  key={col}
-                  onPress={() => onCellPress(index)}
-                  disabled={phase !== 'input'}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Row ${row + 1}, column ${col + 1}`}
-                  style={{
-                    width: cellSize,
-                    height: cellSize,
-                    borderRadius: radius.md,
-                    backgroundColor: background,
-                    borderWidth: 2,
-                    borderColor: background === colors.surface ? colors.border : background,
-                  }}
-                />
-              );
-            })}
-          </View>
-        ))}
+      <View
+        testID="blink-board"
+        style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center' }}
+        onLayout={(e) => setArea({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+      >
+        <View style={{ gap }}>
+          {Array.from({ length: spec.rows }).map((_, row) => (
+            <View key={row} style={{ flexDirection: 'row', gap }}>
+              {Array.from({ length: spec.cols }).map((__, col) => {
+                const index = row * spec.cols + col;
+                return (
+                  <GridCell
+                    key={col}
+                    state={stateOf(index)}
+                    size={cellSize}
+                    onPress={() => onCellPress(index)}
+                    disabled={phase !== 'input'}
+                    accessibilityLabel={`Row ${row + 1}, column ${col + 1}`}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
       </View>
 
-      {phase === 'input' && replaysLeft > 0 && (
-        <Button
-          label={`Show me again (${replaysLeft} left)`}
-          variant="secondary"
-          onPress={replay}
-          fullWidth={false}
-          style={{ marginTop: space.xl }}
-        />
-      )}
+      {/* Room for the replay button is kept from the start, so the board does
+          not shrink under the player's finger when the button appears. */}
+      <View
+        style={{ height: TOUCH_LARGE, marginTop: space.lg, marginBottom: space.lg, justifyContent: 'center' }}
+      >
+        {phase === 'input' && replaysLeft > 0 && (
+          <Button
+            label={`Show me again (${replaysLeft} left)`}
+            variant="secondary"
+            icon="refresh"
+            onPress={replay}
+            fullWidth={false}
+          />
+        )}
+      </View>
     </View>
   );
 }

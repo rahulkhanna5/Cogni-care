@@ -1,13 +1,36 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
+import { gameSummaries } from '@/db/stats';
+import { DOMAIN_LABELS } from '@/db/types';
 import { GAMES } from '@/games/registry';
-import { colors, space } from '@/theme/tokens';
-import { Card, Screen, Text } from '@/ui';
+import { useSession } from '@/store/session';
+import { space } from '@/theme/tokens';
+import { Card, Screen, Tag, Text } from '@/ui';
 
 export default function Games() {
   const router = useRouter();
+  const db = useSQLiteContext();
+  const player = useSession((s) => s.player);
+  const [levels, setLevels] = useState<Record<string, number>>({});
+
+  // The player's own level on each card, so the list shows where they are,
+  // not just what exists.
+  useFocusEffect(
+    useCallback(() => {
+      if (!player) return;
+      let cancelled = false;
+      gameSummaries(db, player.id).then((rows) => {
+        if (!cancelled) setLevels(Object.fromEntries(rows.map((r) => [r.game_id, r.current_level])));
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [db, player])
+  );
+
   return (
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.sm }}>
@@ -20,32 +43,37 @@ export default function Games() {
         </Text>
       </View>
 
-      {GAMES.map((game) => (
-        <Card
-          key={game.id}
-          onPress={game.ready ? () => router.push(`/game/${game.id}`) : undefined}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+      {GAMES.map((game) => {
+        const trains = [...game.domains.map((d) => DOMAIN_LABELS[d]), ...(game.alsoTrains ?? [])].slice(0, 3);
+        const level = levels[game.id];
+        return (
+          <Card
+            key={game.id}
+            onPress={game.ready ? () => router.push(`/game/${game.id}`) : undefined}
+            accessibilityLabel={`${game.title}. ${game.blurb}`}
+          >
             <Text variant="heading">{game.title}</Text>
-            {game.needsHeadphones && (
-              <Ionicons name="headset-outline" size={22} color={colors.textMuted} />
-            )}
-          </View>
-
-          <Text variant="body" color="textMuted">
-            {game.blurb}
-          </Text>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-            <Text variant="caption" color={game.ready ? 'success' : 'textMuted'}>
-              {game.ready ? 'Tap to play' : 'Coming soon'}
+            <Text variant="body" color="textMuted">
+              {game.blurb}
             </Text>
-            {game.ready && (
-              <Ionicons name="chevron-forward" size={18} color={colors.success} />
-            )}
-          </View>
-        </Card>
-      ))}
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, marginTop: space.xs }}>
+              {game.needsHeadphones && <Tag label="Headphones" icon="headset-outline" />}
+              {trains.map((t) => (
+                <Tag key={t} label={t} />
+              ))}
+            </View>
+
+            <Text variant="label" color="accent" style={{ marginTop: space.xs }}>
+              {!game.ready
+                ? 'Coming soon'
+                : level
+                  ? `Level ${level} of ${game.maxLevel} · Tap to play`
+                  : 'New · Tap to play'}
+            </Text>
+          </Card>
+        );
+      })}
     </Screen>
   );
 }

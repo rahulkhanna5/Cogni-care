@@ -1,12 +1,11 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import * as api from '@/api/auth.api';
 import { useAuth } from '@/store/auth';
-import { colors, space } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Banner, Button, Card, HeroIcon, Screen, Text } from '@/ui';
 
 /**
  * Where an approved-pending doctor lands.
@@ -20,13 +19,18 @@ export default function Pending() {
   const router = useRouter();
   const { user, authedFetch, signOut } = useAuth();
   const [checking, setChecking] = useState(false);
+  const [stillWaiting, setStillWaiting] = useState(false);
 
   async function recheck() {
     setChecking(true);
+    setStillWaiting(false);
     try {
       const { user: fresh, pendingApproval } = await authedFetch((token) => api.me(token));
       useAuth.setState({ user: fresh, pendingApproval });
-      if (!pendingApproval) router.replace('/dashboard');
+      // An approved doctor's home is their patient list — this used to send
+      // them to the patient dashboard, a screen with no meaning for a doctor.
+      if (!pendingApproval) router.replace('/patients');
+      else setStillWaiting(true);
     } catch {
       // Stay put — the screen is already the "nothing to do yet" state.
     } finally {
@@ -36,8 +40,8 @@ export default function Pending() {
 
   return (
     <Screen>
-      <View style={{ alignItems: 'center', marginTop: space.xxl, gap: space.md }}>
-        <Ionicons name="hourglass-outline" size={72} color={colors.accent} />
+      <View style={{ gap: space.md, marginTop: space.xxl }}>
+        <HeroIcon name="hourglass-outline" />
         <Text variant="display" center>
           Awaiting approval
         </Text>
@@ -58,11 +62,9 @@ export default function Pending() {
         </Text>
       </Card>
 
-      <Button
-        label={checking ? 'Checking…' : 'Check again'}
-        onPress={recheck}
-        disabled={checking}
-      />
+      {stillWaiting && <Banner tone="info">Still being reviewed. Please check again later.</Banner>}
+
+      <Button label={checking ? 'Checking…' : 'Check again'} busy={checking} onPress={recheck} />
 
       <Button
         label="Sign out"

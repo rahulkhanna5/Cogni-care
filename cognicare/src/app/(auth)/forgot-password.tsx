@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View } from 'react-native';
 
 import * as api from '@/api/auth.api';
 import { ApiError } from '@/api/client';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Screen, Text } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Banner, Button, HeroIcon, Screen, Text, TextField } from '@/ui';
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function ForgotPassword() {
   // way — see the note below on why that has to stay true even here.
   const [sent, setSent] = useState(false);
 
-  const canSubmit = email.trim().length > 0 && !busy;
+  const filled = email.trim().length > 0;
 
   async function submit() {
     setBusy(true);
@@ -47,26 +47,25 @@ export default function ForgotPassword() {
   if (sent) {
     return (
       <Screen>
-        <View style={{ gap: space.sm, marginTop: space.xxl }}>
-          <Text variant="display">Check your email</Text>
-          <Text variant="body" color="textMuted">
+        <View style={{ gap: space.md, marginTop: space.xxl }}>
+          <HeroIcon name="mail-outline" />
+          <Text variant="display" center>
+            Check your email
+          </Text>
+          <Text variant="body" color="textMuted" center>
             If {email.trim()} is registered, we have sent a link to reset the password. It
             expires in 30 minutes.
           </Text>
         </View>
 
-        <Button
-          label="Back to sign in"
-          onPress={() => router.replace('/login')}
-          style={{ marginTop: space.lg }}
-        />
+        <Button label="Back to sign in" onPress={() => router.replace('/login')} style={{ marginTop: space.lg }} />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <View style={{ gap: space.sm, marginTop: space.xxl }}>
+      <View style={{ gap: space.sm, marginTop: space.xl }}>
         <Text variant="display">Reset your password</Text>
         <Text variant="body" color="textMuted">
           Enter the email on your account. If it is registered, we will send a link to reset
@@ -74,62 +73,29 @@ export default function ForgotPassword() {
         </Text>
       </View>
 
-      <View style={{ gap: space.sm, marginTop: space.xl }}>
-        <Text variant="label">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          placeholderTextColor={colors.disabled}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          style={inputStyle}
-        />
-      </View>
+      <TextField
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        textContentType="emailAddress"
+        onSubmitEditing={() => filled && !busy && submit()}
+      />
 
-      {error && (
-        <View
-          style={{
-            backgroundColor: colors.dangerSoft,
-            borderRadius: radius.md,
-            borderWidth: 2,
-            borderColor: colors.danger,
-            padding: space.md,
-            marginTop: space.md,
-          }}
-        >
-          <Text variant="body" color="danger">
-            {error}
-          </Text>
-        </View>
-      )}
+      {error && <Banner tone="error">{error}</Banner>}
 
       <Button
         label={busy ? 'Sending…' : 'Send reset link'}
         onPress={submit}
-        disabled={!canSubmit}
-        style={{ marginTop: space.lg }}
+        busy={busy}
+        disabled={!filled}
+        disabledReason="Type your email to continue."
       />
 
-      <Button
-        label="Back to sign in"
-        variant="quiet"
-        onPress={() => router.replace('/login')}
-        style={{ marginTop: space.sm }}
-      />
+      <Button label="Back to sign in" variant="quiet" onPress={() => router.replace('/login')} />
     </Screen>
   );
 }
-
-const inputStyle = {
-  minHeight: TOUCH_MIN,
-  borderWidth: 2,
-  borderColor: colors.border,
-  borderRadius: radius.md,
-  backgroundColor: colors.surface,
-  paddingHorizontal: space.md,
-  fontSize: 20,
-  color: colors.text,
-} as const;

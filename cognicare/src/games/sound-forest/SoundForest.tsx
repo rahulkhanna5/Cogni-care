@@ -1,10 +1,13 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Animated, Pressable, ScrollView, View, type ImageSourcePropType } from 'react-native';
 
+import { Backdrop } from '@/games/shared/Backdrop';
+import { AnimalTile, ResponsePad, type Feedback } from '@/games/shared/pieces';
 import type { GamePlayProps } from '@/games/shell/types';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Text } from '@/ui';
+import { colors, radius, space } from '@/theme/tokens';
+import { Button, Card, SurfaceProvider, Text, useReduceMotion, type IconName } from '@/ui';
 import {
   buildLocalisation,
   buildSequence,
@@ -24,6 +27,21 @@ import {
 type Props = GamePlayProps & { random?: () => number };
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const FEEDBACK_MS = 400;
+
+/** The forest every turn is played in. Pads and tiles keep their own opaque fills on it. */
+const FOREST: ImageSourcePropType = require('../../../assets/images/sound-forest.webp');
+
+/** The picture behind a turn's play area, below its two heading lines. */
+function Stage({ children, gap = space.md }: { children: ReactNode; gap?: number }) {
+  return (
+    <View style={{ flex: 1, marginBottom: space.lg }}>
+      <Backdrop source={FOREST}>
+        <View style={{ flex: 1, padding: space.md, gap }}>{children}</View>
+      </Backdrop>
+    </View>
+  );
+}
 
 export function SoundForest({ level, roundNo, onRoundComplete, random = Math.random }: Props) {
   const spec = forestLevel(level);
@@ -35,8 +53,11 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
 
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  /** True while a localisation sound is audible — drives the listening visual. */
+  const [hearing, setHearing] = useState(false);
   const [index, setIndex] = useState(0);
   const [heard, setHeard] = useState<Animal[]>([]);
+  const [flash, setFlash] = useState<{ key: string; fb: Feedback } | null>(null);
 
   const hits = useRef(0);
   const misses = useRef(0);
@@ -68,6 +89,11 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
     return () => releaseAudio();
   }, []);
 
+  const show = (key: string, fb: Feedback) => {
+    setFlash({ key, fb });
+    setTimeout(() => setFlash((f) => (f?.key === key ? null : f)), FEEDBACK_MS);
+  };
+
   const finish = useCallback(
     (total: number) => {
       if (finished.current) return;
@@ -92,11 +118,15 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
   const playLocalisation = useCallback(
     async (i: number) => {
       setPlaying(true);
+      setHearing(true);
       await wait(500);
       playAnimal(trials[i].animal, trials[i].position);
       cueAt.current = Date.now();
       responded.current = false;
+      // Answers open the moment the sound starts; the visual stays on for
+      // roughly as long as the sound lasts.
       setPlaying(false);
+      setTimeout(() => setHearing(false), 900);
     },
     [trials]
   );
@@ -110,7 +140,8 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
     if (responded.current) return;
     responded.current = true;
 
-    if (position === trials[index].position) {
+    const ok = position === trials[index].position;
+    if (ok) {
       hits.current += 1;
       latencies.current.push(Date.now() - cueAt.current);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -118,9 +149,13 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
       misses.current += 1;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
+    show(`side-${position}`, ok ? 'correct' : 'mistake');
 
-    if (index + 1 < trials.length) setIndex((n) => n + 1);
-    else finish(trials.length);
+    // Hold the mark before the next sound, so the player sees which it was.
+    setTimeout(() => {
+      if (index + 1 < trials.length) setIndex((n) => n + 1);
+      else finish(trials.length);
+    }, FEEDBACK_MS);
   };
 
   /* -------------------------------- detect -------------------------------- */
@@ -153,9 +188,11 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
       hits.current += 1;
       latencies.current.push(Date.now() - cueAt.current);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      show('pad', 'correct');
     } else {
       falseAlarms.current += 1;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      show('pad', 'mistake');
     }
   };
 
@@ -178,31 +215,93 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
   }, [mode, ready, playSequence]);
 
   const pickAnimal = (animal: Animal) => {
-    if (playing) return;
+    if (playing || finished.current) return;
     const next = [...heard, animal];
     setHeard(next);
 
     if (animal === sequence[next.length - 1]) {
       hits.current += 1;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      show(`animal-${animal}-${next.length}`, 'correct');
       if (next.length === sequence.length) {
         latencies.current.push(Date.now() - cueAt.current);
-        finish(sequence.length);
+        setTimeout(() => finish(sequence.length), FEEDBACK_MS);
       }
     } else {
       falseAlarms.current += 1;
       misses.current += sequence.length - next.length + 1;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      finish(sequence.length);
+      show(`animal-${animal}-${next.length}`, 'mistake');
+      setTimeout(() => finish(sequence.length), FEEDBACK_MS);
     }
   };
 
   /* --------------------------------- views -------------------------------- */
 
+  const label = (id: Animal) => ANIMALS.find((a) => a.id === id)!.label;
+
+  // Before listening for one animal or repeating a sequence, the player hears
+  // each call as often as they like. Recognising a sound you have never been
+  // told is a guess, not memory — and that guess is what the data would show.
+  if (!ready && mode !== 'localise') {
+    const detecting = mode === 'detect';
+    const tiles = (ids: Animal[]) => (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'center' }}>
+        {ids.map((id) => (
+          <AnimalTile key={id} art={id} label={label(id)} onPress={() => playAnimal(id, 'centre')} />
+        ))}
+      </View>
+    );
+
+    return (
+      <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.sm }}>
+        <Text variant="title" center>
+          {detecting ? `Listen for the ${label(target).toLowerCase()}` : 'Hear each animal first'}
+        </Text>
+        <Text variant="body" color="textMuted" center style={{ marginBottom: space.sm }}>
+          Tap an animal to hear its call. Tap as often as you like.
+        </Text>
+
+        <Stage>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+            <Card style={{ gap: space.md }}>
+              {detecting ? (
+                <>
+                  <Text variant="label">Tap the pad only for this one</Text>
+                  {tiles([target])}
+                  {animals.length > 1 && <Text variant="label">Let these go by</Text>}
+                  {tiles(animals.filter((a) => a !== target))}
+                </>
+              ) : (
+                tiles(animals)
+              )}
+            </Card>
+          </ScrollView>
+        </Stage>
+
+        <Button label="I know the sounds — start" onPress={() => setReady(true)} style={{ marginBottom: space.md }} />
+      </View>
+    );
+  }
+
   if (!ready) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: space.lg, justifyContent: 'center', gap: space.md }}>
-        <Text variant="heading" center>
+      <View style={{ flex: 1, paddingHorizontal: space.gutter, justifyContent: 'center', gap: space.md }}>
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              width: 96,
+              height: 96,
+              borderRadius: 48,
+              backgroundColor: colors.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="headset-outline" size={52} color={colors.accent} />
+          </View>
+        </View>
+        <Text variant="title" center>
           Headphones needed
         </Text>
         <Text variant="body" color="textMuted" center>
@@ -213,18 +312,22 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
         {/* Check the sound works BEFORE a scored round starts. Failing the
             first trials because the volume was down is not a memory problem,
             but it looks exactly like one in the data. */}
-        <Text variant="label" center style={{ marginTop: space.md }}>
+        <Text variant="label" center style={{ marginTop: space.sm }}>
           Try it first
         </Text>
         <View style={{ flexDirection: 'row', gap: space.md }}>
           <Button
-            label="◀ Left"
+            label="Left"
+            icon="arrow-back"
             variant="secondary"
+            style={{ flex: 1 }}
             onPress={() => playAnimal(animals[0] ?? 'owl', 'left')}
           />
           <Button
-            label="Right ▶"
+            label="Right"
+            icon="arrow-forward"
             variant="secondary"
+            style={{ flex: 1 }}
             onPress={() => playAnimal(animals[0] ?? 'owl', 'right')}
           />
         </View>
@@ -236,110 +339,215 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
         <Button
           label="I can hear the difference — start"
           onPress={() => setReady(true)}
-          style={{ marginTop: space.md }}
+          style={{ marginTop: space.sm }}
         />
       </View>
     );
   }
 
-  const animalMeta = (id: Animal) => ANIMALS.find((a) => a.id === id)!;
-
   if (mode === 'localise') {
     return (
-      <View style={{ flex: 1, paddingHorizontal: space.lg }}>
-        <Text variant="heading" center>
+      <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.md }}>
+        <Text variant="title" center>
           Which side was that?
         </Text>
-        <Text variant="body" color="textMuted" center style={{ marginBottom: space.xl }}>
+        <Text variant="body" color="textMuted" center>
           {index + 1} of {trials.length}
         </Text>
 
-        <View style={{ gap: space.md }}>
-          {spec.positions.map((position) => (
-            <Button
-              key={position}
-              label={position === 'centre' ? 'Middle' : position === 'left' ? 'Left' : 'Right'}
-              variant="secondary"
-              disabled={playing}
-              onPress={() => answerPosition(position)}
-            />
-          ))}
-        </View>
+        <Stage>
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Listening active={hearing} idleText="Tap the side it came from" />
+          </View>
+
+          {/* Laid out left to right, so the answer sits where the sound was. */}
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            {spec.positions.map((position) => (
+              <SidePad
+                key={position}
+                position={position}
+                disabled={playing}
+                feedback={flash?.key === `side-${position}` ? flash.fb : null}
+                onPress={() => answerPosition(position)}
+              />
+            ))}
+          </View>
+        </Stage>
       </View>
     );
   }
 
   if (mode === 'detect') {
     return (
-      <View style={{ flex: 1, paddingHorizontal: space.lg }}>
-        <Text variant="heading" center>
-          Tap when you hear the {animalMeta(target).label.toLowerCase()}
+      <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.sm }}>
+        <Text variant="title" center>
+          Tap when you hear the {label(target).toLowerCase()}
         </Text>
-        <Text variant="body" color="textMuted" center style={{ marginBottom: space.lg }}>
+        <Text variant="body" color="textMuted" center style={{ marginBottom: space.sm }}>
           Ignore every other animal
         </Text>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`I heard the ${animalMeta(target).label}`}
-          onPress={pressHeard}
-          style={{
-            flex: 1,
-            borderRadius: radius.lg,
-            backgroundColor: colors.accentSoft,
-            borderWidth: 3,
-            borderColor: colors.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: space.lg,
-          }}
-        >
-          <Text style={{ fontSize: 72, lineHeight: 84 }}>{animalMeta(target).emoji}</Text>
-          <Text variant="label" color="accent">
-            Tap here
-          </Text>
-        </Pressable>
+        <Stage>
+          <ResponsePad
+            art={target}
+            label={`${label(target)} — tap here`}
+            accessibilityLabel={`I heard the ${label(target)}`}
+            feedback={flash?.key === 'pad' ? flash.fb : null}
+            onPress={pressHeard}
+          />
+        </Stage>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg }}>
-      <Text variant="heading" center>
+    <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.md }}>
+      <Text variant="title" center>
         {playing ? 'Listen…' : 'Now tap them in order'}
       </Text>
-      <Text variant="body" color="textMuted" center style={{ marginBottom: space.lg }}>
+      <Text variant="body" color="textMuted" center>
         {playing ? `${sequence.length} sounds` : `${heard.length} of ${sequence.length}`}
       </Text>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'center' }}>
-        {animals.map((id) => {
-          const meta = animalMeta(id);
-          return (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityLabel={meta.label}
-              disabled={playing}
-              onPress={() => pickAnimal(id)}
-              style={{
-                width: 96,
-                minHeight: TOUCH_MIN + 40,
-                borderRadius: radius.lg,
-                backgroundColor: colors.surface,
-                borderWidth: 2,
-                borderColor: colors.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: playing ? 0.4 : 1,
-              }}
-            >
-              <Text style={{ fontSize: 40, lineHeight: 46 }}>{meta.emoji}</Text>
-              <Text variant="caption">{meta.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Stage gap={space.lg}>
+        <View style={{ flex: 1, justifyContent: 'center', gap: space.lg }}>
+          {playing && <Listening active />}
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'center' }}>
+            {animals.map((id) => {
+              const key = flash?.key.startsWith(`animal-${id}-`) ? flash.fb : null;
+              return (
+                <AnimalTile
+                  key={id}
+                  art={id}
+                  label={label(id)}
+                  disabled={playing}
+                  feedback={key}
+                  onPress={() => pickAnimal(id)}
+                />
+              );
+            })}
+          </View>
+        </View>
+      </Stage>
     </View>
+  );
+}
+
+/* -------------------------------- pieces ---------------------------------- */
+
+/**
+ * Something to look at while a sound plays, so the screen never looks frozen.
+ * A gentle pulse; with Reduce Motion on it stays still.
+ */
+function Listening({ active, idleText }: { active: boolean; idleText?: string }) {
+  const reduce = useReduceMotion();
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!active || reduce) {
+      pulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.12, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [active, reduce, pulse]);
+
+  return (
+    <View style={{ alignItems: 'center', gap: space.sm }} accessibilityLiveRegion="polite">
+      <Animated.View
+        style={{
+          width: 108,
+          height: 108,
+          borderRadius: 54,
+          backgroundColor: active ? colors.selected : colors.surface,
+          borderWidth: active ? 3 : 2,
+          borderColor: active ? colors.accent : colors.edge,
+          alignItems: 'center',
+          justifyContent: 'center',
+          transform: [{ scale: pulse }],
+        }}
+      >
+        <Ionicons name={active ? 'ear' : 'ear-outline'} size={54} color={active ? colors.accent : colors.textMuted} />
+      </Animated.View>
+      {/* On its own pill: this line sits over the forest picture, which has
+          no fixed colour to measure text against. */}
+      {(active || idleText) && (
+        <SurfaceProvider value="surface">
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: radius.pill,
+              paddingHorizontal: space.md,
+              paddingVertical: space.xs,
+            }}
+          >
+            <Text variant="label" color={active ? 'accent' : 'textMuted'}>
+              {active ? 'Listening…' : idleText}
+            </Text>
+          </View>
+        </SurfaceProvider>
+      )}
+    </View>
+  );
+}
+
+const SIDE: Record<Position, { label: string; icon: IconName }> = {
+  left: { label: 'Left', icon: 'arrow-back' },
+  centre: { label: 'Middle', icon: 'ellipse-outline' },
+  right: { label: 'Right', icon: 'arrow-forward' },
+};
+
+function SidePad({
+  position,
+  disabled,
+  feedback,
+  onPress,
+}: {
+  position: Position;
+  disabled: boolean;
+  feedback: Feedback;
+  onPress: () => void;
+}) {
+  const { label, icon } = SIDE[position];
+  const fill = feedback === 'correct' ? colors.successSoft : feedback === 'mistake' ? colors.dangerSoft : colors.surface;
+  const edge = feedback === 'correct' ? colors.success : feedback === 'mistake' ? colors.danger : colors.edge;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flex: 1,
+        minHeight: 128,
+        borderRadius: radius.md,
+        backgroundColor: fill,
+        borderWidth: feedback ? 3 : 2,
+        borderStyle: feedback === 'mistake' ? 'dashed' : 'solid',
+        borderColor: edge,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: space.sm,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <Ionicons
+        name={feedback === 'correct' ? 'checkmark' : feedback === 'mistake' ? 'remove-circle-outline' : icon}
+        size={40}
+        color={feedback === 'mistake' ? colors.danger : feedback === 'correct' ? colors.success : colors.accentOnCard}
+      />
+      <SurfaceProvider value="surface">
+        <Text variant="title">{label}</Text>
+      </SurfaceProvider>
+    </Pressable>
   );
 }

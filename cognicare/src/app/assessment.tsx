@@ -1,9 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { CHOICES, QUESTIONS, TOTAL_QUESTIONS } from '@/assessment/questions';
 import {
@@ -14,10 +13,12 @@ import {
   type Answers,
 } from '@/assessment/scoring';
 import { getSetting, saveAssessment, setSetting } from '@/db/queries';
-import { DOMAIN_LABELS } from '@/db/types';
+import { AreaBars } from '@/charts/AreaBars';
+import { chart } from '@/charts/colors';
+import { DOMAIN_LABELS, type Domain } from '@/db/types';
 import { useSession } from '@/store/session';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { colors, space } from '@/theme/tokens';
+import { AnswerButton, Banner, Button, Card, Score, Screen, ScreenHeader, Text } from '@/ui';
 
 const draftKey = (playerId: number) => `assessment_draft_${playerId}`;
 
@@ -136,12 +137,12 @@ export default function Assessment() {
           All finished
         </Text>
 
-        <Card>
-          <Text variant="body" color="textMuted">
+        <Card style={{ gap: space.sm }}>
+          <Text variant="caption" color="textMuted">
             Your score
           </Text>
-          <Text variant="display">{done.total} out of 100</Text>
-          <Text variant="heading" color="accent">
+          <Score value={done.total} max={100} />
+          <Text variant="heading" color="warning">
             {info.label}
           </Text>
           <Text variant="body" color="textMuted">
@@ -149,42 +150,27 @@ export default function Assessment() {
           </Text>
         </Card>
 
-        <Card>
-          <Text variant="heading">By area</Text>
-          {(Object.keys(DOMAIN_LABELS) as (keyof typeof DOMAIN_LABELS)[]).map((domain) => (
-            <View key={domain} style={{ gap: space.xs }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text variant="body">{DOMAIN_LABELS[domain]}</Text>
-                <Text variant="label">{done.domains[domain]} / 20</Text>
-              </View>
-              <View
-                style={{
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: colors.border,
-                  overflow: 'hidden',
-                }}
-              >
-                <View
-                  style={{
-                    width: `${(done.domains[domain] / 20) * 100}%`,
-                    height: '100%',
-                    backgroundColor: colors.accent,
-                  }}
-                />
-              </View>
-            </View>
-          ))}
-          <Text variant="caption" color="textMuted">
-            A higher number means more difficulty in that area.
-          </Text>
+        <Card style={{ gap: space.md }}>
+          <View style={{ gap: space.xs }}>
+            <Text variant="heading">By area</Text>
+            <Text variant="body" color="textMuted">
+              A higher number means more difficulty in that area.
+            </Text>
+          </View>
+          <AreaBars
+            max={20}
+            rows={(Object.keys(DOMAIN_LABELS) as Domain[]).map((d) => ({
+              label: DOMAIN_LABELS[d],
+              value: done.domains[d],
+            }))}
+          />
         </Card>
 
         {/* Said plainly, because the instrument is self-made and unvalidated. */}
-        <Text variant="caption" color="textMuted">
+        <Banner tone="info" icon="information-circle-outline">
           This check-in is a way of tracking how things feel over time. It is not a
           medical diagnosis. Please talk to a doctor about any concerns.
-        </Text>
+        </Banner>
 
         <Button label="Done" onPress={() => router.back()} />
       </Screen>
@@ -197,72 +183,41 @@ export default function Assessment() {
 
   return (
     <Screen>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text variant="label" color="textMuted">
-          Question {index + 1} of {TOTAL_QUESTIONS}
-        </Text>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Close check-in"
-          hitSlop={12}
-          style={{ width: TOUCH_MIN, height: TOUCH_MIN, alignItems: 'flex-end', justifyContent: 'center' }}
-        >
-          <Ionicons name="close" size={32} color={colors.textMuted} />
-        </Pressable>
-      </View>
+      <ScreenHeader title={`Question ${index + 1} of ${TOTAL_QUESTIONS}`} onBack={() => router.back()} backIcon="close" />
 
-      <View style={{ height: 10, borderRadius: 5, backgroundColor: colors.border, overflow: 'hidden' }}>
-        <View style={{ width: `${progress * 100}%`, height: '100%', backgroundColor: colors.accent }} />
+      {/* Sand, the check-in's colour everywhere — never the games' coral. */}
+      <View
+        accessible
+        accessibilityLabel={`${index + 1} of ${TOTAL_QUESTIONS} answered`}
+        style={{ height: 12, borderRadius: 6, borderWidth: 1.5, borderColor: colors.edge, overflow: 'hidden' }}
+      >
+        <View style={{ width: `${progress * 100}%`, height: '100%', backgroundColor: chart.checkin }} />
       </View>
 
       <Text variant="caption" color="textMuted" style={{ marginTop: space.sm }}>
         {DOMAIN_LABELS[question.domain]}
       </Text>
 
-      <Text variant="title" style={{ marginBottom: space.lg }}>
+      <Text variant="title" style={{ marginBottom: space.md }}>
         {question.text}
       </Text>
 
-      <View style={{ gap: space.md }}>
-        {CHOICES.map((choice) => {
-          const selected = answers[question.no] === choice.value;
-          return (
-            <Pressable
-              key={choice.value}
-              accessibilityRole="button"
-              accessibilityLabel={choice.label}
-              accessibilityState={{ selected }}
-              onPress={() => answer(choice.value)}
-              style={{
-                minHeight: TOUCH_MIN + 8,
-                borderRadius: radius.md,
-                borderWidth: 2,
-                borderColor: selected ? colors.accent : colors.border,
-                backgroundColor: selected ? colors.accentSoft : colors.surface,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: space.md,
-              }}
-            >
-              <Text variant="label" color={selected ? 'accent' : 'text'}>
-                {choice.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View accessibilityRole="radiogroup" style={{ gap: space.sm + 4 }}>
+        {CHOICES.map((choice) => (
+          <AnswerButton
+            key={choice.value}
+            label={choice.label}
+            selected={answers[question.no] === choice.value}
+            onPress={() => answer(choice.value)}
+          />
+        ))}
       </View>
 
       {index > 0 && (
-        <Button
-          label="Go back"
-          variant="quiet"
-          onPress={() => setIndex(index - 1)}
-          style={{ marginTop: space.md }}
-        />
+        <Button label="Go back" variant="quiet" icon="arrow-back" onPress={() => setIndex(index - 1)} />
       )}
 
-      <Text variant="caption" color="textMuted" center style={{ marginTop: space.sm }}>
+      <Text variant="caption" color="textMuted" center>
         There are no wrong answers. Your progress is saved as you go.
       </Text>
     </Screen>

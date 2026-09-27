@@ -8,7 +8,7 @@ import {
 } from './levels';
 import type { Animal } from './sounds';
 
-const ANIMALS: Animal[] = ['owl', 'bird', 'frog'];
+const ANIMALS: Animal[] = ['owl', 'crow', 'frog'];
 
 describe('sound forest', () => {
   it('rotates through all three mini-games', () => {

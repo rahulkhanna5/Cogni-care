@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
@@ -7,7 +6,7 @@ import { ApiError } from '@/api/client';
 import * as doctorApi from '@/api/doctor.api';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { Banner, Button, Card, Screen, SurfaceProvider, Text } from '@/ui';
 
 /**
  * The doctor's patient list.
@@ -51,32 +50,31 @@ export default function Patients() {
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.sm }}>
         <Text variant="display">Your patients</Text>
-        <Text variant="body" color="textMuted">
-          {user?.name ? `Signed in as ${user.name}` : ''}
-        </Text>
+        {user?.name ? (
+          <Text variant="body" color="textMuted">
+            Signed in as {user.name}
+          </Text>
+        ) : null}
       </View>
 
       {/* The pending state is called out separately from a generic failure:
           it resolves by waiting, and saying "could not load" would be wrong. */}
       {error?.code === 'DOCTOR_PENDING_APPROVAL' ? (
-        <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-            <Ionicons name="hourglass-outline" size={28} color={colors.accent} />
-            <Text variant="heading">Awaiting approval</Text>
-          </View>
-          <Text variant="body" color="textMuted">
-            An administrator is reviewing your registration. Patients cannot be assigned
-            to you until that is done.
-          </Text>
-          <Button label="Check again" variant="secondary" onPress={load} />
-        </Card>
+        <>
+          <Banner tone="info">
+            <Text variant="label">Awaiting approval</Text>
+            <Text variant="body">
+              An administrator is reviewing your registration. Patients cannot be assigned
+              to you until that is done.
+            </Text>
+          </Banner>
+          <Button label="Check again" variant="secondary" icon="refresh" busy={loading} onPress={load} />
+        </>
       ) : error ? (
-        <Card>
-          <Text variant="heading" color="danger">
-            {error.message}
-          </Text>
-          <Button label="Try again" variant="secondary" onPress={load} />
-        </Card>
+        <>
+          <Banner tone="error">{error.message}</Banner>
+          <Button label="Try again" variant="secondary" icon="refresh" busy={loading} onPress={load} />
+        </>
       ) : loading ? (
         <Card>
           <Text variant="body" color="textMuted">
@@ -93,29 +91,34 @@ export default function Patients() {
         </Card>
       ) : (
         patients.map((patient) => (
-          <Card key={patient.id} onPress={() => router.push({ pathname: '/patient/[id]', params: { id: patient.id } })}>
+          <Card
+            key={patient.id}
+            accessibilityLabel={`${patient.name}, ${patient.email}`}
+            onPress={() => router.push({ pathname: '/patient/[id]', params: { id: patient.id } })}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: colors.accentSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text variant="label" color="accent">
-                  {patient.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
+              <SurfaceProvider value="selected">
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: colors.selected,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text variant="heading" color="accent">
+                    {patient.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              </SurfaceProvider>
               <View style={{ flex: 1 }}>
                 <Text variant="heading">{patient.name}</Text>
                 <Text variant="caption" color="textMuted">
                   {patient.email}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color={colors.textMuted} />
             </View>
           </Card>
         ))

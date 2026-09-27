@@ -94,8 +94,12 @@ export const useAuth = create<AuthState>((set, get) => ({
             pendingApproval,
             hydrated: true,
           });
-        } catch {
-          await persist(null, null);
+        } catch (error) {
+          // Only a server that REJECTED the refresh token ends the session.
+          // Offline, or a server that did not answer, is not a reason to sign
+          // someone out — keep the tokens and try again next launch.
+          const unreachable = error instanceof ApiError && error.status === 0;
+          if (!unreachable) await persist(null, null);
           set({ user: null, accessToken: null, refreshToken: null, hydrated: true });
         }
       }

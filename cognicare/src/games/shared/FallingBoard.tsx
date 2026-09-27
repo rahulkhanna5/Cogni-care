@@ -1,36 +1,64 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, View, type ImageSourcePropType } from 'react-native';
 
 import type { RoundResult } from '@/games/shell/types';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Text } from '@/ui';
+import { colors, radius, space } from '@/theme/tokens';
+import { SurfaceProvider, Text } from '@/ui';
+import { Backdrop } from './Backdrop';
 import {
   advance,
   createEngine,
   isComplete,
+  SPRITE_H,
+  SPRITE_W,
   summarise,
   tap,
   type EngineState,
+  type Faller,
   type FallerSpec,
 } from './falling';
+import { Sprite } from './pieces';
 
 const TICK_MS = 33; // ~30fps; enough for a dozen sprites on the JS thread
+const TILE = 56; // SPRITE_W × SPRITE_H (falling.ts) is the tile plus its word
+const MARK_MS = 400; // how long a tap's check or dash stays where it landed
+
+type Mark = { id: number; x: number; y: number; ok: boolean };
 
 type Props = {
   specs: FallerSpec[];
   durationMs: number;
   /** Line above the board, e.g. "Tap the fish swimming up". */
   prompt: string;
+  /** Word for the targets in the counter: "3 fish left to find". */
+  targetNoun?: string;
+  /** Draw faint chevrons showing which way the water runs. */
+  flow?: 'down';
+  /** Turn an item's art, e.g. so a fish faces the way it swims. */
+  rotateFor?: (item: Faller) => number;
+  /** A picture behind the board, e.g. the supermarket aisle. Items switch to framed tiles. */
+  backdrop?: ImageSourcePropType;
   onFinish: (result: RoundResult) => void;
 };
 
-export function FallingBoard({ specs, durationMs, prompt, onFinish }: Props) {
+export function FallingBoard({
+  specs,
+  durationMs,
+  prompt,
+  targetNoun,
+  flow,
+  rotateFor,
+  backdrop,
+  onFinish,
+}: Props) {
   const engine = useRef<EngineState>(createEngine(durationMs, specs));
   const startedAt = useRef<number>(Date.now());
   const done = useRef(false);
   const [, setFrame] = useState(0);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [marks, setMarks] = useState<Mark[]>([]);
 
   const finish = useCallback(() => {
     if (done.current) return;
@@ -50,20 +78,38 @@ export function FallingBoard({ specs, durationMs, prompt, onFinish }: Props) {
     return () => clearInterval(id);
   }, [finish]);
 
-  const onTap = useCallback((id: number) => {
-    const state = engine.current;
-    const item = state.items.find((i) => i.id === id);
-    if (!item || item.status !== 'active') return;
+  const place = useCallback(
+    (item: Faller) => {
+      const travelled = item.direction === 'down' ? item.progress : 1 - item.progress;
+      return {
+        top: travelled * Math.max(0, size.height - SPRITE_H),
+        left: item.x * Math.max(0, size.width - SPRITE_W),
+      };
+    },
+    [size]
+  );
 
-    tap(state, id, Date.now() - startedAt.current);
+  const onTap = useCallback(
+    (id: number) => {
+      const state = engine.current;
+      const item = state.items.find((i) => i.id === id);
+      if (!item || item.status !== 'active') return;
 
-    if (item.kind === 'target') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    }
-    setFrame((f) => f + 1);
-  }, []);
+      const at = place(item);
+      tap(state, id, Date.now() - startedAt.current);
+
+      const ok = item.kind === 'target';
+      if (ok) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      else Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+      // Leave a mark where the tap landed, so the player sees what happened
+      // even though the item itself is gone.
+      setMarks((m) => [...m, { id, x: at.left, y: at.top, ok }]);
+      setTimeout(() => setMarks((m) => m.filter((k) => k.id !== id)), MARK_MS);
+      setFrame((f) => f + 1);
+    },
+    [place]
+  );
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -73,58 +119,119 @@ export function FallingBoard({ specs, durationMs, prompt, onFinish }: Props) {
   const state = engine.current;
   const remaining = state.items.filter((i) => i.kind === 'target' && i.status !== 'tapped').length;
 
+  // What sits on the board, with or without a picture behind it.
+  const pieces = (
+    <>
+      {flow && size.height > 0 && (
+        <FlowChevrons width={size.width} height={size.height} onPicture={!!backdrop} />
+      )}
+
+      {size.height > 0 &&
+        state.items
+          .filter((i) => i.status === 'active')
+          .map((item) => {
+            const { top, left } = place(item);
+            return (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                onPress={() => onTap(item.id)}
+                style={{ position: 'absolute', top, left, width: SPRITE_W, height: SPRITE_H, alignItems: 'center' }}
+              >
+                <Sprite
+                  art={item.art}
+                  label={item.label}
+                  size={TILE}
+                  rotate={rotateFor?.(item)}
+                  framed={!!backdrop}
+                />
+              </Pressable>
+            );
+          })}
+
+      {marks.map((m) => (
+        <View
+          key={m.id}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: m.y + 4,
+            left: m.x + (SPRITE_W - 48) / 2,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: m.ok ? colors.success : colors.dangerSoft,
+            // The ink ring keeps a check visible over a light picture, where
+            // the green fill alone blends in.
+            borderWidth: 2,
+            borderStyle: m.ok ? 'solid' : 'dashed',
+            borderColor: m.ok ? colors.ink : colors.danger,
+          }}
+        >
+          <Ionicons
+            name={m.ok ? 'checkmark' : 'remove-circle-outline'}
+            size={30}
+            color={m.ok ? colors.ink : colors.danger}
+          />
+        </View>
+      ))}
+    </>
+  );
+
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg }}>
+    <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.xs }}>
       <Text variant="heading" center>
         {prompt}
       </Text>
       <Text variant="body" color="textMuted" center style={{ marginBottom: space.sm }}>
-        {remaining} left to find
+        {`${remaining} ${targetNoun ? `${targetNoun} ` : ''}left to find`}
       </Text>
 
-      <View
-        onLayout={onLayout}
-        style={{
-          flex: 1,
-          backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
-          overflow: 'hidden',
-        }}
-      >
-        {size.height > 0 &&
-          state.items
-            .filter((i) => i.status === 'active')
-            .map((item) => {
-              const travelled = item.direction === 'down' ? item.progress : 1 - item.progress;
-              const top = travelled * (size.height - TOUCH_MIN);
-              const left = item.x * (size.width - TOUCH_MIN);
+      <SurfaceProvider value="surface">
+        {backdrop ? (
+          <Backdrop source={backdrop} onLayout={onLayout} testID="falling-board">
+            {pieces}
+          </Backdrop>
+        ) : (
+          <View
+            onLayout={onLayout}
+            style={{
+              flex: 1,
+              backgroundColor: colors.surface,
+              borderRadius: radius.lg,
+              overflow: 'hidden',
+            }}
+          >
+            {pieces}
+          </View>
+        )}
+      </SurfaceProvider>
+    </View>
+  );
+}
 
-              return (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.label}
-                  onPress={() => onTap(item.id)}
-                  style={{
-                    position: 'absolute',
-                    top,
-                    left,
-                    width: TOUCH_MIN,
-                    minHeight: TOUCH_MIN,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 38, lineHeight: 44 }}>{item.emoji}</Text>
-                  <Text variant="caption" color="textMuted" numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-      </View>
+/** Faint arrows showing the current runs downward. Decorative only. */
+function FlowChevrons({ width, height, onPicture }: { width: number; height: number; onPicture: boolean }) {
+  const cols = [0.2, 0.5, 0.8];
+  const rows = Math.max(3, Math.floor(height / 90));
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', width, height }}>
+      {cols.map((cx) =>
+        Array.from({ length: rows }).map((_, r) => (
+          <Ionicons
+            key={`${cx}-${r}`}
+            name="chevron-down"
+            size={28}
+            // Faint on the plain board; on a picture, a pale wash that shows
+            // over water or rock without competing with the pieces.
+            color={onPicture ? `${colors.text}66` : colors.divider}
+            style={{ position: 'absolute', left: cx * width - 14, top: ((r + 0.5) * height) / rows - 14 }}
+          />
+        ))
+      )}
     </View>
   );
 }

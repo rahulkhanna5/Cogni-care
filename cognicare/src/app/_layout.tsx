@@ -1,3 +1,8 @@
+import {
+  AtkinsonHyperlegibleNext_400Regular,
+  AtkinsonHyperlegibleNext_600SemiBold,
+  useFonts,
+} from '@expo-google-fonts/atkinson-hyperlegible-next';
 import { SQLiteProvider } from 'expo-sqlite';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +23,16 @@ function Booting() {
 }
 
 export default function RootLayout() {
+  // Load before anything renders: text laid out in the fallback face and then
+  // swapped jumps and rewraps, which is disorienting for this audience.
+  // A failed load still lets the app start in the system face.
+  const [fontsLoaded, fontError] = useFonts({
+    AtkinsonHyperlegibleNext_400Regular,
+    AtkinsonHyperlegibleNext_600SemiBold,
+  });
+
+  if (!fontsLoaded && !fontError) return <Booting />;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

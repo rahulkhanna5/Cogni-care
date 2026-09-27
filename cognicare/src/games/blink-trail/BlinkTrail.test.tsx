@@ -1,11 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import type { RoundResult } from '@/games/shell/types';
 import { BlinkTrail } from './BlinkTrail';
 import { blinkLevel } from './levels';
 
 /**
- * Level 1 spec: 3x3 grid, 3 lights, 800ms flash, 300ms gap.
+ * Level 1 spec: 3 across by 4 down, 3 lights, 800ms flash, 300ms gap.
  * Timeline before input opens:
  *   600 lead-in + 3 x (800 + 300) + 1000 blank = 4900ms
  */
@@ -17,7 +18,7 @@ const TIME_TO_INPUT = 600 + spec.length * (spec.flashMs + spec.gapMs) + 1000;
 const SEQUENCE = [0, 3, 7];
 
 const cellLabel = (index: number) =>
-  `Row ${Math.floor(index / spec.grid) + 1}, column ${(index % spec.grid) + 1}`;
+  `Row ${Math.floor(index / spec.cols) + 1}, column ${(index % spec.cols) + 1}`;
 
 // RTL v14 render is async — it must be awaited before anything can be queried.
 async function renderGame(onRoundComplete: (r: RoundResult) => void = jest.fn()) {
@@ -124,5 +125,39 @@ describe('BlinkTrail', () => {
     await advance(500); // still in the lead-in
 
     expect(onRoundComplete).not.toHaveBeenCalled();
+  });
+});
+
+describe('the 3 by 4 board fits the screen', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  const sizes = async (area: { width: number; height: number }) => {
+    const view = await render(
+      <BlinkTrail level={1} roundNo={1} totalRounds={5} onRoundComplete={jest.fn()} makeSeq={() => [0, 3, 7]} />
+    );
+    await fireEvent(view.getByTestId('blink-board'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, ...area } } });
+    const cells = view.getAllByLabelText(/^Row \d, column \d$/);
+    return { count: cells.length, width: StyleSheet.flatten(cells[0].props.style).width as number };
+  };
+
+  it('has twelve squares: three across, four down', async () => {
+    expect((await sizes({ width: 343, height: 600 })).count).toBe(12);
+  });
+
+  it('is sized by width when there is height to spare', async () => {
+    // (343 − 2 gaps of 8) / 3
+    expect((await sizes({ width: 343, height: 600 })).width).toBe(109);
+  });
+
+  it('shrinks the squares on a short screen so the bottom row stays on it', async () => {
+    const { width } = await sizes({ width: 343, height: 380 });
+    // (380 − 3 gaps of 8) / 4 = 89, so four rows fill 380 exactly.
+    expect(width).toBe(89);
+    expect(width * 4 + 8 * 3).toBeLessThanOrEqual(380);
+  });
+
+  it('never makes a square smaller than a comfortable touch target', async () => {
+    expect((await sizes({ width: 343, height: 150 })).width).toBeGreaterThanOrEqual(56);
   });
 });

@@ -1,4 +1,4 @@
-import { request } from './client';
+import { AI_TIMEOUT_MS, request } from './client';
 
 /**
  * Rows come back as the database spells them (snake_case) because the
@@ -69,7 +69,11 @@ export type RemarkDraft = { body: string; plan: string; raw: string; model: stri
 
 /** Asks the AI for a draft. Saves nothing — see saveRemark. */
 export const draftRemark = (accessToken: string, patientId: string) =>
-  request<RemarkDraft>(`/patients/${patientId}/remarks/draft`, { method: 'POST', accessToken });
+  request<RemarkDraft>(`/patients/${patientId}/remarks/draft`, {
+    method: 'POST',
+    accessToken,
+    timeoutMs: AI_TIMEOUT_MS,
+  });
 
 export const saveRemark = (
   accessToken: string,

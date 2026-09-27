@@ -1,9 +1,11 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
+import { StepCard } from '@/games/shared/pieces';
 import type { GamePlayProps } from '@/games/shell/types';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 import { buildTrial } from './levels';
 
@@ -81,7 +83,7 @@ export function DailyOrder({ level, onRoundComplete, random = Math.random }: Pro
       erredOnCurrent.current = true;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setWrong(step);
-      setTimeout(() => setWrong(null), 500);
+      setTimeout(() => setWrong((w) => (w === step ? null : w)), 600);
     },
     [finish, placed, trial.answer]
   );
@@ -89,72 +91,50 @@ export function DailyOrder({ level, onRoundComplete, random = Math.random }: Pro
   const remaining = trial.choices.filter((c) => !placed.includes(c));
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg }}>
-      <Text variant="heading" center>
-        {trial.task.emoji} {trial.task.title}
-      </Text>
-      <Text variant="body" color="textMuted" center style={{ marginBottom: space.md }}>
+    <ScrollView contentContainerStyle={{ paddingHorizontal: space.gutter, paddingBottom: space.xl, gap: space.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm + 4 }}>
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: radius.md,
+            backgroundColor: colors.surface,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name={trial.task.icon} size={28} color={colors.accent} />
+        </View>
+        <Text variant="heading" style={{ flexShrink: 1 }}>
+          {trial.task.title}
+        </Text>
+      </View>
+      <Text variant="body" color="textMuted" center style={{ marginBottom: space.sm }}>
         Tap the steps in the order you would really do them
       </Text>
 
       {/* What they have built so far, numbered, so the sequence is visible
           rather than held in memory while they work. */}
-      {placed.length > 0 && (
-        <View style={{ gap: space.xs, marginBottom: space.md }}>
-          {placed.map((step, i) => (
-            <View
-              key={step}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: space.sm,
-                backgroundColor: colors.accentSoft,
-                borderRadius: radius.md,
-                borderWidth: 2,
-                borderColor: colors.accent,
-                paddingHorizontal: space.md,
-                paddingVertical: space.sm,
-              }}
-            >
-              <Text variant="label" color="accent">
-                {i + 1}
-              </Text>
-              <Text variant="body" style={{ flex: 1 }}>
-                {step}
-              </Text>
-            </View>
-          ))}
-        </View>
+      {placed.map((step, i) => (
+        <StepCard key={step} text={step} state="placed" position={i + 1} />
+      ))}
+
+      {placed.length > 0 && remaining.length > 0 && (
+        <View style={{ height: 2, backgroundColor: colors.divider, marginVertical: space.xs }} />
       )}
 
-      <View style={{ gap: space.sm }}>
-        {remaining.map((step) => (
-          <Pressable
-            key={step}
-            accessibilityRole="button"
-            accessibilityLabel={step}
-            onPress={() => choose(step)}
-            style={{
-              minHeight: TOUCH_MIN,
-              justifyContent: 'center',
-              paddingHorizontal: space.md,
-              paddingVertical: space.sm,
-              borderRadius: radius.md,
-              borderWidth: 2,
-              borderColor: wrong === step ? colors.danger : colors.border,
-              backgroundColor: wrong === step ? colors.dangerSoft : colors.surface,
-            }}
-          >
-            <Text variant="body" color={wrong === step ? 'danger' : 'text'}>
-              {step}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {remaining.map((step) => (
+        <StepCard
+          key={step}
+          text={step}
+          state={wrong === step ? 'mistake' : 'available'}
+          onPress={() => choose(step)}
+        />
+      ))}
 
-      <Text variant="caption" color="textMuted" center style={{ marginTop: space.md }}>
+      <Text variant="caption" color="textMuted" center style={{ marginTop: space.sm }}>
         {placed.length} of {trial.answer.length} in place
       </Text>
-    </View>
+    </ScrollView>
   );
 }

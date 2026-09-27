@@ -1,3 +1,5 @@
+import type Ionicons from '@expo/vector-icons/Ionicons';
+
 /**
  * Everyday routines, each written as its correct sequence of steps.
  *
@@ -14,7 +16,8 @@
 export type DailyTask = {
   id: string;
   title: string;
-  emoji: string;
+  /** An outline icon from the app's icon set, shown beside the title. */
+  icon: keyof typeof Ionicons.glyphMap;
   /** In the correct order. */
   steps: string[];
   /** Plausible but wrong steps, used as distractors at higher levels. */
@@ -25,7 +28,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'tea',
     title: 'Making a cup of tea',
-    emoji: '☕',
+    icon: 'cafe-outline',
     steps: [
       'Fill the kettle with water',
       'Switch the kettle on',
@@ -39,7 +42,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'medicine',
     title: 'Taking your morning medicine',
-    emoji: '💊',
+    icon: 'medkit-outline',
     steps: [
       'Check the label for the right medicine',
       'Check how many tablets you need',
@@ -52,7 +55,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'shopping',
     title: 'Going to buy groceries',
-    emoji: '🛒',
+    icon: 'cart-outline',
     steps: [
       'Check what you have run out of',
       'Write a shopping list',
@@ -67,7 +70,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'letter',
     title: 'Posting a letter',
-    emoji: '✉️',
+    icon: 'mail-outline',
     steps: [
       'Write the letter',
       'Fold it and put it in an envelope',
@@ -80,7 +83,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'bill',
     title: 'Paying an electricity bill',
-    emoji: '🧾',
+    icon: 'receipt-outline',
     steps: [
       'Find the bill and check the amount',
       'Check the last date to pay',
@@ -93,7 +96,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'meal',
     title: 'Cooking rice',
-    emoji: '🍚',
+    icon: 'restaurant-outline',
     steps: [
       'Measure the rice',
       'Rinse it under water',
@@ -107,7 +110,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'washing',
     title: 'Washing clothes',
-    emoji: '👕',
+    icon: 'shirt-outline',
     steps: [
       'Sort the dirty clothes',
       'Put them in the machine',
@@ -120,7 +123,7 @@ export const TASKS: DailyTask[] = [
   {
     id: 'appointment',
     title: 'Going to a doctor’s appointment',
-    emoji: '🏥',
+    icon: 'calendar-outline',
     steps: [
       'Check the date and time',
       'Put your medicines list in your bag',

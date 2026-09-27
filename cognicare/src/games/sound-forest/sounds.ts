@@ -1,14 +1,14 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
-export type Animal = 'owl' | 'bird' | 'frog' | 'cricket' | 'duck';
+export type Animal = 'owl' | 'crow' | 'frog' | 'cricket' | 'duck';
 export type Position = 'left' | 'right' | 'centre';
 
-export const ANIMALS: { id: Animal; label: string; emoji: string }[] = [
-  { id: 'owl', label: 'Owl', emoji: '🦉' },
-  { id: 'bird', label: 'Bird', emoji: '🐦' },
-  { id: 'frog', label: 'Frog', emoji: '🐸' },
-  { id: 'cricket', label: 'Cricket', emoji: '🦗' },
-  { id: 'duck', label: 'Duck', emoji: '🦆' },
+export const ANIMALS: { id: Animal; label: string }[] = [
+  { id: 'owl', label: 'Owl' },
+  { id: 'crow', label: 'Crow' },
+  { id: 'frog', label: 'Frog' },
+  { id: 'cricket', label: 'Cricket' },
+  { id: 'duck', label: 'Duck' },
 ];
 
 /* Static requires — Metro needs literal paths, so this table cannot be built
@@ -17,9 +17,9 @@ const FILES: Record<string, number> = {
   'owl-left': require('../../../assets/audio/owl-left.wav'),
   'owl-right': require('../../../assets/audio/owl-right.wav'),
   'owl-centre': require('../../../assets/audio/owl-centre.wav'),
-  'bird-left': require('../../../assets/audio/bird-left.wav'),
-  'bird-right': require('../../../assets/audio/bird-right.wav'),
-  'bird-centre': require('../../../assets/audio/bird-centre.wav'),
+  'crow-left': require('../../../assets/audio/crow-left.wav'),
+  'crow-right': require('../../../assets/audio/crow-right.wav'),
+  'crow-centre': require('../../../assets/audio/crow-centre.wav'),
   'frog-left': require('../../../assets/audio/frog-left.wav'),
   'frog-right': require('../../../assets/audio/frog-right.wav'),
   'frog-centre': require('../../../assets/audio/frog-centre.wav'),

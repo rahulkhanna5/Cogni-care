@@ -44,17 +44,17 @@ export const describeCurrentLevel = (level: number): string => {
 
 /** Fish swim up against the current; everything else drifts down with it. */
 export const FISH = [
-  { label: 'Fish', emoji: '🐟' },
-  { label: 'Fish', emoji: '🐠' },
-  { label: 'Fish', emoji: '🐡' },
+  { label: 'Fish', art: 'fish' as const },
+  { label: 'Fish', art: 'fish-orange' as const },
+  { label: 'Fish', art: 'puffer' as const },
 ];
 
 export const DRIFT = [
-  { label: 'Leaf', emoji: '🍃' },
-  { label: 'Leaf', emoji: '🍂' },
-  { label: 'Drop', emoji: '💧' },
-  { label: 'Weed', emoji: '🌿' },
-  { label: 'Shell', emoji: '🐚' },
+  { label: 'Leaf', art: 'leaf' as const },
+  { label: 'Leaf', art: 'leaf-autumn' as const },
+  { label: 'Drop', art: 'drop' as const },
+  { label: 'Weed', art: 'weed' as const },
+  { label: 'Shell', art: 'shell' as const },
 ];
 
-export const PREDATORS = [{ label: 'Shark', emoji: '🦈' }];
+export const PREDATORS = [{ label: 'Shark', art: 'shark' as const }];

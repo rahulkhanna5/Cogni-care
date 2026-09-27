@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+// Market Rush drags items with gesture-handler, whose native module is absent
+// under Jest. Its own setup mocks it and enables fireGestureHandler.
+require('react-native-gesture-handler/jestSetup');
+
 // Haptics touches native code that does not exist under Jest. The games call it
 // on every tap, so stub it rather than letting each test mock it again.
 jest.mock('expo-haptics', () => ({

@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import { config } from '../config.js';
-import { query, queryOne, withTransaction } from '../db/pool.js';
+import { pool, query, queryOne, withTransaction, type Queryable } from '../db/pool.js';
 import { Errors } from '../lib/errors.js';
 import { hashPassword } from '../lib/password.js';
 import { generateOpaqueToken, hashToken, signAccessToken } from '../lib/tokens.js';
@@ -135,7 +135,9 @@ export async function issueSession(
   user: Pick<UserRow, 'id' | 'role'>,
   meta: { userAgent?: string | null; ip?: string | null },
   familyId?: string,
-  parentId?: string
+  parentId?: string,
+  /** Pass the transaction's client when rotating — see rotateRefreshToken. */
+  client: Queryable = pool
 ): Promise<IssuedSession> {
   const refreshToken = generateOpaqueToken();
 
@@ -151,7 +153,8 @@ export async function issueSession(
       meta.userAgent ?? null,
       meta.ip ?? null,
       String(config.refresh.ttlDays),
-    ]
+    ],
+    client
   );
   if (!row) throw Errors.internal();
 
@@ -218,7 +221,13 @@ export async function rotateRefreshToken(
 
     await query('UPDATE refresh_tokens SET used_at = now() WHERE id = $1', [stored.id], client);
 
-    return issueSession(user, meta, stored.family_id, stored.id);
+    // The new token MUST be written on this transaction's client. Its
+    // parent_id is a foreign key to the row locked FOR UPDATE above; issued on
+    // another connection, the FK check waited for this transaction's lock
+    // while this transaction waited for it — a deadlock Postgres cannot see,
+    // because half of it is in application code. Every refresh hung until the
+    // server killed the idle transaction (FATAL 25P03), which then crashed us.
+    return issueSession(user, meta, stored.family_id, stored.id, client);
   });
 }
 

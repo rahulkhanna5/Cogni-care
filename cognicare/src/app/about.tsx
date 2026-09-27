@@ -1,10 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
-import { colors, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Banner, Button, Card, Screen, ScreenHeader, Text } from '@/ui';
 
 /** Slide 6 of the source deck. */
 const REFERENCES = [
@@ -34,18 +33,7 @@ export default function About() {
 
   return (
     <Screen>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={12}
-          style={{ width: TOUCH_MIN, height: TOUCH_MIN, justifyContent: 'center' }}
-        >
-          <Ionicons name="chevron-back" size={30} color={colors.text} />
-        </Pressable>
-        <Text variant="display">Why this works</Text>
-      </View>
+      <ScreenHeader title="Why this works" onBack={() => router.back()} />
 
       <Card>
         <Text variant="heading">Mild Cognitive Impairment</Text>
@@ -56,27 +44,29 @@ export default function About() {
         </Text>
       </Card>
 
-      <Card>
+      <Card style={{ gap: space.md }}>
         <Text variant="heading">What changes, and why</Text>
-        <Text variant="body">Attention</Text>
-        <Text variant="body" color="textMuted">
-          The front of the brain, which handles focus and planning, becomes less
-          efficient. Harder to hold attention, easier to be distracted.
-        </Text>
-        <Text variant="body" style={{ marginTop: space.sm }}>
-          Memory
-        </Text>
-        <Text variant="body" color="textMuted">
-          The hippocampus, which stores new memories, shrinks slightly and its cells
-          communicate less well — so new information is not stored properly.
-        </Text>
-        <Text variant="body" style={{ marginTop: space.sm }}>
-          Processing speed
-        </Text>
-        <Text variant="body" color="textMuted">
-          Myelin, the protective sheath around nerves, thins. Signals travel more
-          slowly, like a slower connection.
-        </Text>
+        {[
+          [
+            'Attention',
+            'The front of the brain, which handles focus and planning, becomes less efficient. Harder to hold attention, easier to be distracted.',
+          ],
+          [
+            'Memory',
+            'The hippocampus, which stores new memories, shrinks slightly and its cells communicate less well — so new information is not stored properly.',
+          ],
+          [
+            'Processing speed',
+            'Myelin, the protective sheath around nerves, thins. Signals travel more slowly, like a slower connection.',
+          ],
+        ].map(([title, body]) => (
+          <View key={title} style={{ gap: space.xs }}>
+            <Text variant="label">{title}</Text>
+            <Text variant="body" color="textMuted">
+              {body}
+            </Text>
+          </View>
+        ))}
       </Card>
 
       <Card>
@@ -94,28 +84,38 @@ export default function About() {
         </Text>
       </Card>
 
-      <Card>
-        <Text variant="heading">Research</Text>
+      <Card style={{ gap: 0 }}>
+        <Text variant="heading" style={{ marginBottom: space.xs }}>
+          Research
+        </Text>
         {REFERENCES.map((ref) => (
-          <Pressable
+          <Button
             key={ref.url}
-            accessibilityRole="link"
+            label={ref.label}
+            variant="quiet"
+            icon="open-outline"
+            fullWidth={false}
             onPress={() => WebBrowser.openBrowserAsync(ref.url)}
-            style={{ minHeight: TOUCH_MIN, justifyContent: 'center' }}
-          >
-            <Text variant="body" color="accent">
-              {ref.label}
-            </Text>
-          </Pressable>
+            style={{ alignSelf: 'flex-start' }}
+          />
         ))}
       </Card>
 
-      <Text variant="caption" color="textMuted">
-        These exercises are for practice and tracking. They are not a medical
-        diagnosis or a treatment.
-      </Text>
+      <Card style={{ gap: space.xs }}>
+        <Text variant="heading">Sounds</Text>
+        {/* CC0, so credit is optional — but the author asks for it, and it
+            costs one line. */}
+        <Text variant="body" color="textMuted">
+          Duck and crow recordings: Joseph Sardin, BigSoundBank.com (CC0).
+        </Text>
+      </Card>
 
-      <Button label="Back" variant="secondary" onPress={() => router.back()} />
+      <Banner tone="info" icon="information-circle-outline">
+        These exercises are for practice and tracking. They are not a medical diagnosis
+        or a treatment.
+      </Banner>
+
+      <Button label="Back" variant="secondary" icon="arrow-back" onPress={() => router.back()} />
     </Screen>
   );
 }

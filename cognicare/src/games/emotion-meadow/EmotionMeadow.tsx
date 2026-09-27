@@ -1,24 +1,25 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Image, Pressable, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, useWindowDimensions, View, type ImageSourcePropType } from 'react-native';
 
+import { Backdrop } from '@/games/shared/Backdrop';
 import type { GamePlayProps } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 import { EMOTION_LABELS, Face, type Emotion } from './Face';
+import { animalFace, ANIMALS, hasAnimalFacesFor } from './animals';
 import { meadowLevel, TRIALS_PER_ROUND } from './levels';
 import { hasPhotosFor, pickPhoto } from './photos';
 
 type Props = GamePlayProps & { random?: () => number };
 
+/** The meadow the faces are found in. The face tiles are opaque, so they read over any of it. */
+const MEADOW: ImageSourcePropType = require('../../../assets/images/emotion-meadow.webp');
+
 type Trial = { faces: Emotion[]; answer: number };
 
-export function buildTrials(
-  pool: Emotion[],
-  faceCount: number,
-  trials: number,
-  rnd: () => number
-): Trial[] {
+export function buildTrials(pool: Emotion[], faceCount: number, trials: number, rnd: () => number): Trial[] {
   return Array.from({ length: trials }, () => {
     // Distinct emotions per trial, otherwise two faces could both be correct.
     const available = [...pool];
@@ -30,6 +31,22 @@ export function buildTrials(
   });
 }
 
+type TileState = 'idle' | 'correct' | 'mistake';
+
+export type FaceKind = 'photo' | 'animal' | 'drawn';
+
+/**
+ * Which faces a trial shows. Validated photographs if every feeling in it has
+ * one, else the illustrated animals if they cover every feeling, else the
+ * drawn faces. All or nothing within a trial: a mix would make the odd one
+ * out solvable without reading a single expression.
+ */
+export function faceKind(emotions: Emotion[]): FaceKind {
+  if (hasPhotosFor(emotions)) return 'photo';
+  if (hasAnimalFacesFor(emotions)) return 'animal';
+  return 'drawn';
+}
+
 export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: Props) {
   const spec = meadowLevel(level);
   const { width } = useWindowDimensions();
@@ -39,6 +56,9 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [level]
   );
+  // The animal for the first trial; each trial after moves to the next.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const firstAnimal = useMemo(() => Math.floor(random() * ANIMALS.length), [level]);
 
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -51,12 +71,15 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
   const trial = trials[index];
   const target = trial.faces[trial.answer];
 
-  // All-or-nothing: mixing photographs with drawings would make the odd one
-  // out solvable without reading a single expression.
-  const usePhotos = hasPhotosFor(trial.faces);
+  const kind = faceKind(trial.faces);
+  // One animal for every face in a trial — four dogs, say — so the only
+  // difference between the faces is the feeling they show.
+  const animal = ANIMALS[(firstAnimal + index) % ANIMALS.length];
 
   const columns = trial.faces.length <= 4 ? 2 : 3;
-  const faceSize = Math.min((width - space.lg * 2 - space.md * (columns - 1)) / columns, 150);
+  // Room for the screen gutters, the picture's inner margin and the gaps.
+  const tile = Math.min((width - space.gutter * 2 - space.md * 2 - space.md * (columns - 1)) / columns, 164);
+  const faceSize = tile - space.sm * 2 - 6;
 
   const choose = useCallback(
     (i: number) => {
@@ -74,6 +97,7 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
       }
       setPicked(i);
 
+      // Long enough to see which face it was, on a right answer or a wrong one.
       setTimeout(() => {
         if (index + 1 < trials.length) {
           setIndex((n) => n + 1);
@@ -97,65 +121,128 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
           avgReactionMs: avg,
           score: hits.current * 10,
         });
-      }, 700);
+      }, 900);
     },
     [index, onRoundComplete, trial.answer, trials.length]
   );
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg }}>
-      <Text variant="heading" center>
-        Who looks {EMOTION_LABELS[target]}?
+    <View style={{ flex: 1, paddingHorizontal: space.gutter }}>
+      <Text variant="title" center>
+        {kind === 'animal'
+          ? `Which ${animal} looks ${EMOTION_LABELS[target]}?`
+          : `Who looks ${EMOTION_LABELS[target]}?`}
       </Text>
-      <Text variant="body" color="textMuted" center style={{ marginBottom: space.lg }}>
+      <Text variant="body" color="textMuted" center style={{ marginBottom: space.sm }}>
         {index + 1} of {trials.length}
       </Text>
 
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: space.md,
-          justifyContent: 'center',
-        }}
-      >
-        {trial.faces.map((emotion, i) => {
-          const state =
-            picked === null ? 'idle' : i === trial.answer ? 'correct' : i === picked ? 'wrong' : 'idle';
+      <View style={{ flex: 1, marginBottom: space.lg }}>
+        <Backdrop source={MEADOW}>
+          <View style={{ flex: 1, justifyContent: 'center', padding: space.md }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'center' }}>
+              {trial.faces.map((emotion, i) => {
+                // After a pick, the right face is always shown — a wrong pick is a
+                // chance to see the answer, not only a mark against the player.
+                const state: TileState =
+                  picked === null
+                    ? 'idle'
+                    : i === trial.answer
+                      ? 'correct'
+                      : i === picked
+                        ? 'mistake'
+                        : 'idle';
 
-          return (
-            <Pressable
-              key={`${emotion}-${i}`}
-              accessibilityRole="button"
-              accessibilityLabel={`Face ${i + 1}`}
-              onPress={() => choose(i)}
-              style={{
-                padding: space.sm,
-                borderRadius: radius.lg,
-                borderWidth: 3,
-                borderColor:
-                  state === 'correct'
-                    ? colors.success
-                    : state === 'wrong'
-                      ? colors.danger
-                      : 'transparent',
-                backgroundColor: colors.surface,
-              }}
-            >
-              {usePhotos ? (
-                <Image
-                  source={pickPhoto(emotion, i + index)!}
-                  style={{ width: faceSize, height: faceSize, borderRadius: radius.md }}
-                  resizeMode="cover"
-                  accessibilityIgnoresInvertColors
-                />
-              ) : (
-                <Face emotion={emotion} size={faceSize} intensity={spec.intensity} />
-              )}
-            </Pressable>
-          );
-        })}
+                return (
+                  <Pressable
+                    key={`${emotion}-${i}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Face ${i + 1}`}
+                    onPress={() => choose(i)}
+                    style={{
+                      width: tile,
+                      height: tile,
+                      padding: space.sm,
+                      borderRadius: radius.md,
+                      borderWidth: state === 'idle' ? 2 : 3,
+                      borderStyle: state === 'mistake' ? 'dashed' : 'solid',
+                      borderColor:
+                        state === 'correct'
+                          ? colors.success
+                          : state === 'mistake'
+                            ? colors.danger
+                            : colors.edge,
+                      backgroundColor:
+                        state === 'correct'
+                          ? colors.successSoft
+                          : state === 'mistake'
+                            ? colors.dangerSoft
+                            : colors.surface,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {kind === 'photo' ? (
+                      <Image
+                        source={pickPhoto(emotion, i + index)!}
+                        style={{ width: faceSize, height: faceSize, borderRadius: radius.md }}
+                        resizeMode="cover"
+                        accessibilityIgnoresInvertColors
+                      />
+                    ) : kind === 'animal' ? (
+                      // The same light tile behind every animal: no feeling gets a
+                      // colour of its own, and the panda's black ears still show.
+                      <View
+                        style={{
+                          width: faceSize,
+                          height: faceSize,
+                          borderRadius: radius.md,
+                          backgroundColor: colors.tile,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <Image
+                          source={animalFace(animal, emotion)!}
+                          style={{ width: faceSize, height: faceSize }}
+                          resizeMode="contain"
+                          accessibilityIgnoresInvertColors
+                        />
+                      </View>
+                    ) : (
+                      <Face emotion={emotion} size={faceSize} intensity={spec.intensity} />
+                    )}
+
+                    {state !== 'idle' && <Badge ok={state === 'correct'} />}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </Backdrop>
       </View>
+    </View>
+  );
+}
+
+/** A check or a dash in the corner, so right and wrong differ by shape too. */
+function Badge({ ok }: { ok: boolean }) {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: ok ? colors.success : colors.dangerSoft,
+        borderWidth: ok ? 0 : 2,
+        borderColor: colors.danger,
+      }}
+    >
+      <Ionicons name={ok ? 'checkmark' : 'remove'} size={22} color={ok ? colors.ink : colors.danger} />
     </View>
   );
 }

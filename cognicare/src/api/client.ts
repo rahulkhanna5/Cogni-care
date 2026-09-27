@@ -39,10 +39,26 @@ type RequestOptions = {
   body?: unknown;
   accessToken?: string | null;
   signal?: AbortSignal;
+  /** Give up after this long. AI calls pass a longer limit — see chat.api. */
+  timeoutMs?: number;
 };
 
+/**
+ * fetch has no timeout of its own, so a request the server never answered
+ * hung forever — and at boot that meant a spinner with no way out, for an app
+ * whose exercises are meant to work without the server at all.
+ */
+export const DEFAULT_TIMEOUT_MS = 20_000;
+/** AI replies can legitimately take a while: the server may try more than one model. */
+export const AI_TIMEOUT_MS = 120_000;
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, accessToken, signal } = options;
+  const { method = 'GET', body, accessToken, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const forwardAbort = () => controller.abort();
+  signal?.addEventListener('abort', forwardAbort);
 
   let response: Response;
   try {
@@ -53,12 +69,15 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
         ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
+      signal: controller.signal,
     });
   } catch {
-    // A dead server and a flaky connection look the same to fetch. Give the
-    // user something actionable rather than "Network request failed".
+    // A dead server, a flaky connection and a timeout look the same to the
+    // user. Give them something actionable rather than "Network request failed".
     throw new ApiError(0, 'NETWORK_ERROR', 'Could not reach the server. Check your connection.');
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', forwardAbort);
   }
 
   if (response.status === 204) return undefined as T;

@@ -1,16 +1,16 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { LevelMeter } from '@/charts/LevelMeter';
 import { endSession, getProgress, saveRound, startSession, updateProgress } from '@/db/queries';
 import type { GameMeta } from '@/games/registry';
 import { decideNextLevel, encourage, type Direction } from '@/scoring/adaptive';
 import { useSession } from '@/store/session';
-import { colors, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { colors, fonts, space } from '@/theme/tokens';
+import { Banner, Button, Card, Screen, ScreenHeader, StatTile, Text } from '@/ui';
 import type { GamePlayProps, RoundResult } from './types';
 
 type Phase = 'intro' | 'countdown' | 'playing' | 'between' | 'summary';
@@ -23,6 +23,12 @@ type Props = {
   instructions: string[];
   /** Optional one-line hint about the current level, e.g. "4 by 4 grid". */
   describeLevel?: (level: number) => string;
+  /**
+   * The line shown between turns, in this game's own words ("You caught 5 of
+   * 6 fish"). A generic "N of M remembered" was wrong for every game that is
+   * not a memory game.
+   */
+  describeRound?: (result: RoundResult) => string;
   play: (props: GamePlayProps) => ReactNode;
 };
 
@@ -32,9 +38,15 @@ export function GameShell({
   roundsPerSession,
   instructions,
   describeLevel,
+  describeRound,
   play,
 }: Props) {
-  useKeepAwake(); // a game with a 4-second watch phase must not dim mid-trial
+  // A game with a 4-second watch phase must not dim mid-trial. On web the
+  // wake lock can fail to activate (a hidden page, or no Wake Lock API); the
+  // hook ignores that, but then threw on leaving the game when it tried to
+  // release a lock it never held. That release is exactly what this option
+  // is for — it changes nothing on a phone, where activation succeeds.
+  useKeepAwake(undefined, { suppressDeactivateWarnings: true });
 
   const db = useSQLiteContext();
   const router = useRouter();
@@ -49,6 +61,7 @@ export function GameShell({
   const [outcome, setOutcome] = useState<{ direction: Direction; nextLevel: number } | null>(
     null
   );
+  const [confirmingQuit, setConfirmingQuit] = useState(false);
 
   const sessionIdRef = useRef<number | null>(null);
   const lastDirectionRef = useRef<Direction | null>(null);
@@ -148,6 +161,7 @@ export function GameShell({
 
       lastDirectionRef.current = decision.direction;
       setOutcome({ direction: decision.direction, nextLevel: decision.level });
+      setConfirmingQuit(false);
       setPhase('summary');
     },
     [db, level, maxLevel, meta.id, player, results, roundNo, roundsPerSession]
@@ -162,7 +176,12 @@ export function GameShell({
 
   // Quitting part-way leaves ended_at NULL, and unfinished sessions are
   // excluded from stats. A half-played session should not count as data.
-  const quit = () => router.back();
+  const leave = () => router.back();
+
+  // Mid-session, ✕ asks first: with a tremor it is an easy accidental tap, and
+  // it throws away the turns already played. Before or after, it just leaves.
+  const midSession = phase === 'countdown' || phase === 'playing' || phase === 'between';
+  const quit = () => (midSession ? setConfirmingQuit(true) : leave());
 
   // Without a local player there is nowhere to record a session, so Start
   // silently did nothing — a dead button with no explanation. Same failure as
@@ -170,7 +189,7 @@ export function GameShell({
   if (!player) {
     return (
       <Screen>
-        <Header title={meta.title} onClose={quit} />
+        <ScreenHeader title={meta.title} onBack={leave} backIcon="close" />
         <Card>
           <Text variant="heading">Almost there</Text>
           <Text variant="body" color="textMuted">
@@ -183,20 +202,62 @@ export function GameShell({
     );
   }
 
+  if (confirmingQuit) {
+    return (
+      <Screen scroll={false} style={{ justifyContent: 'center' }}>
+        <Card style={{ gap: space.md }}>
+          <Text variant="title">Stop this game?</Text>
+          <Text variant="body" color="textMuted">
+            The turns you have played so far will not be saved.
+            {/* The game is paused by being set aside, so a turn in progress
+                begins again rather than carrying on with its clock stopped. */}
+            {phase === 'playing' ? ' If you keep playing, this turn starts again.' : ''}
+          </Text>
+          <Button label="Keep playing" onPress={() => setConfirmingQuit(false)} />
+          <Button label="Stop" variant="secondary" onPress={leave} />
+        </Card>
+      </Screen>
+    );
+  }
+
   if (phase === 'intro') {
     return (
       <Screen>
-        <Header title={meta.title} onClose={quit} />
-        <Card>
+        <ScreenHeader title={meta.title} onBack={quit} backIcon="close" />
+
+        {meta.needsHeadphones && (
+          <Banner tone="info" icon="headset-outline">
+            Put your headphones in — this game needs sound from both sides.
+          </Banner>
+        )}
+
+        <Card style={{ gap: space.md }}>
           <Text variant="heading">How to play</Text>
           {instructions.map((line, i) => (
-            <Text key={i} variant="body" color="textMuted">
-              {i + 1}. {line}
-            </Text>
+            <View key={i} style={{ flexDirection: 'row', gap: space.md, alignItems: 'flex-start' }}>
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: colors.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text variant="label" color="textInverse">
+                  {i + 1}
+                </Text>
+              </View>
+              <Text variant="body" style={{ flex: 1 }}>
+                {line}
+              </Text>
+            </View>
           ))}
         </Card>
-        <Card>
-          <Text variant="label">Level {level}</Text>
+
+        <Card style={{ gap: space.md }}>
+          <LevelMeter level={level} max={maxLevel} />
           {describeLevel && (
             <Text variant="body" color="textMuted">
               {describeLevel(level)}
@@ -206,31 +267,40 @@ export function GameShell({
             {roundsPerSession} turns. Take your time — speed is not the point.
           </Text>
         </Card>
-        <Button label="Start" onPress={begin} />
+
+        <Button label="Start" icon="play" onPress={begin} />
       </Screen>
     );
   }
 
   if (phase === 'countdown') {
     return (
-      <Screen scroll={false} style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 96, lineHeight: 110, fontWeight: '600', color: colors.accent }}>
+      <Screen scroll={false} style={{ justifyContent: 'center', alignItems: 'center', gap: space.md }}>
+        <Text
+          accessibilityLiveRegion="assertive"
+          style={{ fontSize: 120, lineHeight: 136, fontFamily: fonts.semibold, color: colors.accent }}
+        >
           {countdown === 0 ? 'Go' : countdown}
+        </Text>
+        <Text variant="body" color="textMuted">
+          Get ready
         </Text>
       </Screen>
     );
   }
 
   if (phase === 'between' && lastRound) {
+    const total = lastRound.hits + lastRound.misses;
     return (
       <Screen scroll={false} style={{ justifyContent: 'center', gap: space.lg }}>
+        <TurnDots done={roundNo} total={roundsPerSession} />
         <Text variant="title" center>
-          Turn {roundNo} of {roundsPerSession}
+          Turn {roundNo} of {roundsPerSession} done
         </Text>
         <Text variant="body" color="textMuted" center>
-          {lastRound.hits} of {lastRound.hits + lastRound.misses} remembered
+          {describeRound ? describeRound(lastRound) : `${lastRound.hits} of ${total} right.`}
         </Text>
-        <Button label="Next turn" onPress={nextRound} />
+        <Button label="Next turn" icon="arrow-forward" onPress={nextRound} />
       </Screen>
     );
   }
@@ -238,70 +308,65 @@ export function GameShell({
   if (phase === 'summary' && outcome) {
     const accuracy = results.reduce((s, r) => s + r.accuracy, 0) / (results.length || 1);
     const score = results.reduce((s, r) => s + r.score, 0);
+    const moved = outcome.nextLevel !== level;
     return (
       <Screen>
         <Text variant="display" style={{ marginTop: space.lg }}>
           All done
         </Text>
-        <Card>
-          <Row label="Score" value={String(score)} />
-          <Row label="Accuracy" value={`${Math.round(accuracy * 100)}%`} />
-          <Row label="Level" value={`${level} → ${outcome.nextLevel}`} />
+
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <StatTile value={String(score)} label="Score" />
+          <StatTile value={`${Math.round(accuracy * 100)}%`} label="Accuracy" />
+        </View>
+
+        <Card style={{ gap: space.md }}>
+          <LevelMeter level={outcome.nextLevel} max={maxLevel} title={meta.title} />
+          <Text variant="body" color="textMuted">
+            {moved ? `Level ${level} → ${outcome.nextLevel}` : `Staying at level ${level}`}
+          </Text>
         </Card>
-        <Text variant="body" color="textMuted">
+
+        <Banner tone={outcome.direction === 'up' ? 'success' : 'info'} icon={outcome.direction === 'up' ? 'trending-up' : 'leaf-outline'}>
           {encourage(outcome.direction, accuracy)}
-        </Text>
-        <Button label="Done" onPress={() => router.back()} />
+        </Banner>
+
+        <Button label="Done" onPress={leave} />
       </Screen>
     );
   }
 
   return (
     <Screen scroll={false} padded={false}>
-      <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
-        <Header title={`Turn ${roundNo} of ${roundsPerSession}`} onClose={quit} />
+      <View style={{ paddingHorizontal: space.gutter, paddingTop: space.md, marginBottom: space.sm }}>
+        <ScreenHeader title={`Turn ${roundNo} of ${roundsPerSession}`} onBack={quit} backIcon="close" />
       </View>
       {play({ level, roundNo, totalRounds: roundsPerSession, onRoundComplete: handleRoundComplete })}
     </Screen>
   );
 }
 
-function Header({ title, onClose }: { title: string; onClose: () => void }) {
+/** Turns so far: filled for played, outlined for still to come. */
+function TurnDots({ done, total }: { done: number; total: number }) {
   return (
     <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: space.md,
-      }}
+      accessible
+      accessibilityLabel={`${done} of ${total} turns played`}
+      style={{ flexDirection: 'row', justifyContent: 'center', gap: space.sm }}
     >
-      <Text variant="heading">{title}</Text>
-      <Pressable
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel="Close game"
-        hitSlop={12}
-        style={{
-          width: TOUCH_MIN,
-          height: TOUCH_MIN,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Ionicons name="close" size={32} color={colors.textMuted} />
-      </Pressable>
-    </View>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Text variant="body" color="textMuted">
-        {label}
-      </Text>
-      <Text variant="label">{value}</Text>
+      {Array.from({ length: total }).map((_, i) => (
+        <View
+          key={i}
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+            backgroundColor: i < done ? colors.accent : 'transparent',
+            borderWidth: i < done ? 0 : 2,
+            borderColor: colors.edge,
+          }}
+        />
+      ))}
     </View>
   );
 }

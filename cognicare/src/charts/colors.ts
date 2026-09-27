@@ -1,43 +1,33 @@
 import { colors } from '@/theme/tokens';
 
 /**
- * Chart colours — dark theme.
+ * Chart colours.
  *
- * Still one hue in two shades rather than two hues. The dashboard's only
- * two-series chart is a before/after dumbbell, which the form guidance puts
- * at "1 hue, 2 shades"; differing by lightness rather than hue sidesteps
- * colour-vision separation entirely.
+ * The two panels never share a colour: game charts are coral, check-in charts
+ * are warm sand. The directions are opposite — higher is better in the games,
+ * lower is better in the check-in — and a shared colour would invite reading
+ * one as a continuation of the other.
  *
- * On a dark background the earlier value is the DIMMER of the two, so the
- * current value reads as the brighter, more prominent mark. A two-hue
- * alternative was checked with the palette validator on the previous light
- * theme and failed badly (deltaE 5.8 in normal vision against a floor of 15);
- * do not reintroduce a second hue without re-running that check on this
- * background.
- *
- * Both shades are directly labelled wherever they appear, so colour never
- * carries meaning alone.
+ * Within the check-in dumbbell, previous vs latest differ by SHAPE (hollow
+ * ring vs solid dot), not by shade, so colour-vision differences cannot merge
+ * them. Every two-series chart also carries a legend.
  */
 export const chart = {
-  /** Current value — brand primary. 8.0:1 on bg. */
-  now: colors.accent,
-  /** Earlier value. 5.8:1 on bg, well clear of the 3:1 mark floor. */
-  before: '#C08A84',
-  /** Track and axis furniture. Deliberately recessive. */
-  track: '#3D3830',
+  /** Game results. 6.3:1 as a mark on a card — graphics need 3:1. */
+  game: colors.accent,
+  /** Check-in results. 8.0:1 on a card. */
+  checkin: colors.warning,
+  /** Outline of an empty meter segment or bar track. */
+  outline: colors.edge,
+  /** Axis rules and average lines. */
   axis: colors.textMuted,
-  /**
-   * Ring drawn around overlapping marks so two dots stay separable when a
-   * score has not moved. Must match whatever sits behind the chart, which on
-   * this theme is the card surface, not white.
-   */
-  ring: colors.surface,
+  /** Hairline under a dumbbell. */
+  track: colors.divider,
 } as const;
 
 /** Mark geometry, kept consistent across every chart. */
 export const mark = {
-  lineWidth: 2,
-  dot: 9,
-  trackHeight: 10,
-  radius: 5,
+  lineWidth: 2.5,
+  dot: 8,
+  trackHeight: 12,
 } as const;

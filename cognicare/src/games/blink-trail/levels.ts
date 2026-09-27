@@ -1,38 +1,36 @@
 export type BlinkLevel = {
-  /** grid is grid x grid cells */
-  grid: number;
-  /** how many dots light up */
+  /** squares across */
+  cols: number;
+  /** squares down — one more than across, so the board uses a phone's height */
+  rows: number;
+  /** how many squares light up */
   length: number;
-  /** how long each dot stays lit */
+  /** how long each square stays lit */
   flashMs: number;
-  /** dark gap between dots — without it, two adjacent flashes blur together */
+  /** dark gap between flashes — without it, two adjacent flashes blur together */
   gapMs: number;
   /** how many times the player may ask to see it again */
   replays: number;
 };
 
 /**
- * Follows the progression in the source deck: grid 3x3 → 6x6, length 3 → 10,
- * flash 800ms → 300ms. Difficulty moves one axis at a time — changing grid
- * size and sequence length together makes a level jump feel like a wall.
+ * One more light at every level: 3 at level 1, 4 at level 2, and so on to 10.
+ * Nothing else changes — the same 3×4 board, the same pace, one replay — so
+ * each step up is exactly one more thing to remember, never two changes at
+ * once, which is what makes a level jump feel like a wall.
+ *
+ * It stops at 10, the source deck's maximum. Spatial span in healthy older
+ * adults is about five or six; much past ten, a sequence is a wall for
+ * everyone, and a level nobody can pass only teaches the player to fail.
  */
-export const BLINK_LEVELS: BlinkLevel[] = [
-  { grid: 3, length: 3, flashMs: 800, gapMs: 300, replays: 1 },
-  { grid: 3, length: 4, flashMs: 800, gapMs: 300, replays: 1 },
-  { grid: 3, length: 4, flashMs: 700, gapMs: 280, replays: 1 },
-  { grid: 3, length: 5, flashMs: 700, gapMs: 280, replays: 1 },
-  { grid: 4, length: 5, flashMs: 650, gapMs: 260, replays: 1 },
-  { grid: 4, length: 6, flashMs: 600, gapMs: 250, replays: 1 },
-  { grid: 4, length: 6, flashMs: 550, gapMs: 240, replays: 0 },
-  { grid: 4, length: 7, flashMs: 500, gapMs: 230, replays: 0 },
-  { grid: 5, length: 7, flashMs: 500, gapMs: 220, replays: 0 },
-  { grid: 5, length: 8, flashMs: 450, gapMs: 210, replays: 0 },
-  { grid: 5, length: 8, flashMs: 400, gapMs: 200, replays: 0 },
-  { grid: 5, length: 9, flashMs: 400, gapMs: 190, replays: 0 },
-  { grid: 6, length: 9, flashMs: 350, gapMs: 180, replays: 0 },
-  { grid: 6, length: 10, flashMs: 350, gapMs: 170, replays: 0 },
-  { grid: 6, length: 10, flashMs: 300, gapMs: 160, replays: 0 },
-];
+export const BLINK_LEVELS: BlinkLevel[] = [3, 4, 5, 6, 7, 8, 9, 10].map((length) => ({
+  cols: 3,
+  rows: 4,
+  length,
+  flashMs: 800,
+  gapMs: 300,
+  replays: 1,
+}));
 
 export const BLINK_MAX_LEVEL = BLINK_LEVELS.length;
 
@@ -41,5 +39,5 @@ export const blinkLevel = (level: number): BlinkLevel =>
 
 export const describeBlinkLevel = (level: number): string => {
   const s = blinkLevel(level);
-  return `${s.grid} by ${s.grid} grid, ${s.length} lights to remember`;
+  return `${s.length} lights to remember, on a ${s.cols} by ${s.rows} grid`;
 };

@@ -13,7 +13,7 @@ import { describePathLevel, PATH_MAX_LEVEL } from '@/games/path-finder/levels';
 import { PathFinder } from '@/games/path-finder/PathFinder';
 import { getGame, type GameId } from '@/games/registry';
 import { GameShell } from '@/games/shell/GameShell';
-import type { GamePlayProps } from '@/games/shell/types';
+import type { GamePlayProps, RoundResult } from '@/games/shell/types';
 import { DualTaskFlow } from '@/games/dual-task-flow/DualTaskFlow';
 import { describeDualLevel, DUAL_MAX_LEVEL } from '@/games/dual-task-flow/levels';
 import { describeForestLevel, FOREST_MAX_LEVEL, FOREST_ROUNDS } from '@/games/sound-forest/levels';
@@ -27,6 +27,8 @@ type Entry = {
   maxLevel: number;
   rounds: number;
   describeLevel: (level: number) => string;
+  /** The line between turns, in the game's own words. */
+  describeRound: (r: RoundResult) => string;
   instructions: string[];
   play: (props: GamePlayProps) => ReactElement;
 };
@@ -39,6 +41,7 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'blink-trail': {
     maxLevel: BLINK_MAX_LEVEL,
     rounds: 5,
+    describeRound: (r) => `You remembered ${r.hits} of ${r.hits + r.misses} lights.`,
     describeLevel: describeBlinkLevel,
     instructions: [
       'Some squares will light up, one after another.',
@@ -50,17 +53,19 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'market-rush': {
     maxLevel: MARKET_MAX_LEVEL,
     rounds: 4,
+    describeRound: (r) => `You put ${r.hits} of ${r.hits + r.misses} items from your list in the basket.`,
     describeLevel: describeMarketLevel,
     instructions: [
-      'A shopping list appears for a few seconds.',
-      'Remember what is on it, then it disappears.',
-      'Items float down the screen — tap only the ones from your list.',
+      'A shopping list appears for a few seconds. Remember it.',
+      'Items then come down the aisle. Drag the ones from your list into the basket.',
+      'Tapping an item puts it in the basket too. While you hold one, the aisle waits.',
     ],
     play: (p) => <MarketRush key={p.roundNo} {...p} />,
   },
   'speedy-current': {
     maxLevel: CURRENT_MAX_LEVEL,
     rounds: 4,
+    describeRound: (r) => `You caught ${r.hits} of ${r.hits + r.misses} fish.`,
     describeLevel: describeCurrentLevel,
     instructions: [
       'Fish swim upward against the current.',
@@ -72,6 +77,7 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'emotion-meadow': {
     maxLevel: MEADOW_MAX_LEVEL,
     rounds: 4,
+    describeRound: (r) => `You spotted ${r.hits} of ${r.hits + r.falseAlarms} feelings.`,
     describeLevel: describeMeadowLevel,
     instructions: [
       'Several faces appear together.',
@@ -83,6 +89,10 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'path-finder': {
     maxLevel: PATH_MAX_LEVEL,
     rounds: 3,
+    describeRound: (r) =>
+      r.falseAlarms === 0
+        ? 'Every route found by the shortest way.'
+        : `Every route found — ${r.falseAlarms === 1 ? 'one was' : `${r.falseAlarms} were`} a little longer than the shortest way.`,
     describeLevel: describePathLevel,
     instructions: [
       'You start at the house and must reach the flag.',
@@ -94,6 +104,7 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'sound-forest': {
     maxLevel: FOREST_MAX_LEVEL,
     rounds: FOREST_ROUNDS,
+    describeRound: (r) => `You got ${r.hits} of ${r.hits + r.misses} sounds right.`,
     describeLevel: describeForestLevel,
     instructions: [
       'Put your headphones in — sounds come from your left and right.',
@@ -105,6 +116,7 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'daily-order': {
     maxLevel: DAILY_MAX_LEVEL,
     rounds: 4,
+    describeRound: (r) => `${r.hits} of ${r.hits + r.misses} steps right first time.`,
     describeLevel: describeDailyLevel,
     instructions: [
       'You will see the steps of an everyday task, jumbled up.',
@@ -116,6 +128,7 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   'dual-task-flow': {
     maxLevel: DUAL_MAX_LEVEL,
     rounds: 3,
+    describeRound: (r) => `You caught ${r.hits} of ${r.hits + r.misses} odd numbers and high sounds.`,
     describeLevel: describeDualLevel,
     instructions: [
       'Two things happen at once: numbers appear and sounds play.',
@@ -152,6 +165,7 @@ export default function GameRoute() {
       maxLevel={entry.maxLevel}
       roundsPerSession={entry.rounds}
       describeLevel={entry.describeLevel}
+      describeRound={entry.describeRound}
       instructions={entry.instructions}
       play={entry.play}
     />

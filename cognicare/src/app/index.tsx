@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { getPlayer, getSetting } from '@/db/queries';
+import { createPlayer, getPlayer, getSetting, setSetting } from '@/db/queries';
 import { useAuth } from '@/store/auth';
 import { pushPending } from '@/sync/sync';
 import { ACTIVE_PLAYER_KEY, useSession } from '@/store/session';
@@ -54,8 +54,19 @@ export default function Index() {
         }
         // Keep the local player in step so the games and dashboard still work.
         const saved = await getSetting(db, ACTIVE_PLAYER_KEY);
-        const local = saved ? await getPlayer(db, Number(saved)) : null;
+        let local = saved ? await getPlayer(db, Number(saved)) : null;
         if (cancelled) return;
+
+        // A signed-in patient with no local profile yet gets one made from the
+        // account name. Sending them to Welcome asked for a name they had just
+        // typed, and until they did, the dashboard greeted them "Hello, there".
+        if (!local) {
+          const firstName = user.name.trim().split(/\s+/)[0] || user.name;
+          const id = await createPlayer(db, firstName, null);
+          await setSetting(db, ACTIVE_PLAYER_KEY, String(id));
+          local = await getPlayer(db, id);
+          if (cancelled) return;
+        }
         if (local) setPlayer(local);
 
         // Opportunistic catch-up push for anything played offline. Failures

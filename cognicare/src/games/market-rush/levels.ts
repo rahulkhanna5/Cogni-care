@@ -43,25 +43,33 @@ export const describeMarketLevel = (level: number): string => {
   return `${s.listSize} items to remember, shown for ${(s.viewMs / 1000).toFixed(1)} seconds`;
 };
 
-/** Everyday groceries. Emoji plus the word — the word carries it if the
- *  emoji renders differently across Android versions. */
+/** Everyday groceries. An illustration plus the word — the word is always shown. */
 export const GROCERIES = [
-  { label: 'Bread', emoji: '🍞' },
-  { label: 'Milk', emoji: '🥛' },
-  { label: 'Eggs', emoji: '🥚' },
-  { label: 'Banana', emoji: '🍌' },
-  { label: 'Apple', emoji: '🍎' },
-  { label: 'Cheese', emoji: '🧀' },
-  { label: 'Rice', emoji: '🍚' },
-  { label: 'Tomato', emoji: '🍅' },
-  { label: 'Carrot', emoji: '🥕' },
-  { label: 'Fish', emoji: '🐟' },
-  { label: 'Tea', emoji: '🍵' },
-  { label: 'Honey', emoji: '🍯' },
-  { label: 'Orange', emoji: '🍊' },
-  { label: 'Potato', emoji: '🥔' },
-  { label: 'Onion', emoji: '🧅' },
-  { label: 'Butter', emoji: '🧈' },
-  { label: 'Grapes', emoji: '🍇' },
-  { label: 'Corn', emoji: '🌽' },
+  { label: 'Bread', art: 'bread' as const },
+  { label: 'Milk', art: 'milk' as const },
+  { label: 'Eggs', art: 'eggs' as const },
+  { label: 'Banana', art: 'banana' as const },
+  { label: 'Apple', art: 'apple' as const },
+  { label: 'Cheese', art: 'cheese' as const },
+  { label: 'Rice', art: 'rice' as const },
+  { label: 'Tomato', art: 'tomato' as const },
+  { label: 'Carrot', art: 'carrot' as const },
+  { label: 'Fish', art: 'fish' as const },
+  { label: 'Tea', art: 'tea' as const },
+  { label: 'Honey', art: 'honey' as const },
+  { label: 'Orange', art: 'orange' as const },
+  { label: 'Potato', art: 'potato' as const },
+  { label: 'Onion', art: 'onion' as const },
+  { label: 'Butter', art: 'butter' as const },
+  { label: 'Grapes', art: 'grapes' as const },
+  { label: 'Corn', art: 'corn' as const },
+  // Household and packaged goods. They can be on the list too, so "never pick
+  // anything that isn't food" is not a shortcut around remembering.
+  { label: 'Soap', art: 'soap' as const },
+  { label: 'Shampoo', art: 'shampoo' as const },
+  { label: 'Cereal', art: 'cereal' as const },
+  { label: 'Toothpaste', art: 'toothpaste' as const },
+  { label: 'Juice', art: 'juice' as const },
+  { label: 'Biscuits', art: 'biscuits' as const },
+  { label: 'Detergent', art: 'detergent' as const },
 ];

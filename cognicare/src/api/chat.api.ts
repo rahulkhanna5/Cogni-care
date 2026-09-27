@@ -1,4 +1,4 @@
-import { request } from './client';
+import { AI_TIMEOUT_MS, request } from './client';
 
 export type ChatTurn = { role: 'user' | 'assistant'; content: string };
 
@@ -14,4 +14,6 @@ export const sendChatMessage = (accessToken: string, patientId: string, messages
     method: 'POST',
     body: { messages },
     accessToken,
+    // The server tries several models in turn, each allowed up to 45s.
+    timeoutMs: AI_TIMEOUT_MS,
   });

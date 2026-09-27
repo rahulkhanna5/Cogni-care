@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { View } from 'react-native';
 
 import * as api from '@/api/auth.api';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/store/auth';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
+import { colors, space } from '@/theme/tokens';
+import { Banner, Button, Card, RoleToggle, Screen, Text, TextField } from '@/ui';
 
 type Role = 'PATIENT' | 'DOCTOR';
 
@@ -26,12 +26,17 @@ export default function Register() {
 
   const doctorFieldsOk =
     role === 'PATIENT' || (specialty.trim().length > 1 && licenseNumber.trim().length > 2);
-  const canSubmit =
-    name.trim().length > 0 &&
-    email.trim().length > 0 &&
-    password.length >= 10 &&
-    doctorFieldsOk &&
-    !busy;
+  const ready =
+    name.trim().length > 0 && email.trim().length > 0 && password.length >= 10 && doctorFieldsOk;
+
+  // The first thing still missing, in plain words.
+  const reason = !name.trim()
+    ? 'Type your full name to continue.'
+    : !email.trim()
+      ? 'Type your email to continue.'
+      : password.length < 10
+        ? 'Your password needs at least 10 characters.'
+        : 'Add your specialty and registration number to continue.';
 
   async function submit() {
     setBusy(true);
@@ -54,7 +59,9 @@ export default function Register() {
       }
 
       await signIn(email.trim(), password);
-      router.replace(role === 'DOCTOR' ? '/pending' : '/dashboard');
+      // A patient goes through the boot router, which makes their local
+      // profile from the name just typed rather than asking for it again.
+      router.replace(role === 'DOCTOR' ? '/pending' : '/');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not create the account.');
     } finally {
@@ -66,73 +73,87 @@ export default function Register() {
     <Screen>
       <View style={{ gap: space.sm, marginTop: space.lg }}>
         <Text variant="display">Create an account</Text>
+        <Text variant="body" color="textMuted">
+          First, which describes you?
+        </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.md }}>
-        {(['PATIENT', 'DOCTOR'] as Role[]).map((option) => (
-          <Pressable
-            key={option}
-            accessibilityRole="button"
-            accessibilityState={{ selected: role === option }}
-            onPress={() => setRole(option)}
-            style={{
-              flex: 1,
-              minHeight: TOUCH_MIN,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: radius.md,
-              borderWidth: 2,
-              borderColor: role === option ? colors.accent : colors.border,
-              backgroundColor: role === option ? colors.accentSoft : colors.surface,
-            }}
-          >
-            <Text variant="label" color={role === option ? 'accent' : 'text'}>
-              {option === 'PATIENT' ? 'I am a patient' : 'I am a doctor'}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <RoleToggle
+        options={[
+          { value: 'PATIENT', label: 'I am a patient' },
+          { value: 'DOCTOR', label: 'I am a doctor' },
+        ]}
+        value={role}
+        onChange={setRole}
+      />
 
-      <View style={{ gap: space.md, marginTop: space.lg }}>
-        <Field label="Full name" value={name} onChange={setName} autoCapitalize="words" />
-        <Field
+      <View style={{ gap: space.md, marginTop: space.sm }}>
+        <TextField
+          label="Full name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          autoCorrect={false}
+          textContentType="name"
+        />
+        <TextField
           label="Email"
           value={email}
-          onChange={setEmail}
+          onChangeText={setEmail}
+          placeholder="you@example.com"
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
+          textContentType="emailAddress"
         />
-        <Field
+        <TextField
           label="Password (at least 10 characters)"
           value={password}
-          onChange={setPassword}
-          secure
+          onChangeText={setPassword}
+          secureTextEntry
           autoCapitalize="none"
+          textContentType="newPassword"
         />
 
         {role === 'DOCTOR' && (
           <>
-            <Field label="Specialty" value={specialty} onChange={setSpecialty} />
-            <Field
+            <TextField label="Specialty" value={specialty} onChangeText={setSpecialty} placeholder="e.g. Neurology" />
+            <TextField
               label="Registration / licence number"
               value={licenseNumber}
-              onChange={setLicenseNumber}
+              onChangeText={setLicenseNumber}
               autoCapitalize="characters"
+              autoCorrect={false}
             />
-            <Field label="Short bio (optional)" value={bio} onChange={setBio} multiline />
+            <TextField label="Short bio (optional)" value={bio} onChangeText={setBio} multiline minLines={3} />
 
-            <Card>
-              <Text variant="label">What happens next</Text>
-              <Text variant="body" color="textMuted">
-                1. Confirm your email address.
-              </Text>
-              <Text variant="body" color="textMuted">
-                2. An administrator checks your registration number against the medical
-                council register.
-              </Text>
-              <Text variant="body" color="textMuted">
-                3. Once approved, patients can ask to be connected to you.
-              </Text>
+            <Card style={{ gap: space.md }}>
+              <Text variant="heading">What happens next</Text>
+              {[
+                'Confirm your email address.',
+                'An administrator checks your registration number against the medical council register.',
+                'Once approved, patients can ask to be connected to you.',
+              ].map((step, i) => (
+                <View key={step} style={{ flexDirection: 'row', gap: space.md, alignItems: 'flex-start' }}>
+                  <View
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      backgroundColor: colors.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text variant="label" color="textInverse">
+                      {i + 1}
+                    </Text>
+                  </View>
+                  <Text variant="body" style={{ flex: 1 }}>
+                    {step}
+                  </Text>
+                </View>
+              ))}
               <Text variant="caption" color="textMuted">
                 You can sign in while you wait. No patient information is visible until
                 both your account and each patient connection are approved.
@@ -142,82 +163,17 @@ export default function Register() {
         )}
       </View>
 
-      {error && (
-        <View
-          style={{
-            backgroundColor: colors.dangerSoft,
-            borderRadius: radius.md,
-            borderWidth: 2,
-            borderColor: colors.danger,
-            padding: space.md,
-            marginTop: space.md,
-          }}
-        >
-          <Text variant="body" color="danger">
-            {error}
-          </Text>
-        </View>
-      )}
+      {error && <Banner tone="error">{error}</Banner>}
 
       <Button
         label={busy ? 'Creating…' : 'Create account'}
         onPress={submit}
-        disabled={!canSubmit}
-        style={{ marginTop: space.lg }}
+        busy={busy}
+        disabled={!ready}
+        disabledReason={reason}
       />
 
-      <Button
-        label="I already have an account"
-        variant="quiet"
-        onPress={() => router.replace('/login')}
-        style={{ marginTop: space.sm }}
-      />
+      <Button label="I already have an account" variant="quiet" onPress={() => router.replace('/login')} />
     </Screen>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  secure,
-  multiline,
-  autoCapitalize = 'sentences',
-  keyboardType,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  secure?: boolean;
-  multiline?: boolean;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  keyboardType?: 'default' | 'email-address';
-}) {
-  return (
-    <View style={{ gap: space.sm }}>
-      <Text variant="label">{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        secureTextEntry={secure}
-        multiline={multiline}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-        keyboardType={keyboardType}
-        placeholderTextColor={colors.disabled}
-        style={{
-          minHeight: multiline ? TOUCH_MIN * 1.6 : TOUCH_MIN,
-          borderWidth: 2,
-          borderColor: colors.border,
-          borderRadius: radius.md,
-          backgroundColor: colors.surface,
-          paddingHorizontal: space.md,
-          paddingTop: multiline ? space.sm : 0,
-          fontSize: 20,
-          color: colors.text,
-          textAlignVertical: multiline ? 'top' : 'center',
-        }}
-      />
-    </View>
   );
 }

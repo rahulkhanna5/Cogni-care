@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { pool } from './pool.js';
+import { guardCheckedOut, pool } from './pool.js';
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
 
@@ -39,6 +39,7 @@ export async function migrate(): Promise<void> {
   for (const filename of pending) {
     const sql = await readFile(join(MIGRATIONS_DIR, filename), 'utf8');
     const client = await pool.connect();
+    const guard = guardCheckedOut(client);
     try {
       await client.query('BEGIN');
       await client.query(sql);
@@ -46,11 +47,11 @@ export async function migrate(): Promise<void> {
       await client.query('COMMIT');
       console.log(`migrations: applied ${filename}`);
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query('ROLLBACK').catch(() => undefined);
       console.error(`migrations: FAILED on ${filename}`);
       throw error;
     } finally {
-      client.release();
+      guard.release();
     }
   }
 }

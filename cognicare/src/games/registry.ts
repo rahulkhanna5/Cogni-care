@@ -1,4 +1,12 @@
 import type { Domain } from '@/db/types';
+import { BLINK_MAX_LEVEL } from './blink-trail/levels';
+import { DAILY_MAX_LEVEL } from './daily-order/levels';
+import { DUAL_MAX_LEVEL } from './dual-task-flow/levels';
+import { MEADOW_MAX_LEVEL } from './emotion-meadow/levels';
+import { MARKET_MAX_LEVEL } from './market-rush/levels';
+import { PATH_MAX_LEVEL } from './path-finder/levels';
+import { FOREST_MAX_LEVEL } from './sound-forest/levels';
+import { CURRENT_MAX_LEVEL } from './speedy-current/levels';
 
 export type GameId =
   | 'market-rush'
@@ -22,6 +30,8 @@ export type GameMeta = {
   needsHeadphones?: boolean;
   /** Set true once the game itself is implemented. */
   ready: boolean;
+  /** Levels differ per game (Daily Order has 10), so progress is shown against this. */
+  maxLevel: number;
 };
 
 export const GAMES: GameMeta[] = [
@@ -31,6 +41,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Watch the lights, then tap them back in the same order.',
     domains: ['stm', 'attention'],
     ready: true,
+    maxLevel: BLINK_MAX_LEVEL,
   },
   {
     id: 'market-rush',
@@ -38,6 +49,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Remember the shopping list, then pick those items out of the crowd.',
     domains: ['stm', 'speed', 'attention'],
     ready: true,
+    maxLevel: MARKET_MAX_LEVEL,
   },
   {
     id: 'speedy-current',
@@ -45,6 +57,7 @@ export const GAMES: GameMeta[] = [
     blurb: 'Tap only the fish swimming against the current.',
     domains: ['speed', 'attention'],
     ready: true,
+    maxLevel: CURRENT_MAX_LEVEL,
   },
   {
     id: 'sound-forest',
@@ -53,6 +66,7 @@ export const GAMES: GameMeta[] = [
     domains: ['attention', 'stm'],
     needsHeadphones: true,
     ready: true,
+    maxLevel: FOREST_MAX_LEVEL,
   },
   {
     id: 'path-finder',
@@ -61,6 +75,7 @@ export const GAMES: GameMeta[] = [
     domains: ['adl'],
     alsoTrains: ['Planning', 'Problem solving'],
     ready: true,
+    maxLevel: PATH_MAX_LEVEL,
   },
   {
     id: 'emotion-meadow',
@@ -69,6 +84,7 @@ export const GAMES: GameMeta[] = [
     domains: [],
     alsoTrains: ['Social cognition', 'Emotion recognition'],
     ready: true,
+    maxLevel: MEADOW_MAX_LEVEL,
   },
   {
     id: 'daily-order',
@@ -77,6 +93,7 @@ export const GAMES: GameMeta[] = [
     domains: ['adl', 'ltm'],
     alsoTrains: ['Sequencing', 'Planning'],
     ready: true,
+    maxLevel: DAILY_MAX_LEVEL,
   },
   {
     id: 'dual-task-flow',
@@ -85,6 +102,7 @@ export const GAMES: GameMeta[] = [
     domains: ['attention', 'speed'],
     alsoTrains: ['Task switching'],
     ready: true,
+    maxLevel: DUAL_MAX_LEVEL,
   },
 ];
 

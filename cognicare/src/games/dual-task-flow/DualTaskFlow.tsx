@@ -5,8 +5,8 @@ import { Pressable, View } from 'react-native';
 
 import type { GamePlayProps } from '@/games/shell/types';
 import { play, prepareAudio, releaseAudio } from '@/games/sound-forest/sounds';
-import { colors, radius, space } from '@/theme/tokens';
-import { Text } from '@/ui';
+import { colors, fonts, radius, space } from '@/theme/tokens';
+import { SurfaceProvider, Text, type IconName } from '@/ui';
 import { buildTimeline, dualLevel } from './levels';
 
 type Props = GamePlayProps & { random?: () => number };
@@ -92,81 +92,129 @@ export function DualTaskFlow({ level, onRoundComplete, random = Math.random }: P
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setFlash('wrong');
     }
-    setTimeout(() => setFlash(null), 220);
+    setTimeout(() => setFlash(null), 400);
   };
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg, gap: space.md }}>
-      <Text variant="body" color="textMuted" center>
-        {isVisualTurn ? 'Look at the number' : 'Listen to the sound'}
-      </Text>
-
+    <View style={{ flex: 1, paddingHorizontal: space.gutter, gap: space.md }}>
       <View
         style={{
           flex: 1,
           borderRadius: radius.lg,
-          backgroundColor:
-            flash === 'hit' ? colors.accentSoft : flash === 'wrong' ? colors.dangerSoft : colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
+          backgroundColor: flash === 'hit' ? colors.successSoft : flash === 'wrong' ? colors.dangerSoft : colors.surface,
+          borderWidth: flash ? 3 : 0,
+          borderStyle: flash === 'wrong' ? 'dashed' : 'solid',
+          borderColor: flash === 'hit' ? colors.success : colors.danger,
           alignItems: 'center',
           justifyContent: 'center',
+          gap: space.sm,
         }}
       >
-        {isVisualTurn ? (
-          <Text style={{ fontSize: 108, lineHeight: 124, fontWeight: '600', color: colors.text }}>
-            {event?.value ?? ''}
+        <SurfaceProvider value="surface">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Ionicons name={isVisualTurn ? 'eye-outline' : 'ear-outline'} size={26} color={colors.textMuted} />
+            <Text variant="label" color="textMuted">
+              {isVisualTurn ? 'Look at the number' : 'Listen to the sound'}
+            </Text>
+          </View>
+
+          {isVisualTurn ? (
+            <Text style={{ fontSize: 112, lineHeight: 128, fontFamily: fonts.semibold }}>{event?.value ?? ''}</Text>
+          ) : (
+            <Ionicons name="volume-high" size={104} color={colors.accentOnCard} />
+          )}
+
+          {flash && (
+            <Ionicons
+              name={flash === 'hit' ? 'checkmark-circle' : 'remove-circle-outline'}
+              size={36}
+              color={flash === 'hit' ? colors.success : colors.danger}
+            />
+          )}
+
+          <Text variant="caption" color="textMuted">
+            {Math.min(index + 1, timeline.length)} of {timeline.length}
           </Text>
-        ) : (
-          <Ionicons name="volume-high" size={96} color={colors.accent} />
-        )}
-        <Text variant="caption" color="textMuted">
-          {Math.min(index + 1, timeline.length)} of {timeline.length}
-        </Text>
+        </SurfaceProvider>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Odd number"
-        accessibilityState={{ disabled: !isVisualTurn }}
+      <ResponseButton
+        label="Odd number"
+        hint="Tap if the number is odd"
+        icon="eye-outline"
+        live={isVisualTurn}
+        edge={colors.accent}
         onPress={() => respond('visual')}
-        style={{
-          minHeight: 84,
-          borderRadius: radius.md,
-          backgroundColor: isVisualTurn ? colors.accentSoft : colors.bg,
-          borderWidth: 3,
-          borderColor: isVisualTurn ? colors.accent : colors.border,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: isVisualTurn ? 1 : 0.4,
-        }}
-      >
-        <Text variant="title" color={isVisualTurn ? 'accent' : 'textMuted'}>
-          Odd number
-        </Text>
-      </Pressable>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="High sound"
-        accessibilityState={{ disabled: isVisualTurn }}
+      />
+      <ResponseButton
+        label="High sound"
+        hint="Tap if the sound is high"
+        icon="ear-outline"
+        live={!isVisualTurn}
+        edge={colors.success}
         onPress={() => respond('audio')}
-        style={{
-          minHeight: 84,
-          borderRadius: radius.md,
-          backgroundColor: colors.surface,
-          borderWidth: 3,
-          borderColor: !isVisualTurn ? colors.success : colors.border,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: space.md,
-          opacity: !isVisualTurn ? 1 : 0.4,
-        }}
-      >
-        <Text variant="title" color={!isVisualTurn ? 'success' : 'textMuted'}>
-          High sound
-        </Text>
-      </Pressable>
+        style={{ marginBottom: space.md }}
+      />
     </View>
+  );
+}
+
+/**
+ * The live button is filled, edged, and says what to do; the other is a
+ * dashed outline marked "Not now". Which task is live never depends on
+ * noticing a change in opacity alone.
+ */
+function ResponseButton({
+  label,
+  hint,
+  icon,
+  live,
+  edge,
+  onPress,
+  style,
+}: {
+  label: string;
+  hint: string;
+  icon: IconName;
+  live: boolean;
+  edge: string;
+  onPress: () => void;
+  style?: object;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !live }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        {
+          minHeight: 88,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: space.md,
+          paddingHorizontal: space.lg,
+          borderRadius: radius.md,
+          backgroundColor: live ? colors.selected : colors.bg,
+          borderWidth: live ? 3 : 2,
+          borderStyle: live ? 'solid' : 'dashed',
+          borderColor: live ? edge : colors.edge,
+          opacity: pressed && live ? 0.85 : 1,
+        },
+        style,
+      ]}
+    >
+      <Ionicons name={icon} size={32} color={live ? edge : colors.textMuted} />
+      <SurfaceProvider value={live ? 'selected' : 'bg'}>
+        <View style={{ flex: 1 }}>
+          <Text variant="title" color={live ? 'text' : 'textMuted'}>
+            {label}
+          </Text>
+          <Text variant="caption" color="textMuted">
+            {live ? hint : 'Not now'}
+          </Text>
+        </View>
+      </SurfaceProvider>
+    </Pressable>
   );
 }

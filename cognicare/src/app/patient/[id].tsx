@@ -1,22 +1,30 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, TextInput, useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
 
 import { bandInfo } from '@/assessment/scoring';
 import { ApiError } from '@/api/client';
 import * as doctorApi from '@/api/doctor.api';
 import { Dumbbell, type DumbbellRow } from '@/charts/Dumbbell';
-import { chart } from '@/charts/colors';
-import { Meter } from '@/charts/Meter';
+import { LevelMeter } from '@/charts/LevelMeter';
 import { Sparkline } from '@/charts/Sparkline';
 import { DOMAIN_LABELS, type Domain } from '@/db/types';
 import { getGame } from '@/games/registry';
 import { useAuth } from '@/store/auth';
-import { colors, radius, space, TOUCH_MIN } from '@/theme/tokens';
-import { Button, Card, Screen, Text } from '@/ui';
-
-const MAX_LEVEL = 15;
+import { colors, radius, space } from '@/theme/tokens';
+import {
+  Banner,
+  Button,
+  Card,
+  InfoRow,
+  Score,
+  Screen,
+  ScreenHeader,
+  StatTile,
+  SurfaceProvider,
+  Text,
+  TextField,
+} from '@/ui';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -36,7 +44,6 @@ export default function PatientDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { authedFetch, user } = useAuth();
-  const { width } = useWindowDimensions();
 
   const [patient, setPatient] = useState<doctorApi.PatientSummary | null>(null);
   const [assessments, setAssessments] = useState<doctorApi.ServerAssessment[]>([]);
@@ -75,9 +82,7 @@ export default function PatientDetail() {
         setRemarks(r.remarks);
       } catch (e) {
         if (!cancelled) {
-          setError(
-            e instanceof ApiError ? e.message : 'Could not load this patient’s records.'
-          );
+          setError(e instanceof ApiError ? e.message : 'Could not load this patient’s records.');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -147,8 +152,6 @@ export default function PatientDetail() {
     }
   }
 
-  const cardWidth = Math.min(width, 520) - space.lg * 4;
-
   const rollups = useMemo<GameRollup[]>(() => {
     const byGame = new Map<string, doctorApi.ServerSession[]>();
     // Oldest first so trends read left to right.
@@ -160,9 +163,7 @@ export default function PatientDetail() {
     return [...byGame.entries()]
       .map(([gameId, rows]) => {
         const accuracies = rows.map((r) => r.accuracy ?? 0);
-        const reactions = rows
-          .map((r) => r.avg_reaction_ms)
-          .filter((n): n is number => n != null);
+        const reactions = rows.map((r) => r.avg_reaction_ms).filter((n): n is number => n != null);
         return {
           gameId,
           plays: rows.length,
@@ -192,7 +193,7 @@ export default function PatientDetail() {
   if (loading) {
     return (
       <Screen>
-        <Header onBack={() => router.back()} title="Loading…" />
+        <ScreenHeader title="Loading…" onBack={() => router.back()} />
       </Screen>
     );
   }
@@ -200,96 +201,91 @@ export default function PatientDetail() {
   if (error) {
     return (
       <Screen>
-        <Header onBack={() => router.back()} title="Unavailable" />
-        <Card>
-          <Text variant="body" color="danger">
-            {error}
-          </Text>
-        </Card>
+        <ScreenHeader title="Unavailable" onBack={() => router.back()} />
+        <Banner tone="error">{error}</Banner>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <Header onBack={() => router.back()} title={patient?.name ?? 'Patient'} />
+      <ScreenHeader title={patient?.name ?? 'Patient'} onBack={() => router.back()} />
 
       <Button
         label="Chat about this patient"
         variant="secondary"
-        onPress={() =>
-          router.push({ pathname: '/patient/[id]/chat', params: { id, name: patient?.name ?? '' } })
-        }
+        icon="chatbox-ellipses-outline"
+        onPress={() => router.push({ pathname: '/patient/[id]/chat', params: { id, name: patient?.name ?? '' } })}
       />
 
-      <Card>
-        <Text variant="caption" color="textMuted">
-          {patient?.email}
-        </Text>
-        <View style={{ flexDirection: 'row', gap: space.lg, marginTop: space.sm }}>
-          <Stat label="Sessions" value={String(sessions.length)} />
-          <Stat label="Check-ins" value={String(assessments.length)} />
-          <Stat label="Games used" value={String(rollups.length)} />
-        </View>
-      </Card>
+      <Text variant="body" color="textMuted">
+        {patient?.email}
+      </Text>
+
+      {/* On the page, not inside a card: nested in one, each tile had ~60dp
+          for its label and "Sessions" broke mid-word. */}
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <StatTile value={String(sessions.length)} label="Sessions" />
+        <StatTile value={String(assessments.length)} label="Check-ins" />
+        <StatTile value={String(rollups.length)} label="Games used" />
+      </View>
 
       {/* Two panels, same separation as the patient's own dashboard. The
           games and the questionnaire do not measure the same things, and a
           combined figure would imply a link the data cannot support. */}
-      <Card>
-        <Text variant="heading">Games</Text>
-        <Text variant="body" color="textMuted">
-          Performance in the exercises. Higher is better.
-        </Text>
+      <Card style={{ gap: space.lg }}>
+        <View style={{ gap: space.xs }}>
+          <Text variant="heading">Games</Text>
+          <Text variant="body" color="textMuted">
+            Performance in the exercises. Higher is better.
+          </Text>
+        </View>
 
         {rollups.length === 0 ? (
           <Text variant="body" color="textMuted">
             No sessions shared yet.
           </Text>
         ) : (
-          <View style={{ gap: space.lg, marginTop: space.sm }}>
-            {rollups.map((r) => (
-              <View key={r.gameId} style={{ gap: space.xs }}>
+          rollups.map((r) => {
+            const meta = getGame(r.gameId);
+            return (
+              <View key={r.gameId} style={{ gap: space.sm }}>
+                <LevelMeter title={meta?.title ?? r.gameId} level={r.level} max={meta?.maxLevel ?? 15} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text variant="label">{getGame(r.gameId)?.title ?? r.gameId}</Text>
-                  <Text variant="body" color="textMuted">
-                    Level {r.level}
+                  <Text variant="caption" color="textMuted">
+                    Accuracy, last {r.trend.length} {r.trend.length === 1 ? 'session' : 'sessions'}
                   </Text>
+                  <Text variant="label">Avg {Math.round(r.meanAccuracy * 100)}%</Text>
                 </View>
-
-                <Meter value={r.level} max={MAX_LEVEL} width={cardWidth} />
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-                  <Sparkline values={r.trend} width={cardWidth - 90} />
-                  <Text variant="body">{Math.round(r.meanAccuracy * 100)}%</Text>
-                </View>
-
+                <Sparkline values={r.trend} />
                 <Text variant="caption" color="textMuted">
                   {r.plays} {r.plays === 1 ? 'session' : 'sessions'}
-                  {r.meanReactionMs != null ? ` · ${r.meanReactionMs}ms average` : ''}
+                  {r.meanReactionMs != null ? ` · ${r.meanReactionMs} ms average` : ''}
                   {r.lastPlayed ? ` · last ${formatDate(r.lastPlayed)}` : ''}
                 </Text>
               </View>
-            ))}
-          </View>
+            );
+          })
         )}
       </Card>
 
-      <Card>
-        <Text variant="heading">Check-in</Text>
-        <Text variant="body" color="textMuted">
-          Self-reported difficulty. Lower is better.
-        </Text>
+      <Card style={{ gap: space.md }}>
+        <View style={{ gap: space.xs }}>
+          <Text variant="heading">Check-in</Text>
+          <Text variant="body" color="textMuted">
+            Self-reported difficulty. Lower is better.
+          </Text>
+        </View>
 
         {!latest ? (
           <Text variant="body" color="textMuted">
             No check-in shared yet.
           </Text>
         ) : (
-          <View style={{ gap: space.md, marginTop: space.sm }}>
+          <>
             <View>
-              <Text variant="display">{latest.total_score} / 100</Text>
-              <Text variant="heading" color="accent">
+              <Score value={latest.total_score} max={100} />
+              <Text variant="heading" color="warning">
                 {bandInfo(latest.band).label}
               </Text>
               <Text variant="caption" color="textMuted">
@@ -297,15 +293,13 @@ export default function PatientDetail() {
               </Text>
             </View>
 
-            <Dumbbell rows={domainRows} max={20} width={cardWidth} />
-
-            {previous && (
-              <View style={{ flexDirection: 'row', gap: space.lg, flexWrap: 'wrap' }}>
-                <Key color={chart.before} label={`Previous (${formatDate(previous.taken_at)})`} />
-                <Key color={chart.now} label="Latest" />
-              </View>
-            )}
-          </View>
+            <Dumbbell
+              rows={domainRows}
+              max={20}
+              beforeLabel={previous ? `Previous (${formatDate(previous.taken_at)})` : undefined}
+              nowLabel="Latest"
+            />
+          </>
         )}
       </Card>
 
@@ -313,14 +307,11 @@ export default function PatientDetail() {
         <Card>
           <Text variant="heading">Check-in history</Text>
           {assessments.map((a) => (
-            <View key={a.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="body" color="textMuted">
-                {formatDate(a.taken_at)}
-              </Text>
-              <Text variant="label">
-                {a.total_score} · {bandInfo(a.band).label}
-              </Text>
-            </View>
+            <InfoRow
+              key={a.id}
+              label={formatDate(a.taken_at)}
+              value={`${a.total_score} · ${bandInfo(a.band).label}`}
+            />
           ))}
         </Card>
       )}
@@ -329,191 +320,126 @@ export default function PatientDetail() {
           data, this is a clinician's interpretation of it. An AI draft can
           seed it, but nothing here was written by the AI unedited — see
           draftWithAi / saveRemark. */}
-      <Card>
-        <Text variant="heading">Remarks</Text>
-        <Text variant="body" color="textMuted">
-          Notes for the care team. Not shown to the patient.
-        </Text>
+      <Card style={{ gap: space.md }}>
+        <View style={{ gap: space.xs }}>
+          <Text variant="heading">Remarks</Text>
+          <Text variant="body" color="textMuted">
+            Notes for the care team. Not shown to the patient.
+          </Text>
+        </View>
 
-        {remarks.length === 0 && !composerOpen && (
-          <Text variant="body" color="textMuted" style={{ marginTop: space.sm }}>
+        {!composerOpen && remarks.length === 0 && (
+          <Text variant="body" color="textMuted">
             No remarks yet.
           </Text>
         )}
 
-        {!composerOpen && (
-          <View style={{ gap: space.md, marginTop: space.sm }}>
-            {remarks.map((r) => (
-              <View
-                key={r.id}
-                style={{
-                  gap: space.xs,
-                  paddingTop: space.sm,
-                  borderTopWidth: remarks[0] === r ? 0 : 1,
-                  borderTopColor: colors.border,
-                }}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text variant="label">{r.author_name}</Text>
-                  <Text variant="caption" color="textMuted">
-                    {formatDate(r.created_at)}
-                  </Text>
-                </View>
-                <Text variant="body">{r.body}</Text>
-                {r.plan && (
+        {!composerOpen &&
+          remarks.map((r, i) => (
+            <View
+              key={r.id}
+              style={{
+                gap: space.sm,
+                paddingTop: i === 0 ? 0 : space.md,
+                borderTopWidth: i === 0 ? 0 : 1,
+                borderTopColor: colors.divider,
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.md }}>
+                <Text variant="label">{r.author_name}</Text>
+                <Text variant="caption" color="textMuted">
+                  {formatDate(r.created_at)}
+                </Text>
+              </View>
+              <Text variant="body">{r.body}</Text>
+              {r.plan && (
+                <SurfaceProvider value="raised">
                   <View
                     style={{
-                      marginTop: space.xs,
-                      padding: space.sm,
+                      gap: space.xs,
+                      padding: space.md,
                       borderRadius: radius.md,
-                      backgroundColor: colors.accentSoft,
+                      backgroundColor: colors.surfaceRaised,
                     }}
                   >
-                    <Text variant="caption" color="accent">
+                    <Text variant="label" color="accent">
                       Training plan
                     </Text>
                     <Text variant="body">{r.plan}</Text>
                   </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
+                </SurfaceProvider>
+              )}
+            </View>
+          ))}
 
         {composerOpen ? (
-          <View style={{ gap: space.md, marginTop: space.md }}>
+          <View style={{ gap: space.md }}>
             <Button
               label={drafting ? 'Drafting…' : 'Draft with AI'}
               variant="secondary"
+              icon="sparkles-outline"
+              busy={drafting}
+              disabled={saving}
               onPress={draftWithAi}
-              disabled={drafting || saving}
             />
 
+            {/* The draft must never look final: it is labelled as a draft
+                from a named model, for the doctor to check and change. */}
             {aiProvenance && (
-              <Text variant="caption" color="textMuted">
-                Drafted by {aiProvenance.model}. Read it over — edit anything before saving.
-              </Text>
+              <Banner tone="info" icon="sparkles-outline">
+                {`Drafted by ${aiProvenance.model}. Read it over — edit anything before saving.`}
+              </Banner>
             )}
 
-            <View style={{ gap: space.sm }}>
-              <Text variant="label">Observations</Text>
-              <TextInput
-                value={draftBody}
-                onChangeText={setDraftBody}
-                placeholder="What you are seeing in this patient's results…"
-                placeholderTextColor={colors.disabled}
-                multiline
-                style={composerInputStyle}
-              />
-            </View>
+            <TextField
+              label="Observations"
+              value={draftBody}
+              onChangeText={setDraftBody}
+              placeholder="What you are seeing in this patient's results…"
+              multiline
+              minLines={4}
+            />
+            <TextField
+              label="Training plan (optional)"
+              value={draftPlan}
+              onChangeText={setDraftPlan}
+              placeholder="Which exercises, how often…"
+              multiline
+              minLines={3}
+            />
 
-            <View style={{ gap: space.sm }}>
-              <Text variant="label">Training plan (optional)</Text>
-              <TextInput
-                value={draftPlan}
-                onChangeText={setDraftPlan}
-                placeholder="Which exercises, how often…"
-                placeholderTextColor={colors.disabled}
-                multiline
-                style={composerInputStyle}
-              />
-            </View>
-
-            {remarkError && (
-              <View
-                style={{
-                  backgroundColor: colors.dangerSoft,
-                  borderRadius: radius.md,
-                  borderWidth: 2,
-                  borderColor: colors.danger,
-                  padding: space.md,
-                }}
-              >
-                <Text variant="body" color="danger">
-                  {remarkError}
-                </Text>
-              </View>
-            )}
+            {remarkError && <Banner tone="error">{remarkError}</Banner>}
 
             <View style={{ flexDirection: 'row', gap: space.sm }}>
               <Button
                 label={saving ? 'Saving…' : 'Save remark'}
+                busy={saving}
                 onPress={saveRemark}
-                disabled={!draftBody.trim() || saving || drafting}
+                disabled={!draftBody.trim() || drafting}
                 style={{ flex: 1 }}
               />
               <Button
                 label="Cancel"
-                variant="quiet"
+                variant="secondary"
                 onPress={() => setComposerOpen(false)}
                 disabled={saving}
                 style={{ flex: 1 }}
               />
             </View>
+            {!draftBody.trim() && !drafting && (
+              <Text variant="caption" color="textMuted">
+                Write your observations, or draft them with AI, to save.
+              </Text>
+            )}
           </View>
         ) : (
-          <Button label="Write a remark" onPress={openComposer} style={{ marginTop: space.sm }} />
+          <Button label="Write a remark" icon="create-outline" onPress={openComposer} />
         )}
       </Card>
 
       <Text variant="caption" color="textMuted">
-        These scores are practice and self-report data, not a diagnostic
-        assessment.
+        These scores are practice and self-report data, not a diagnostic assessment.
       </Text>
     </Screen>
-  );
-}
-
-const composerInputStyle = {
-  minHeight: TOUCH_MIN * 1.6,
-  borderWidth: 2,
-  borderColor: colors.border,
-  borderRadius: radius.md,
-  backgroundColor: colors.surface,
-  paddingHorizontal: space.md,
-  paddingTop: space.sm,
-  fontSize: 20,
-  color: colors.text,
-  textAlignVertical: 'top',
-} as const;
-
-function Header({ title, onBack }: { title: string; onBack: () => void }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-      <Pressable
-        onPress={onBack}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        hitSlop={12}
-        style={{ width: TOUCH_MIN, height: TOUCH_MIN, justifyContent: 'center' }}
-      >
-        <Ionicons name="chevron-back" size={30} color={colors.text} />
-      </Pressable>
-      <Text variant="title" style={{ flex: 1 }} numberOfLines={1}>
-        {title}
-      </Text>
-    </View>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ flex: 1 }}>
-      <Text variant="title">{value}</Text>
-      <Text variant="caption" color="textMuted">
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function Key({ color, label }: { color: string; label: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-      <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: color }} />
-      <Text variant="caption" color="textMuted">
-        {label}
-      </Text>
-    </View>
   );
 }

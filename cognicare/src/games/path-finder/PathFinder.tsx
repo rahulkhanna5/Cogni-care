@@ -5,11 +5,14 @@ import { Pressable, useWindowDimensions, View } from 'react-native';
 
 import type { GamePlayProps } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
-import { Button, Text } from '@/ui';
+import { Banner, Button, Text } from '@/ui';
 import { MAPS_PER_ROUND, pathLevel } from './levels';
 import { canExtend, generateMap, routeAccuracy, same, type Cell } from './routing';
 
 type Props = GamePlayProps & { random?: () => number };
+
+/** Long enough to read the result line before the next map appears. */
+const RESULT_MS = 1600;
 
 export function PathFinder({ level, onRoundComplete, random = Math.random }: Props) {
   const spec = pathLevel(level);
@@ -24,6 +27,7 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
   const [mapIndex, setMapIndex] = useState(0);
   const map = maps[mapIndex];
   const [path, setPath] = useState<Cell[]>([map.start]);
+  const [result, setResult] = useState<string | null>(null);
 
   const scores = useRef<number[]>([]);
   const latencies = useRef<number[]>([]);
@@ -32,7 +36,7 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
   const locked = useRef(false);
 
   const gap = 4;
-  const board = Math.min(width - space.lg * 2, 420);
+  const board = Math.min(width - space.gutter * 2, 420);
   const cellSize = (board - gap * (map.size - 1)) / map.size;
 
   const finishMap = useCallback(
@@ -42,7 +46,15 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
       latencies.current.push(Date.now() - startedAt.current);
       if (accuracy < 1) detours.current += 1;
 
+      const extra = finalPath.length - 1 - map.optimal;
+      setResult(
+        extra <= 0
+          ? 'The shortest way — well done.'
+          : `Home! ${extra} ${extra === 1 ? 'step' : 'steps'} longer than the shortest way.`
+      );
+
       setTimeout(() => {
+        setResult(null);
         if (mapIndex + 1 < maps.length) {
           const next = mapIndex + 1;
           setMapIndex(next);
@@ -67,7 +79,7 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
           ),
           score: Math.round(mean * 50),
         });
-      }, 700);
+      }, RESULT_MS);
     },
     [map, mapIndex, maps, onRoundComplete]
   );
@@ -100,9 +112,10 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
   );
 
   const pathIndex = (cell: Cell) => path.findIndex((p) => same(p, cell));
+  const icon = cellSize * 0.5;
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: space.lg, alignItems: 'center' }}>
+    <View style={{ flex: 1, paddingHorizontal: space.gutter, alignItems: 'center' }}>
       <Text variant="heading" center>
         Find the shortest way home
       </Text>
@@ -115,16 +128,10 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
           <View key={r} style={{ flexDirection: 'row', gap }}>
             {Array.from({ length: map.size }).map((__, c) => {
               const cell = { r, c };
-              const onPath = pathIndex(cell);
+              const onPath = pathIndex(cell) >= 0;
               const isStart = same(cell, map.start);
               const isGoal = same(cell, map.goal);
               const isBlocked = map.blocked[r][c];
-
-              const background = isBlocked
-                ? colors.textMuted
-                : onPath >= 0
-                  ? colors.accent
-                  : colors.surface;
 
               return (
                 <Pressable
@@ -135,33 +142,33 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
                   accessibilityLabel={
                     isBlocked
                       ? `Blocked, row ${r + 1}, column ${c + 1}`
-                      : `Row ${r + 1}, column ${c + 1}`
+                      : isStart
+                        ? 'Home, the start'
+                        : isGoal
+                          ? `Flag, the goal, row ${r + 1}, column ${c + 1}`
+                          : `Row ${r + 1}, column ${c + 1}`
                   }
                   style={{
                     width: cellSize,
                     height: cellSize,
                     borderRadius: radius.sm,
-                    backgroundColor: background,
-                    borderWidth: 2,
-                    borderColor: isGoal ? colors.success : colors.border,
+                    backgroundColor: isBlocked ? colors.surfaceRaised : onPath ? colors.accent : colors.surface,
+                    borderWidth: isGoal ? 3 : isBlocked ? 1 : 2,
+                    borderColor: isGoal ? colors.success : isBlocked ? colors.divider : onPath ? colors.accent : colors.edge,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  {isStart && (
-                    <Ionicons
-                      name="home"
-                      size={cellSize * 0.5}
-                      color={onPath >= 0 ? colors.textInverse : colors.text}
-                    />
-                  )}
-                  {isGoal && (
-                    <Ionicons
-                      name="flag"
-                      size={cellSize * 0.5}
-                      color={onPath >= 0 ? colors.textInverse : colors.success}
-                    />
-                  )}
+                  {isBlocked ? (
+                    // A building, so "blocked" is a shape and not only a grey.
+                    <Ionicons name="business" size={icon} color={colors.edge} />
+                  ) : isStart ? (
+                    <Ionicons name="home" size={icon} color={onPath ? colors.ink : colors.text} />
+                  ) : isGoal ? (
+                    <Ionicons name="flag" size={icon} color={onPath ? colors.ink : colors.success} />
+                  ) : onPath ? (
+                    <View style={{ width: cellSize * 0.22, height: cellSize * 0.22, borderRadius: 99, backgroundColor: colors.ink }} />
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -169,13 +176,21 @@ export function PathFinder({ level, onRoundComplete, random = Math.random }: Pro
         ))}
       </View>
 
-      <Button
-        label="Start over"
-        variant="secondary"
-        fullWidth={false}
-        onPress={() => setPath([map.start])}
-        style={{ marginTop: space.lg }}
-      />
+      <View style={{ alignSelf: 'stretch', marginTop: space.lg, minHeight: 64 }}>
+        {result ? (
+          <Banner tone="success" icon="flag-outline">
+            {result}
+          </Banner>
+        ) : (
+          <Button
+            label="Start over"
+            variant="secondary"
+            icon="refresh"
+            fullWidth={false}
+            onPress={() => setPath([map.start])}
+          />
+        )}
+      </View>
     </View>
   );
 }
