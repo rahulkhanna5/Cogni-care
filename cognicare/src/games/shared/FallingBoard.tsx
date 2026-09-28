@@ -1,12 +1,21 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, View, type ImageSourcePropType } from 'react-native';
+import {
+  Animated,
+  Easing,
+  LayoutChangeEvent,
+  Platform,
+  Pressable,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
 
 import type { RoundResult } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
-import { SurfaceProvider, Text } from '@/ui';
-import { Backdrop } from './Backdrop';
+import { Art } from '@/art/Art';
+import { SurfaceProvider, Text, useReduceMotion } from '@/ui';
+import { Backdrop, WATER_SPEED } from './Backdrop';
 import {
   advance,
   createEngine,
@@ -40,8 +49,18 @@ type Props = {
   rotateFor?: (item: Faller) => number;
   /** A picture behind the board, e.g. the supermarket aisle. Items switch to framed tiles. */
   backdrop?: ImageSourcePropType;
+  /**
+   * Just the drawing: no tile, no word. For pieces anyone can name at a
+   * glance (a fish, a leaf) — the word only cluttered a busy board.
+   */
+  bare?: boolean;
+  /** What a screen reader says for an item. Defaults to its word. */
+  describe?: (item: Faller) => string;
   onFinish: (result: RoundResult) => void;
 };
+
+/** A bare drawing, sized to fill most of its touch box. */
+const BARE_ART = 64;
 
 export function FallingBoard({
   specs,
@@ -51,6 +70,8 @@ export function FallingBoard({
   flow,
   rotateFor,
   backdrop,
+  bare = false,
+  describe,
   onFinish,
 }: Props) {
   const engine = useRef<EngineState>(createEngine(durationMs, specs));
@@ -123,7 +144,7 @@ export function FallingBoard({
   const pieces = (
     <>
       {flow && size.height > 0 && (
-        <FlowChevrons width={size.width} height={size.height} onPicture={!!backdrop} />
+        <FlowChevrons width={size.width} height={size.height} onPicture={!!backdrop} moving={!!backdrop} />
       )}
 
       {size.height > 0 &&
@@ -135,17 +156,29 @@ export function FallingBoard({
               <Pressable
                 key={item.id}
                 accessibilityRole="button"
-                accessibilityLabel={item.label}
+                accessibilityLabel={describe ? describe(item) : item.label}
                 onPress={() => onTap(item.id)}
-                style={{ position: 'absolute', top, left, width: SPRITE_W, height: SPRITE_H, alignItems: 'center' }}
+                style={{
+                  position: 'absolute',
+                  top,
+                  left,
+                  width: SPRITE_W,
+                  height: SPRITE_H,
+                  alignItems: 'center',
+                  justifyContent: bare ? 'center' : undefined,
+                }}
               >
-                <Sprite
-                  art={item.art}
-                  label={item.label}
-                  size={TILE}
-                  rotate={rotateFor?.(item)}
-                  framed={!!backdrop}
-                />
+                {bare ? (
+                  <Art name={item.art} size={BARE_ART} rotate={rotateFor?.(item)} />
+                ) : (
+                  <Sprite
+                    art={item.art}
+                    label={item.label}
+                    size={TILE}
+                    rotate={rotateFor?.(item)}
+                    framed={!!backdrop}
+                  />
+                )}
               </Pressable>
             );
           })}
@@ -192,7 +225,7 @@ export function FallingBoard({
 
       <SurfaceProvider value="surface">
         {backdrop ? (
-          <Backdrop source={backdrop} onLayout={onLayout} testID="falling-board">
+          <Backdrop source={backdrop} onLayout={onLayout} testID="falling-board" flow={flow}>
             {pieces}
           </Backdrop>
         ) : (
@@ -213,14 +246,54 @@ export function FallingBoard({
   );
 }
 
-/** Faint arrows showing the current runs downward. Decorative only. */
-function FlowChevrons({ width, height, onPicture }: { width: number; height: number; onPicture: boolean }) {
+/**
+ * Faint arrows showing the current runs downward. Decorative only. Over a
+ * flowing picture they drift down with the water, at its speed, so arrows and
+ * water tell the same story; still under Reduce Motion.
+ */
+function FlowChevrons({
+  width,
+  height,
+  onPicture,
+  moving,
+}: {
+  width: number;
+  height: number;
+  onPicture: boolean;
+  moving: boolean;
+}) {
+  const reduce = useReduceMotion();
   const cols = [0.2, 0.5, 0.8];
   const rows = Math.max(3, Math.floor(height / 90));
+  const step = height / rows;
+  const drift = moving && !reduce;
+  const shift = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!drift) return;
+    shift.setValue(0);
+    // One row's travel, then back: the pattern repeats every row, so the
+    // jump is invisible.
+    const loop = Animated.loop(
+      Animated.timing(shift, {
+        toValue: step,
+        duration: (step / WATER_SPEED) * 1000,
+        easing: Easing.linear,
+        useNativeDriver: Platform.OS !== 'web',
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [drift, step, shift]);
+
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', width, height }}>
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', width, height, transform: drift ? [{ translateY: shift }] : undefined }}
+    >
       {cols.map((cx) =>
-        Array.from({ length: rows }).map((_, r) => (
+        // One extra row above the top edge, which the drift brings into view.
+        Array.from({ length: rows + (drift ? 1 : 0) }).map((_, r) => (
           <Ionicons
             key={`${cx}-${r}`}
             name="chevron-down"
@@ -228,10 +301,10 @@ function FlowChevrons({ width, height, onPicture }: { width: number; height: num
             // Faint on the plain board; on a picture, a pale wash that shows
             // over water or rock without competing with the pieces.
             color={onPicture ? `${colors.text}66` : colors.divider}
-            style={{ position: 'absolute', left: cx * width - 14, top: ((r + 0.5) * height) / rows - 14 }}
+            style={{ position: 'absolute', left: cx * width - 14, top: (r + 0.5) * step - 14 - (drift ? step : 0) }}
           />
         ))
       )}
-    </View>
+    </Animated.View>
   );
 }

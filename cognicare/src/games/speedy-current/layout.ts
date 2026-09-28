@@ -1,6 +1,6 @@
-import { SPRITE_H, SPRITE_W, type FallerSpec } from '@/games/shared/falling';
+import { schedule, SPRITE_H, SPRITE_W, type FallerSpec } from '@/games/shared/falling';
 import { laneLayout } from '@/games/shared/lanes';
-import type { CurrentLevel } from './levels';
+import { DRIFT, FISH, PREDATORS, type CurrentLevel } from './levels';
 
 export { SPRITE_H, SPRITE_W };
 
@@ -27,3 +27,37 @@ export const currentLayout = (specs: FallerSpec[], level: CurrentLevel, random: 
     lanes: LANES,
     followGap: FOLLOW_GAP,
   });
+
+/**
+ * A whole round: fish to tap, from the bottom and from the top; sharks (never
+ * tap) swimming up; debris drifting down. The game and its tests both build
+ * rounds here, so what is tested is what is played.
+ */
+export function currentRound(level: CurrentLevel, random: () => number): FallerSpec[] {
+  const common = { durationMs: level.durationMs, travelMs: level.travelMs, random };
+  const main = schedule({
+    ...common,
+    targetCount: level.targetCount - level.fromTop,
+    distractorCount: level.distractorCount,
+    forbiddenCount: level.forbiddenCount,
+    targets: FISH,
+    distractors: DRIFT,
+    forbidden: PREDATORS,
+    direction: 'up',
+    distractorDirection: 'down',
+  });
+  // The rest of the fish come down from the top. Still fish, still to tap.
+  const fromTop = schedule({
+    ...common,
+    targetCount: level.fromTop,
+    distractorCount: 0,
+    targets: FISH,
+    distractors: DRIFT,
+    direction: 'down',
+  }).map((s, k) => ({ ...s, id: main.length + k }));
+
+  return currentLayout([...main, ...fromTop], level, random);
+}
+
+/** The fish drawings, whichever way they swim. */
+export const isFish = (spec: Pick<FallerSpec, 'art'>) => FISH.some((f) => f.art === spec.art);

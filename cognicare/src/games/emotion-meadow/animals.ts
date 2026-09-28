@@ -10,8 +10,8 @@ import type { Emotion } from './Face';
  * The source sheet gave every feeling its own background colour — yellow
  * happy, red angry, blue sad, purple surprised. Left in, a player could tap
  * "the red one" without reading a face, and the game would train colour
- * matching. Each face was cut out (macOS Vision subject lifting) and is shown
- * on the same light tile, so the expression is the only difference.
+ * matching. Each face was cut out (macOS Vision subject lifting) and stands
+ * straight on the meadow, no tile, so the expression is the only difference.
  *
  * Only the four feelings above exist here. A trial that also needs "worried"
  * or "calm" uses the drawn faces for every face in it (see faceKind).

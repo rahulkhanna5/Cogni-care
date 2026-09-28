@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 245) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 261) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -71,6 +71,22 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   a fixed 3×4 board, and nothing else changes — one axis per step. It stops
   at 10: older adults' spatial span is about 5-6, and a level nobody passes
   only teaches failure. Old saves at levels 9-15 clamp to 8.
+- **In Speedy Current every fish is a catch, from either end** (`speedy-current/
+  layout.ts`, `currentRound`): some come down from the top (2 → 7 per turn),
+  the rest up from the bottom; debris is always wrong, sharks never tapped.
+  Items are bare drawings (no tile, no word); direction lives in the
+  accessibility label. The water flows (`Backdrop flow="down"`, mirrored tiles
+  so no seam) at 24dp/s, still under Reduce Motion.
+- **Path Finder is a walk across town** (`path-finder/town.ts`): tap
+  crossroads along open roads; each turn is Home → hospital / school / police
+  station and back, and on the way back an accident closes a road just used.
+  The town is 3×3 crossroads at level 1, 4×4 at 2, 5×5 from 3 (the tap-size
+  ceiling); after that road blocks (2 → 8) carry the difficulty.
+  Corner-to-corner has dozens of equal shortest ways and no handful of blocks
+  lengthens any, so on levels with blocks "on the way" the destination goes
+  where short ways are few and each block takes the busiest road. Buildings
+  and blocks are pictures in `assets/town/` when present (`sprites.tsx`,
+  `TOWN_IMAGES`), else the SVG stand-ins.
 - **Falling items travel in lanes** (`games/shared/lanes.ts`): Market Rush 3,
   Speedy Current 4. Random position plus random entry time stacked items on
   top of each other. In Speedy Current a lane never carries an up-swimmer and
@@ -89,7 +105,7 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - **Face ink in Emotion Meadow is a fixed dark constant**, not the theme text
   colour — the face is always a light circle, so theme ink would make the
   features vanish.
-- **Emotion Meadow's animal faces sit on one neutral tile**
+- **Emotion Meadow's animal faces stand frameless on the meadow**
   (`emotion-meadow/animals.ts`). The source sheet coloured each feeling's
   background (red = angry…), which would let a player match colours instead
   of reading faces; the animals were cut out with macOS Vision. One animal per

@@ -2,13 +2,13 @@ import { useMemo } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 
 import { FallingBoard } from '@/games/shared/FallingBoard';
-import { schedule } from '@/games/shared/falling';
+import type { Faller } from '@/games/shared/falling';
 import { endOf } from '@/games/shared/lanes';
 import type { GamePlayProps } from '@/games/shell/types';
-import { currentLayout } from './layout';
-import { currentLevel, DRIFT, FISH, PREDATORS } from './levels';
+import { currentRound, isFish } from './layout';
+import { currentLevel } from './levels';
 
-/** The river the fish swim in. Pieces on it are framed tiles, so they read over any of it. */
+/** The river the fish swim in; it flows downward, like the current. */
 const WATER: ImageSourcePropType = require('../../../assets/images/speedy-current.webp');
 
 type Props = GamePlayProps & {
@@ -16,35 +16,23 @@ type Props = GamePlayProps & {
   random?: () => number;
 };
 
+/** Swimmers are drawn facing left; turn each to face the way it goes. */
+const facing = (item: Faller) => (item.direction === 'up' ? 90 : isFish(item) ? -90 : 0);
+
+/**
+ * What a screen reader says: the direction is the whole task, and a player
+ * who cannot see the movement still needs to know it.
+ */
+const describe = (item: Faller) =>
+  `${item.label}, ${item.direction === 'up' ? 'swimming up' : isFish(item) ? 'swimming down' : 'drifting down'}`;
+
 export function SpeedyCurrent({ level, onRoundComplete, random = Math.random }: Props) {
   const spec = currentLevel(level);
 
-  const specs = useMemo(
-    () =>
-      // In lanes, so nothing ever swims through or drifts on top of anything
-      // else (see layout.ts).
-      currentLayout(
-        schedule({
-          durationMs: spec.durationMs,
-          travelMs: spec.travelMs,
-          targetCount: spec.targetCount,
-          distractorCount: spec.distractorCount,
-          forbiddenCount: spec.forbiddenCount,
-          targets: FISH,
-          distractors: DRIFT,
-          forbidden: PREDATORS,
-          // Fish move against the flow; debris moves with it. That opposition is
-          // the whole visual cue the player is learning to use.
-          direction: 'up',
-          distractorDirection: 'down',
-          random,
-        }),
-        spec,
-        random
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [level]
-  );
+  // Fish from both ends, sharks, and debris drifting down, in lanes so
+  // nothing overlaps (see layout.ts).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const specs = useMemo(() => currentRound(spec, random), [level]);
   // An item that waited for a free lane may finish a fraction past the
   // level's length; the turn runs until it has, rather than cut it off.
   const durationMs = Math.max(spec.durationMs, endOf(specs));
@@ -54,16 +42,15 @@ export function SpeedyCurrent({ level, onRoundComplete, random = Math.random }: 
       specs={specs}
       durationMs={durationMs}
       backdrop={WATER}
-      prompt={
-        spec.forbiddenCount > 0
-          ? 'Tap the fish swimming up — never the sharks'
-          : 'Tap only the fish swimming up'
-      }
+      // Just the drawings: a fish or a leaf needs no word under it, and the
+      // tiles hid the moving water.
+      bare
+      describe={describe}
+      prompt={spec.forbiddenCount > 0 ? 'Tap every fish — never the sharks' : 'Tap every fish'}
       targetNoun="fish"
       flow="down"
-      // Swimmers are drawn facing left; turn them to face the way they go.
-      // Sharks swim up too, so direction alone never gives them away.
-      rotateFor={(item) => (item.direction === 'up' ? 90 : 0)}
+      // Fish face the way they swim, so one coming down looks it.
+      rotateFor={facing}
       onFinish={onRoundComplete}
     />
   );

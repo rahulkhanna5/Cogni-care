@@ -159,29 +159,27 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
                     accessibilityRole="button"
                     accessibilityLabel={`Face ${i + 1}`}
                     onPress={() => choose(i)}
-                    style={{
-                      width: tile,
-                      height: tile,
-                      padding: space.sm,
-                      borderRadius: radius.md,
-                      borderWidth: state === 'idle' ? 2 : 3,
-                      borderStyle: state === 'mistake' ? 'dashed' : 'solid',
-                      borderColor:
-                        state === 'correct'
-                          ? colors.success
-                          : state === 'mistake'
-                            ? colors.danger
-                            : colors.edge,
-                      backgroundColor:
-                        state === 'correct'
-                          ? colors.successSoft
-                          : state === 'mistake'
-                            ? colors.dangerSoft
-                            : colors.surface,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                    // No frame: the faces stand in the meadow itself. The tap
+                    // area is still the whole square.
+                    style={{ width: tile, height: tile, alignItems: 'center', justifyContent: 'center' }}
                   >
+                    {/* After a pick, a ring says right or wrong — solid green, or
+                        dashed red — with a tick or dash badge, never colour alone. */}
+                    {state !== 'idle' && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          width: tile,
+                          height: tile,
+                          borderRadius: tile / 2,
+                          borderWidth: 4,
+                          borderStyle: state === 'mistake' ? 'dashed' : 'solid',
+                          borderColor: state === 'correct' ? colors.success : colors.danger,
+                          backgroundColor: `${state === 'correct' ? colors.successSoft : colors.dangerSoft}B3`,
+                        }}
+                      />
+                    )}
+
                     {kind === 'photo' ? (
                       <Image
                         source={pickPhoto(emotion, i + index)!}
@@ -190,24 +188,26 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
                         accessibilityIgnoresInvertColors
                       />
                     ) : kind === 'animal' ? (
-                      // The same light tile behind every animal: no feeling gets a
-                      // colour of its own, and the panda's black ears still show.
-                      <View
-                        style={{
-                          width: faceSize,
-                          height: faceSize,
-                          borderRadius: radius.md,
-                          backgroundColor: colors.tile,
-                          overflow: 'hidden',
-                        }}
-                      >
+                      <>
+                        {/* A soft shadow on the ground, so the animal stands in
+                            the jungle rather than floating over it. */}
+                        <View
+                          style={{
+                            position: 'absolute',
+                            bottom: tile * 0.06,
+                            width: tile * 0.62,
+                            height: tile * 0.12,
+                            borderRadius: tile,
+                            backgroundColor: 'rgba(0,0,0,0.35)',
+                          }}
+                        />
                         <Image
                           source={animalFace(animal, emotion)!}
-                          style={{ width: faceSize, height: faceSize }}
+                          style={{ width: tile * 0.94, height: tile * 0.94 }}
                           resizeMode="contain"
                           accessibilityIgnoresInvertColors
                         />
-                      </View>
+                      </>
                     ) : (
                       <Face emotion={emotion} size={faceSize} intensity={spec.intensity} />
                     )}

@@ -1,7 +1,7 @@
 import { schedule, type FallerSpec } from '@/games/shared/falling';
 import { endOf } from '@/games/shared/lanes';
 import { CURRENT_LEVELS, DRIFT, FISH, PREDATORS } from './levels';
-import { currentLayout, SPRITE_H, SPRITE_W } from './layout';
+import { currentRound, isFish, SPRITE_H, SPRITE_W } from './layout';
 
 /** Small seeded PRNG, so every run checks the same rounds. */
 function seeded(seed: number) {
@@ -16,7 +16,9 @@ function seeded(seed: number) {
 
 function round(levelIndex: number, seed: number) {
   const spec = CURRENT_LEVELS[levelIndex];
-  const random = seeded(seed);
+  // The old layout — random place, random time — kept only to show the
+  // overlap test can see the problem it guards against.
+  const old = seeded(seed);
   const raw = schedule({
     durationMs: spec.durationMs,
     travelMs: spec.travelMs,
@@ -28,9 +30,9 @@ function round(levelIndex: number, seed: number) {
     forbidden: PREDATORS,
     direction: 'up',
     distractorDirection: 'down',
-    random,
+    random: old,
   });
-  return { spec, raw, specs: currentLayout(raw, spec, random) };
+  return { spec, raw, specs: currentRound(spec, seeded(seed)) };
 }
 
 /**
@@ -74,16 +76,33 @@ describe('Speedy Current never stacks one item on another', () => {
     expect(overlaps(round(0, 1).raw).length).toBeGreaterThan(0);
   });
 
-  it('keeps every fish, shark and leaf, each going the way it was meant to', () => {
+  it('keeps every item, with a unique id', () => {
     for (let level = 0; level < CURRENT_LEVELS.length; level++) {
-      const { spec, raw, specs } = round(level, 5);
+      const { spec, specs } = round(level, 5);
       expect(specs).toHaveLength(spec.targetCount + spec.distractorCount + spec.forbiddenCount);
-      const byId = new Map(raw.map((s) => [s.id, s]));
-      for (const s of specs) {
-        expect(s.direction).toBe(byId.get(s.id)!.direction);
-        expect(s.kind).toBe(byId.get(s.id)!.kind);
-      }
+      expect(new Set(specs.map((s) => s.id)).size).toBe(specs.length);
     }
+  });
+
+  it('makes every fish one to tap — some from the bottom, some from the top', () => {
+    for (let level = 0; level < CURRENT_LEVELS.length; level++) {
+      const { spec, specs } = round(level, 5);
+      const fish = specs.filter(isFish);
+      expect(fish).toHaveLength(spec.targetCount);
+      for (const f of fish) expect(f.kind).toBe('target');
+      expect(fish.filter((f) => f.direction === 'down')).toHaveLength(spec.fromTop);
+      expect(fish.filter((f) => f.direction === 'up')).toHaveLength(spec.targetCount - spec.fromTop);
+      // Everything else is something not to tap.
+      for (const s of specs.filter((x) => !isFish(x))) expect(s.kind).not.toBe('target');
+    }
+  });
+
+  it('sends fish from the top at every level, a few more as levels rise', () => {
+    CURRENT_LEVELS.forEach((spec, i) => {
+      expect(spec.fromTop).toBeGreaterThanOrEqual(2);
+      expect(spec.fromTop).toBeLessThan(spec.targetCount);
+      if (i > 0) expect(spec.fromTop).toBeGreaterThanOrEqual(CURRENT_LEVELS[i - 1].fromTop);
+    });
   });
 
   it('lengthens a turn by under a second at most when an item waits for a lane', () => {

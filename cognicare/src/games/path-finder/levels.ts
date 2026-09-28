@@ -1,31 +1,36 @@
-export type PathLevel = { size: number; blockedRatio: number };
+import type { TownLevel } from './town';
 
-/** Grid grows first, then obstacle density — one axis at a time. */
-export const PATH_LEVELS: PathLevel[] = [
-  { size: 4, blockedRatio: 0.1 },
-  { size: 4, blockedRatio: 0.15 },
-  { size: 5, blockedRatio: 0.15 },
-  { size: 5, blockedRatio: 0.18 },
-  { size: 5, blockedRatio: 0.22 },
-  { size: 6, blockedRatio: 0.18 },
-  { size: 6, blockedRatio: 0.22 },
-  { size: 6, blockedRatio: 0.25 },
-  { size: 7, blockedRatio: 0.2 },
-  { size: 7, blockedRatio: 0.23 },
-  { size: 7, blockedRatio: 0.26 },
-  { size: 7, blockedRatio: 0.28 },
-  { size: 8, blockedRatio: 0.24 },
-  { size: 8, blockedRatio: 0.27 },
-  { size: 8, blockedRatio: 0.3 },
+/**
+ * The town grows quickly — 3×3 crossroads at level 1, 4×4 at level 2, 5×5
+ * from level 3 — and from then on road blocks do the work: 2 up to 8, with
+ * more of them (`onRoute`) on the way a player would take without looking,
+ * so the obvious route stops being the answer. 5×5 is the ceiling: past it a
+ * crossroad on a phone is smaller than a comfortable tap.
+ */
+export const PATH_LEVELS: TownLevel[] = [
+  { n: 3, blocks: 1, onRoute: 0 },
+  { n: 4, blocks: 2, onRoute: 0 },
+  { n: 5, blocks: 2, onRoute: 1 },
+  { n: 5, blocks: 3, onRoute: 1 },
+  { n: 5, blocks: 3, onRoute: 2 },
+  { n: 5, blocks: 4, onRoute: 2 },
+  { n: 5, blocks: 4, onRoute: 3 },
+  { n: 5, blocks: 5, onRoute: 2 },
+  { n: 5, blocks: 5, onRoute: 3 },
+  { n: 5, blocks: 6, onRoute: 3 },
+  { n: 5, blocks: 6, onRoute: 4 },
+  { n: 5, blocks: 7, onRoute: 3 },
+  { n: 5, blocks: 7, onRoute: 4 },
+  { n: 5, blocks: 8, onRoute: 4 },
+  { n: 5, blocks: 8, onRoute: 4 },
 ];
 
 export const PATH_MAX_LEVEL = PATH_LEVELS.length;
-export const MAPS_PER_ROUND = 2;
 
-export const pathLevel = (level: number): PathLevel =>
+export const pathLevel = (level: number): TownLevel =>
   PATH_LEVELS[Math.min(Math.max(level, 1), PATH_MAX_LEVEL) - 1];
 
 export const describePathLevel = (level: number): string => {
   const s = pathLevel(level);
-  return `${s.size} by ${s.size} town, ${Math.round(s.blockedRatio * 100)}% blocked`;
+  return `${s.n} by ${s.n} streets, ${s.blocks} ${s.blocks === 1 ? 'road' : 'roads'} blocked`;
 };
