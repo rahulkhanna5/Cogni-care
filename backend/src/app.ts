@@ -37,6 +37,16 @@ export function createApp() {
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
+  // Someone opening the server's address in a browser saw "Endpoint not
+  // found" and took the server for broken. Say what this is instead.
+  app.get('/', (_req, res) =>
+    res.json({
+      service: 'CogniCare API',
+      status: 'running',
+      message: 'This is the server behind the CogniCare app. Open the app to use it.',
+    })
+  );
+
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/doctors', doctorRoutes);
   app.use('/api/v1/patients', patientRoutes);
