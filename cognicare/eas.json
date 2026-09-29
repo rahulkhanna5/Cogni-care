@@ -10,7 +10,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://cognicare-api.onrender.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://cogni-care-qvj2.onrender.com/api/v1"
       }
     }
   }
