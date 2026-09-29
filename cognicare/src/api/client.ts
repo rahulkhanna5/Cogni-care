@@ -6,6 +6,12 @@ import Constants from 'expo-constants';
  * Expo URL the app was opened from, so we derive it rather than hardcoding it.
  */
 function inferBaseUrl(): string {
+  // An installed APK has no Expo host to follow, so its build bakes in the
+  // hosted API (eas.json sets EXPO_PUBLIC_API_URL). Development leaves it
+  // unset and keeps following the Mac on the LAN.
+  const fromBuild = process.env.EXPO_PUBLIC_API_URL;
+  if (fromBuild) return fromBuild;
+
   const fromConfig = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
   if (fromConfig) return fromConfig;
 

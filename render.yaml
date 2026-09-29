@@ -1,0 +1,35 @@
+# Render Blueprint for the CogniCare API. On render.com: New → Blueprint →
+# pick this repository; Render reads this file, builds backend/, and redeploys
+# on every push to main.
+#
+# Secrets are NOT in this file (the repository is public). Render asks for the
+# two marked `sync: false` when the Blueprint is created; JWT_SECRET it
+# generates itself, so it never has to be copied anywhere.
+services:
+  - type: web
+    name: cognicare-api
+    runtime: node
+    plan: free
+    # Same region as the Neon database (aws ap-southeast-1), so every query
+    # is a short hop instead of a round trip across the world.
+    region: singapore
+    rootDir: backend
+    # --include=dev: TypeScript is a dev dependency, and NODE_ENV=production
+    # would otherwise make npm skip it and the build fail.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENROUTER_MODEL
+        value: google/gemma-4-26b-a4b-it:free,google/gemma-4-31b-it:free,openai/gpt-oss-20b:free,nvidia/nemotron-3-nano-30b-a3b:free
