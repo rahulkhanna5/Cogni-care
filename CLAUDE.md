@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 261) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 308) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -52,17 +52,24 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   number would imply a link the data cannot support.
 - **`misses` and `false_alarms` stay separate** everywhere, device to server.
   That difference distinguishes an attention lapse from an inhibition failure.
-- **Colours are measured, not chosen.** Every text pair clears 7:1 (WCAG AAA)
-  *on the surface it sits on*, and edges of tappable things clear 3:1 —
-  `src/theme/tokens.test.ts` fails if either drifts. `Text` resolves colour per
-  surface (Card, Banner etc. set it via `SurfaceProvider`): coral text on a card
-  becomes `accentOnCard`, because plain coral is only 6.3:1 there. Never
-  hard-code a text colour; ask for the intent. Game charts are coral, check-in
-  charts sand — the two panels never share a colour.
-- **The UI follows the Claude Design system "Warm Lantern"** (brief:
-  `DESIGN_PROMPT.md`). Font is Atkinson Hyperlegible Next, loaded in the root
-  layout; each weight is its own family because Android ignores `fontWeight`
-  for custom fonts. Sprites are SVG illustrations in `src/art/`, never emoji.
+- **Colours are measured, not chosen.** The app is a light theme (owner's
+  palette: blue #2563EB, teal #0F766E, page #F8FAFC, cards white, text
+  #172033 / #475569, status green/amber/red). Every text pair clears 7:1 (WCAG
+  AAA) *on the surface it sits on*, and edges of tappable things clear 3:1 —
+  `src/theme/tokens.test.ts` fails if either drifts. The owner's exact colours
+  are used for shapes only (logo, icons, ticks, chart lines, selection edges:
+  `accentBright`, `success`, `warning`, `danger`, `teal`); they fail 7:1 as
+  text (blue 5.2, green 3.3, amber 3.2), so text and white labels use the
+  darker shade (`accent`, `successText`, `warningText`, `dangerText`). `Text`
+  resolves colour per surface (`contrast.ts`): on a soft status tint or the
+  selection tint, coloured and muted text yields to main text. Never hard-code
+  a text colour; ask for the intent. Game charts are blue, check-in charts
+  teal — the two panels never share a colour.
+- **Typography and layout follow the "Warm Lantern" design system** (brief:
+  `DESIGN_PROMPT.md`; its dark colours were replaced by the light theme
+  above). Font is Atkinson Hyperlegible Next, loaded in the root layout; each
+  weight is its own family because Android ignores `fontWeight` for custom
+  fonts. Sprites are SVG illustrations in `src/art/`, never emoji.
 - **Market Rush is drag-into-basket, but a tap does the same.** Drag is how
   it is taught; a tremor or a screen reader must not lock anyone out. Game
   time stops while an item is held (`market-rush/rules.ts`), so a slow hand
@@ -77,16 +84,26 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   Items are bare drawings (no tile, no word); direction lives in the
   accessibility label. The water flows (`Backdrop flow="down"`, mirrored tiles
   so no seam) at 24dp/s, still under Reduce Motion.
-- **Path Finder is a walk across town** (`path-finder/town.ts`): tap
-  crossroads along open roads; each turn is Home → hospital / school / police
-  station and back, and on the way back an accident closes a road just used.
-  The town is 3×3 crossroads at level 1, 4×4 at 2, 5×5 from 3 (the tap-size
-  ceiling); after that road blocks (2 → 8) carry the difficulty.
-  Corner-to-corner has dozens of equal shortest ways and no handful of blocks
-  lengthens any, so on levels with blocks "on the way" the destination goes
-  where short ways are few and each block takes the busiest road. Buildings
-  and blocks are pictures in `assets/town/` when present (`sprites.tsx`,
-  `TOWN_IMAGES`), else the SVG stand-ins.
+- **Path Finder is a hand-made illustrated city** (spec:
+  `docs/superpowers/specs/2026-10-07-city-pathfinder-design.md`). Levels are
+  data (`path-finder/data/`); the engine (`engine/`) is pure and tested; the
+  map (`city/`) is ¾ view, not isometric — an isometric diamond puts
+  crossroads ~31dp apart on a portrait phone. One trip per turn; Check route
+  scores distance 40 / safety 30 / planning 20 / time 10 (time full unless a
+  level sets a limit). Busy roads walked and closed-road taps are false
+  alarms, skipped stops are misses. `gameDistance` defaults to drawn length:
+  with no labels on the map, a road that looks short but scores long is a
+  trap. Edge places' names sit in the map margin — a pill is wider than a
+  block. Only Level 1 exists; old saves (to 15) clamp to it.
+- **Daily Order steps are pictures** (`daily-order/scenes.tsx`): each step's
+  scene is found by the step's exact words, so a new step needs only a scene
+  in `daily-order/art/` — sequencing and scoring never see pictures. Every
+  scene is built from one kit (`art/kit.tsx`: one person, shared props,
+  160×120, the app's ink outline) so 60+ drawings stay one set. Wrong steps
+  get ordinary-looking pictures too — a cross or warning would give the answer
+  away. A step without a scene shows `ActionCard`'s fallback (routine icon,
+  bold words); `scenes.test.tsx` fails if a shipped step lacks one or a scene
+  key matches no step.
 - **Falling items travel in lanes** (`games/shared/lanes.ts`): Market Rush 3,
   Speedy Current 4. Random position plus random entry time stacked items on
   top of each other. In Speedy Current a lane never carries an up-swimmer and

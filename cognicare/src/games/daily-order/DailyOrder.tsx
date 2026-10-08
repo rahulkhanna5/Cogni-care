@@ -1,13 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
-import { StepCard } from '@/games/shared/pieces';
+import { ActionCard } from '@/games/shared/ActionCard';
 import type { GamePlayProps } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 import { buildTrial } from './levels';
+import { stepPicture } from './scenes';
 
 type Props = GamePlayProps & { random?: () => number };
 
@@ -90,8 +91,22 @@ export function DailyOrder({ level, onRoundComplete, random = Math.random }: Pro
 
   const remaining = trial.choices.filter((c) => !placed.includes(c));
 
+  // Two picture cards a row to choose from; the order so far three a row.
+  const { width } = useWindowDimensions();
+  const content = Math.min(width, 600) - space.gutter * 2;
+  const choiceWidth = Math.floor((content - space.sm) / 2);
+  const placedWidth = Math.floor((content - space.sm * 2) / 3);
+
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: space.gutter, paddingBottom: space.xl, gap: space.sm }}>
+    <ScrollView
+      contentContainerStyle={{
+        width: content + space.gutter * 2,
+        alignSelf: 'center',
+        paddingHorizontal: space.gutter,
+        paddingBottom: space.xl,
+        gap: space.sm,
+      }}
+    >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm + 4 }}>
         <View
           style={{
@@ -115,22 +130,39 @@ export function DailyOrder({ level, onRoundComplete, random = Math.random }: Pro
 
       {/* What they have built so far, numbered, so the sequence is visible
           rather than held in memory while they work. */}
-      {placed.map((step, i) => (
-        <StepCard key={step} text={step} state="placed" position={i + 1} />
-      ))}
+      {placed.length > 0 && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+          {placed.map((step, i) => (
+            <ActionCard
+              key={step}
+              text={step}
+              picture={stepPicture(step)}
+              fallbackIcon={trial.task.icon}
+              state="placed"
+              position={i + 1}
+              width={placedWidth}
+            />
+          ))}
+        </View>
+      )}
 
       {placed.length > 0 && remaining.length > 0 && (
         <View style={{ height: 2, backgroundColor: colors.divider, marginVertical: space.xs }} />
       )}
 
-      {remaining.map((step) => (
-        <StepCard
-          key={step}
-          text={step}
-          state={wrong === step ? 'mistake' : 'available'}
-          onPress={() => choose(step)}
-        />
-      ))}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+        {remaining.map((step) => (
+          <ActionCard
+            key={step}
+            text={step}
+            picture={stepPicture(step)}
+            fallbackIcon={trial.task.icon}
+            state={wrong === step ? 'mistake' : 'available'}
+            width={choiceWidth}
+            onPress={() => choose(step)}
+          />
+        ))}
+      </View>
 
       <Text variant="caption" color="textMuted" center style={{ marginTop: space.sm }}>
         {placed.length} of {trial.answer.length} in place

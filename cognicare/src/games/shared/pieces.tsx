@@ -19,7 +19,7 @@ import { SurfaceProvider, Text, useReduceMotion } from '@/ui';
 export type Feedback = 'correct' | 'mistake' | null;
 
 /** Scale-up for a correct tap, a soft pulse for a mistake. */
-function useFeedbackMotion(feedback: Feedback) {
+export function useFeedbackMotion(feedback: Feedback) {
   const reduce = useReduceMotion();
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -74,7 +74,7 @@ export function GridCell({ state, size, onPress, disabled, accessibilityLabel, c
 
   const icon =
     state === 'lit' ? (
-      <Ionicons name="sunny" size={size * 0.42} color={colors.ink} />
+      <Ionicons name="sunny" size={size * 0.42} color={colors.textInverse} />
     ) : state === 'correct' ? (
       <Ionicons name="checkmark" size={size * 0.5} color={colors.ink} />
     ) : state === 'mistake' ? (
@@ -155,7 +155,7 @@ export function Sprite({ art, label, size = TOUCH_MIN, rotate, framed, width }: 
         }}
       >
         <Art name={art} size={size * 0.8} rotate={rotate} />
-        <Text variant="caption" color="textInverse" numberOfLines={1} style={{ fontWeight: '600' }}>
+        <Text variant="caption" color="ink" numberOfLines={1} style={{ fontWeight: '600' }}>
           {label}
         </Text>
       </View>
@@ -351,7 +351,7 @@ export function StepCard({ text, state, position, onPress }: StepCardProps) {
     backgroundColor: state === 'placed' ? colors.selected : state === 'mistake' ? colors.dangerSoft : colors.bg,
     borderWidth: 2,
     borderStyle: state === 'mistake' ? 'dashed' : 'solid',
-    borderColor: state === 'placed' ? colors.selected : state === 'mistake' ? colors.danger : colors.edge,
+    borderColor: state === 'placed' ? colors.accentBright : state === 'mistake' ? colors.danger : colors.edge,
   };
 
   if (!onPress) {
