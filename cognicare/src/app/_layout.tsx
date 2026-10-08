@@ -4,7 +4,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/atkinson-hyperlegible-next';
 import { SQLiteProvider } from 'expo-sqlite';
-import { Stack } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -13,6 +13,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { migrate } from '@/db/migrations';
 import { colors } from '@/theme/tokens';
+
+const NAV_THEME = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: colors.accent,
+    background: colors.bg,
+    card: colors.surface,
+    text: colors.text,
+    border: colors.divider,
+  },
+};
 
 function Booting() {
   return (
@@ -38,13 +50,17 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <Suspense fallback={<Booting />}>
           <SQLiteProvider databaseName="cognicare.db" onInit={migrate} useSuspense>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.bg },
-              }}
-            />
+            <StatusBar style="dark" />
+            {/* Without this the navigator paints its own default grey behind every
+                screen, which showed during transitions and overscroll. */}
+            <ThemeProvider value={NAV_THEME}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.bg },
+                }}
+              />
+            </ThemeProvider>
           </SQLiteProvider>
         </Suspense>
       </SafeAreaProvider>

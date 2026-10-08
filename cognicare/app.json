@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "cognicare",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -36,7 +36,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1F1D1E",
+          "backgroundColor": "#F8FAFC",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -50,7 +50,7 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "backgroundColor": "#1F1D1E",
+    "backgroundColor": "#F8FAFC",
     "extra": {
       "router": {},
       "eas": {

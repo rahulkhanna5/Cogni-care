@@ -66,7 +66,7 @@ export default function Profile() {
               width: 64,
               height: 64,
               borderRadius: 32,
-              backgroundColor: colors.selected,
+              backgroundColor: colors.tint,
               alignItems: 'center',
               justifyContent: 'center',
             }}

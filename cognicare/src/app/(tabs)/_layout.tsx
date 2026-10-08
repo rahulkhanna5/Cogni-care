@@ -20,7 +20,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
         borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? colors.selected : 'transparent',
+        backgroundColor: focused ? colors.tint : 'transparent',
       }}
     >
       <Ionicons name={name} size={26} color={focused ? colors.accent : colors.textMuted} />

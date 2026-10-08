@@ -22,9 +22,6 @@ type Props = {
   children?: ReactNode;
 };
 
-/** The app background at ~18%: takes the glare off a bright picture. */
-const SCRIM = `${colors.bg}2E`;
-
 /**
  * How fast flowing water moves, in dp per second. Slow on purpose: well
  * under the pace of anything the player has to track, so the water reads as
@@ -118,7 +115,6 @@ export function Backdrop({ source, onLayout, testID, flow, children }: Props) {
           style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
         />
       )}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: SCRIM }]} />
       {children}
     </View>
   );

@@ -103,7 +103,7 @@ export default function Patients() {
                     width: 52,
                     height: 52,
                     borderRadius: 26,
-                    backgroundColor: colors.selected,
+                    backgroundColor: colors.tint,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}

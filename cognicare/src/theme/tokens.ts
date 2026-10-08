@@ -1,79 +1,95 @@
 /**
- * Design tokens — "Warm Lantern": a dark, warm room with one soft coral light
- * guiding the way. Dark theme only.
+ * Design tokens — a calm light theme: blue on a very light page, white cards,
+ * dark navy text.
  *
- * Brand colours supplied by the owner: background #1F1D1E, primary #FF968C,
- * secondary #332F29. Everything else was specified in the Claude Design system
- * and every pair below was re-measured before use (see tokens.test.ts, which
- * fails the build if any of these drift).
+ * Brand colours supplied by the owner: primary blue #2563EB, teal #0F766E,
+ * page #F8FAFC, cards #FFFFFF, text #172033, secondary text #475569, and
+ * green #16A34A, amber #D97706, red #DC2626 for status. Every pair below was
+ * measured before use (see tokens.test.ts, which fails the build if any drift).
  *
  * The rule is 7:1 (WCAG AAA) for ALL text, measured against the surface the
- * text actually sits on — not just the page. The previous palette measured
- * only against the page, which hid two failures: coral text on the old coral
- * tint was 5.9:1, and muted text on cards was 6.99:1. Edges of anything you
- * can tap or type into are held to 3:1.
+ * text actually sits on. The owner's colours are exact wherever they are
+ * shapes — the logo, icons, ticks, chart lines, selection edges — and clear
+ * 3:1 there. They are NOT enough for text or a white label on a fill: blue is
+ * 5.2:1 on white, red 4.8, teal 5.5, green 3.3 and amber 3.2. Where text sits
+ * on one of them it uses the nearest darker shade of the same hue instead
+ * (`accent`, `successText`, `warningText`, `dangerText`), which reaches 7.4:1.
+ * Edges of anything you can tap or type into are held to 3:1.
  */
 
 export const colors = {
   /* ------------------------------- surfaces ------------------------------- */
-  bg: '#1F1D1E',
-  /** Brand secondary — cards and tiles. */
-  surface: '#332F29',
+  /** The page. */
+  bg: '#F8FAFC',
+  /** Cards and tiles. */
+  surface: '#FFFFFF',
   /** Raised blocks inside a card, and the disabled button fill. */
-  surfaceRaised: '#3D3830',
-  /** Text field fill — darker than the page, so a field reads as a well. */
-  field: '#171516',
-  tabBar: '#262322',
+  surfaceRaised: '#F5F8FB',
+  /** Text field fill. */
+  field: '#FFFFFF',
+  tabBar: '#FFFFFF',
   /**
-   * Behind anything selected or placed. Replaces the old coral tint: light
-   * text on this is 10.1:1, where coral text on the old tint was 5.9:1.
-   * Always paired with a 3px coral edge and a check, never colour alone.
+   * Behind a selected card, answer or placed step. Always paired with a 3px
+   * blue edge and a check, never colour alone. Muted and coloured text on it
+   * falls just under 7:1, so it yields to main text there (see contrast.ts).
    */
-  selected: '#4A2C29',
+  selected: '#EFF6FF',
+  /** A stronger blue tint for small shapes that hold an icon: avatars, the tab pill. */
+  tint: '#DBEAFE',
   /** Light tile behind every illustration. */
   tile: '#F2E6DA',
-  /** Dark ink for features drawn on a light tile or face. 13.3:1 on tile. */
-  ink: '#221F20',
+  /** Dark ink for features drawn on a light tile or face, and ticks on green. */
+  ink: '#172033',
 
   /* --------------------------------- text --------------------------------- */
-  text: '#EDE6E3', // 13.6 bg · 10.8 surface · 9.4 raised
-  textMuted: '#D2C9C4', // 10.3 bg · 8.2 surface · 7.1 raised
-  /** Ink for text on a coral or green fill. 8.0:1 on coral. */
-  textInverse: '#1F1D1E',
+  text: '#172033', // 15.6 bg · 16.3 surface
+  textMuted: '#475569', // 7.2 bg · 7.6 surface · 7.1 raised
+  /** White, for text and icons on a blue fill. 7.4:1 on `accent`. */
+  textInverse: '#FFFFFF',
   /**
-   * Placeholder examples only. 4.7:1 on the field — below the 7:1 text rule
-   * on purpose: a placeholder as bright as typed text reads as already filled
-   * in. Labels always sit above fields, so no instruction lives here.
+   * Placeholder examples only. 4.8:1 on a white field — below the 7:1 text
+   * rule on purpose: a placeholder as dark as typed text reads as already
+   * filled in. Labels always sit above fields, so no instruction lives here.
    */
-  placeholder: '#8A8078',
+  placeholder: '#64748B',
 
-  /* --------------------------------- coral -------------------------------- */
-  /** Fills, and text on the page (8.0:1). Only 6.3:1 on a card — never text there. */
-  accent: '#FF968C',
-  /** Coral text on cards: 8.4 surface · 7.3 raised. */
-  accentOnCard: '#FFBDB5',
-  /** The glow ring around a lit cell. Graphic only, never text. */
-  halo: '#FFC8C1',
+  /* --------------------------------- blue --------------------------------- */
+  /** Buttons, links and blue text: 7.4:1 on a card, 7.0 on the page, 7.4 with white on it. */
+  accent: '#1D4EBA',
+  /** Blue text on a tinted surface: 9.3 raised · 9.0 selected. */
+  accentOnCard: '#183E94',
+  /** The owner's blue, exactly. Shapes only — logo, chart lines, selection edges (5.2:1). Never text. */
+  accentBright: '#2563EB',
+  /** The glow ring around a lit cell. Graphic only. */
+  halo: '#93B4F5',
+
+  /* --------------------------------- teal --------------------------------- */
+  /** Check-in charts, so the two panels never share a colour. 5.5:1 as a mark on a card. */
+  teal: '#0F766E',
 
   /* --------------------------------- lines -------------------------------- */
-  /** Edges of inputs, tiles, chips: 4.3 bg · 3.4 surface · 3.0 raised. */
-  edge: '#8A8078',
-  /** Decorative lines only (1.7:1). Never an input edge. */
-  divider: '#474139',
+  /** Edges of inputs, tiles, chips: 4.6 bg · 4.8 surface · 4.5 raised. */
+  edge: '#64748B',
+  /** Decorative lines only (1.2:1). Never an input edge. */
+  divider: '#E2E8F0',
 
   /* -------------------------------- status -------------------------------- */
-  success: '#8FD9B6', // 10.2 bg · 8.1 surface; dark text on it 10.2
-  successSoft: '#1E3329',
-  /** Warm sand. Also the check-in chart colour, so it never shares coral. */
-  warning: '#F0C08A', // 10.1 bg · 8.0 surface
-  warningSoft: '#3B3325',
-  /** Mistake rings, error edges and icons. Not for text — see dangerText. */
-  danger: '#FF9B94',
-  dangerSoft: '#3A2523',
-  /** Error text: 9.3 on dangerSoft, 7.6 even on raised. */
-  dangerText: '#FFC2BC',
+  /** The owner's green, exactly: ticks and rings (3.3:1 as a mark). Not for text. */
+  success: '#16A34A',
+  successSoft: '#DCFCE7',
+  /** Green text: 7.4:1 on a card. */
+  successText: '#0D632D',
+  /** The owner's amber, exactly: warning marks (3.2:1). Not for text. */
+  warning: '#D97706',
+  warningSoft: '#FEF3C7',
+  warningText: '#824704',
+  /** The owner's red, exactly: mistake rings, error edges and icons (4.8:1). Not for text. */
+  danger: '#DC2626',
+  dangerSoft: '#FEE2E2',
+  /** Error text: 7.4:1 on a card. */
+  dangerText: '#A71D1D',
 
-  disabled: '#6B635C',
+  disabled: '#94A3B8',
 } as const;
 
 export type ColorName = keyof typeof colors;

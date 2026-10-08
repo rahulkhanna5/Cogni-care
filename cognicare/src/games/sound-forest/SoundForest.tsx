@@ -466,7 +466,7 @@ function Listening({ active, idleText }: { active: boolean; idleText?: string })
           width: 108,
           height: 108,
           borderRadius: 54,
-          backgroundColor: active ? colors.selected : colors.surface,
+          backgroundColor: active ? colors.tint : colors.surface,
           borderWidth: active ? 3 : 2,
           borderColor: active ? colors.accent : colors.edge,
           alignItems: 'center',

@@ -169,7 +169,7 @@ function Bubble({ turn }: { turn: ChatTurn }) {
         <View
           style={{
             maxWidth: '86%',
-            backgroundColor: mine ? colors.selected : colors.surface,
+            backgroundColor: mine ? colors.tint : colors.surface,
             borderRadius: radius.lg,
             // The corner nearest the speaker is squared off, like a tail.
             borderBottomRightRadius: mine ? 6 : radius.lg,

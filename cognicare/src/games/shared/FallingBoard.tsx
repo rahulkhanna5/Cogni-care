@@ -300,7 +300,7 @@ function FlowChevrons({
             size={28}
             // Faint on the plain board; on a picture, a pale wash that shows
             // over water or rock without competing with the pieces.
-            color={onPicture ? `${colors.text}66` : colors.divider}
+            color={onPicture ? 'rgba(255,255,255,0.45)' : colors.divider}
             style={{ position: 'absolute', left: cx * width - 14, top: (r + 0.5) * step - 14 - (drift ? step : 0) }}
           />
         ))

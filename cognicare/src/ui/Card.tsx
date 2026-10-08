@@ -29,7 +29,7 @@ export function Card({ children, onPress, tone = 'surface', accessibilityLabel, 
     borderRadius: radius.lg,
     padding: space.lg,
     gap: space.sm,
-    ...(tone === 'selected' ? { borderWidth: 3, borderColor: colors.accent } : null),
+    ...(tone === 'selected' ? { borderWidth: 3, borderColor: colors.accentBright } : null),
   };
 
   if (!onPress) {

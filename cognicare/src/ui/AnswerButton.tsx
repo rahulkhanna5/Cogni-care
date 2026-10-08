@@ -34,7 +34,7 @@ export function AnswerButton({ label, selected, onPress, role = 'radio' }: Props
         paddingVertical: space.sm,
         borderRadius: radius.md,
         borderWidth: selected ? 3 : 2,
-        borderColor: selected ? colors.accent : colors.edge,
+        borderColor: selected ? colors.accentBright : colors.edge,
         backgroundColor: selected ? colors.selected : colors.bg,
         opacity: pressed ? 0.9 : 1,
       })}
@@ -45,7 +45,7 @@ export function AnswerButton({ label, selected, onPress, role = 'radio' }: Props
             width: 28,
             height: 28,
             borderRadius: 14,
-            backgroundColor: colors.accent,
+            backgroundColor: colors.accentBright,
             alignItems: 'center',
             justifyContent: 'center',
           }}

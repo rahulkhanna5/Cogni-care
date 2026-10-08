@@ -13,7 +13,7 @@ export function HeroIcon({ name, tone = 'accent' }: { name: IconName; tone?: 'ac
           width: 104,
           height: 104,
           borderRadius: 52,
-          backgroundColor: tone === 'success' ? colors.successSoft : colors.selected,
+          backgroundColor: tone === 'success' ? colors.successSoft : colors.tint,
           alignItems: 'center',
           justifyContent: 'center',
         }}

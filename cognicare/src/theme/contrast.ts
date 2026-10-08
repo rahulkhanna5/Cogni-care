@@ -50,27 +50,36 @@ export type TextColor =
   | 'warning'
   | 'danger';
 
+/** Surfaces where every coloured shade of text clears 7:1: the page and white. */
+const PLAIN: Surface[] = ['bg', 'surface', 'field', 'tabBar'];
+/** Soft status tints, where only main text clears 7:1. */
+const SOFT: Surface[] = ['dangerSoft', 'successSoft', 'warningSoft'];
+
 /**
  * The colour a piece of text should actually be drawn in, given what it sits on.
  *
  * Callers ask for intent ("accent") and this picks the shade that clears 7:1
- * on that surface, so a coral label moved from the page onto a card cannot
- * silently fall to 6.3:1. textInverse and ink are for text on coral, green and
- * light-tile fills, which are not surfaces in this sense; they pass through.
+ * on that surface, so a blue label moved from the page onto a tinted card
+ * cannot silently fall short. textInverse and ink are for text on blue fills
+ * and light-tile fills, which are not surfaces in this sense; they pass through.
  */
 export function textColorOn(color: TextColor, surface: Surface): string {
   switch (color) {
     case 'accent':
-      // Plain coral clears 7:1 only on the darkest surfaces.
-      return surface === 'bg' || surface === 'field' || surface === 'tabBar'
-        ? colors.accent
-        : colors.accentOnCard;
-    case 'danger':
-      // The ring colour is 6.6:1 on a card. Text always uses the lighter shade.
-      return colors.dangerText;
+      if (PLAIN.includes(surface)) return colors.accent;
+      // On a soft status tint nothing blue reaches 7:1 without going near-black.
+      return SOFT.includes(surface) ? colors.text : colors.accentOnCard;
+    case 'success':
     case 'warning':
-      // Sand is 6.98:1 on raised — a hair short — so it yields to plain text there.
-      return surface === 'raised' ? colors.text : colors.warning;
+    case 'danger':
+      // Each shade is 7.0-7.4:1 on the page and white, but 6.0-6.9 on a tint.
+      // There, the message is carried by main text, with the colour in the
+      // icon and edge beside it.
+      if (!PLAIN.includes(surface)) return colors.text;
+      return { success: colors.successText, warning: colors.warningText, danger: colors.dangerText }[color];
+    case 'textMuted':
+      // Slate is 6.2-6.96:1 on a selection or status tint.
+      return SOFT.includes(surface) || surface === 'selected' ? colors.text : colors.textMuted;
     default:
       return colors[color];
   }
