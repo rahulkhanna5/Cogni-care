@@ -88,16 +88,15 @@ const ENTRIES: Partial<Record<GameId, Entry>> = {
   },
   'path-finder': {
     maxLevel: PATH_MAX_LEVEL,
+    // One walk per turn: Level 1 has three (clinic, pharmacy, home).
     rounds: 3,
     describeRound: (r) =>
-      r.falseAlarms === 0
-        ? 'Every route found by the shortest way.'
-        : `Every route found — ${r.falseAlarms === 1 ? 'one was' : `${r.falseAlarms} were`} a little longer than the shortest way.`,
+      r.hits ? `${r.score} of 100 — the shortest safe way.` : `${r.score} of 100 — you got there.`,
     describeLevel: describePathLevel,
     instructions: [
-      'Walk from home to a place in town, then back again.',
-      'Tap the crossroads one at a time to walk along the roads.',
-      'Roads can be blocked — a broken road, an accident, roadworks. Go round them, the shortest way you can.',
+      'Plan a walk across town, from one place to another.',
+      'Tap the crossroads, or the roads, one at a time to build your route. Then press Check route.',
+      'Take the shortest safe way: go round closed roads, and keep off the busy road.',
     ],
     play: (p) => <PathFinder key={p.roundNo} {...p} />,
   },

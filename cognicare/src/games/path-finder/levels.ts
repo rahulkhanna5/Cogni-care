@@ -1,36 +1,20 @@
-import type { TownLevel } from './town';
+import { LEVEL_1 } from './data/level1';
+import type { CityLevel } from './engine/types';
 
 /**
- * The town grows quickly — 3×3 crossroads at level 1, 4×4 at level 2, 5×5
- * from level 3 — and from then on road blocks do the work: 2 up to 8, with
- * more of them (`onRoute`) on the way a player would take without looking,
- * so the obvious route stops being the answer. 5×5 is the ceiling: past it a
- * crossroad on a phone is smaller than a comfortable tap.
+ * Hand-made towns, one per level. A new level is a new file in data/ added
+ * here — the engine and the map need no changes. Until level 2 exists the
+ * game stays at level 1, and saved progress from the old generated towns
+ * (up to 15) clamps to it.
  */
-export const PATH_LEVELS: TownLevel[] = [
-  { n: 3, blocks: 1, onRoute: 0 },
-  { n: 4, blocks: 2, onRoute: 0 },
-  { n: 5, blocks: 2, onRoute: 1 },
-  { n: 5, blocks: 3, onRoute: 1 },
-  { n: 5, blocks: 3, onRoute: 2 },
-  { n: 5, blocks: 4, onRoute: 2 },
-  { n: 5, blocks: 4, onRoute: 3 },
-  { n: 5, blocks: 5, onRoute: 2 },
-  { n: 5, blocks: 5, onRoute: 3 },
-  { n: 5, blocks: 6, onRoute: 3 },
-  { n: 5, blocks: 6, onRoute: 4 },
-  { n: 5, blocks: 7, onRoute: 3 },
-  { n: 5, blocks: 7, onRoute: 4 },
-  { n: 5, blocks: 8, onRoute: 4 },
-  { n: 5, blocks: 8, onRoute: 4 },
-];
+export const PATH_LEVELS: CityLevel[] = [LEVEL_1];
 
 export const PATH_MAX_LEVEL = PATH_LEVELS.length;
 
-export const pathLevel = (level: number): TownLevel =>
+export const pathLevel = (level: number): CityLevel =>
   PATH_LEVELS[Math.min(Math.max(level, 1), PATH_MAX_LEVEL) - 1];
 
 export const describePathLevel = (level: number): string => {
-  const s = pathLevel(level);
-  return `${s.n} by ${s.n} streets, ${s.blocks} ${s.blocks === 1 ? 'road' : 'roads'} blocked`;
+  const l = pathLevel(level);
+  return `${l.title} — ${l.trips.length} walks across town`;
 };
