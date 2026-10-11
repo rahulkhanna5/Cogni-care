@@ -33,6 +33,9 @@ const store = {
       : SecureStore.deleteItemAsync(key),
 };
 
+/** The refresh in flight, if any — see authedFetch. */
+let refreshing: Promise<{ accessToken: string; refreshToken: string }> | null = null;
+
 type AuthState = {
   user: api.ApiUser | null;
   accessToken: string | null;
@@ -142,9 +145,19 @@ export const useAuth = create<AuthState>((set, get) => ({
 
       if (!expired) throw error;
 
-      const rotated = await api.refresh(refreshToken!);
-      await persist(rotated.accessToken, rotated.refreshToken);
-      set({ accessToken: rotated.accessToken, refreshToken: rotated.refreshToken });
+      // Refresh tokens rotate, so a second refresh with the same old token is
+      // treated as reuse. Calls that expire together share ONE refresh.
+      refreshing ??= (async () => {
+        try {
+          const rotated = await api.refresh(refreshToken!);
+          await persist(rotated.accessToken, rotated.refreshToken);
+          set({ accessToken: rotated.accessToken, refreshToken: rotated.refreshToken });
+          return rotated;
+        } finally {
+          refreshing = null;
+        }
+      })();
+      const rotated = await refreshing;
       return fn(rotated.accessToken);
     }
   },
