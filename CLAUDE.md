@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 308) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 333) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -104,6 +104,20 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   away. A step without a scene shows `ActionCard`'s fallback (routine icon,
   bold words); `scenes.test.tsx` fails if a shipped step lacks one or a scene
   key matches no step.
+- **A patient chooses their own doctor** (`care/`, `app/find-doctor.tsx`,
+  Profile → "Your doctor"). Asking creates a PENDING request that shares
+  nothing until an admin approves it; the patient can withdraw or stop sharing
+  at any time with no admin step. Doctors still cannot initiate — naming a
+  patient would disclose they are one.
+- **The doctor's screens answer "who needs a look?" first** (`care/insight.ts`,
+  `care/doctor/`). The list ranks patients by reasons computed from the rows the
+  server already returns: no play for 7 days, check-in 5+ points worse or a
+  worse band, a game down 10+ points (last 3 sessions vs the 5 before). Games
+  and the check-in stay separate and say which way is good — higher for games,
+  LOWER for the check-in. Not built, because each needs a server change:
+  misses vs false alarms per game, per-question answers, sharing a note with
+  the patient, and one summary endpoint (the list currently reads each
+  patient's sessions separately, so each read is logged).
 - **Falling items travel in lanes** (`games/shared/lanes.ts`): Market Rush 3,
   Speedy Current 4. Random position plus random entry time stacked items on
   top of each other. In Speedy Current a lane never carries an up-swimmer and
@@ -133,6 +147,14 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 
 ## Traps already paid for
 
+- **`authedFetch` calls that expire together must share one refresh.** Refresh
+  tokens rotate, so N parallel refreshes with the same old token look like
+  token reuse and can sign the user out. The refresh in flight is shared
+  (`store/auth.ts`, tested in `auth.refresh.test.ts`).
+- **Never put a test file under `src/app/`.** expo-router makes every file
+  there a route, so `find-doctor.test.tsx` broke the whole web bundle
+  ("expect is not defined"). Tests of a screen live beside its feature
+  (`src/care/FindDoctor.test.tsx`).
 - `@testing-library/react-native` v14: **`render` and `fireEvent` both return
   promises** and must be awaited. Wrapping timer advancement in `act()` nests
   act scopes and corrupts every following test.
