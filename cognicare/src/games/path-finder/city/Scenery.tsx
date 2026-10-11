@@ -614,7 +614,9 @@ function labelAt(level: CityLevel, lot: Lot, b: Building | undefined, fit: Fit):
   const y = (wy: number) => fit.toScreen({ x: 0, y: wy }).y;
   if (lot.rect.y0 <= top) return { x, y: (y(level.bounds.y0) + y(top - KERB_W / 2)) / 2 };
   if (lot.rect.y1 >= bottom) return { x, y: (y(bottom + KERB_W / 2) + y(level.bounds.y1)) / 2 };
-  if (!b) return { x, y: y(lot.rect.y0 + ROAD_HALF + 0.14) };
+  // A park has no roof to stand above, and its fountain marker fills the middle
+  // of the lawn, so the name sits on the street along its top edge.
+  if (!b) return { x, y: y(lot.rect.y0 + 0.02) };
   return { x, y: boxFaces(fit, b.foot, b.height).top - 14 };
 }
 

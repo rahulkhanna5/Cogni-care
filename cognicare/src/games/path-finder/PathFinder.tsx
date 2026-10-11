@@ -25,6 +25,11 @@ const NOTE_MS = 2600;
 const RESERVED = 480;
 /** Below this the crossroads crowd; the screen scrolls instead. */
 const MIN_MAP = 330;
+/**
+ * Dp per map unit below which crossroads crowd each other. A tall town gets
+ * the height it needs and the page scrolls, rather than being squeezed.
+ */
+const MIN_SCALE = 62;
 
 /**
  * Path Finder: plan a walk across an illustrated town, then check it. One trip
@@ -41,7 +46,12 @@ export function PathFinder({ level, roundNo, totalRounds, onRoundComplete }: Gam
   const [s, dispatch] = useReducer(run, undefined, () => initialState(g, trip));
   const { width, height } = useWindowDimensions();
   const fit = useMemo(
-    () => fitCity(city.bounds, width - space.gutter * 2, Math.max(MIN_MAP, height - RESERVED)),
+    () =>
+      fitCity(
+        city.bounds,
+        width - space.gutter * 2,
+        Math.max(MIN_MAP, height - RESERVED, (city.bounds.y1 - city.bounds.y0) * MIN_SCALE)
+      ),
     [city, width, height]
   );
   const startedAt = useRef(Date.now());
