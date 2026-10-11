@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 
 import type { RoundResult } from '@/games/shell/types';
 import { DailyOrder } from './DailyOrder';
-import { buildTrial } from './levels';
+import { buildTrial, forgetTasks } from './levels';
 
 // Fixed sequence so the same trial is built in the test as in the component.
 const seeded = () => {
@@ -13,24 +13,23 @@ const seeded = () => {
   };
 };
 
-const LEVEL = 3; // 4 steps + 1 distractor
+const LEVEL = 4; // 5 steps + 1 distractor
 
 async function renderGame(onRoundComplete: (r: RoundResult) => void = jest.fn()) {
   const trial = buildTrial(LEVEL, seeded());
   const view = await render(
-    <DailyOrder
-      level={LEVEL}
-      roundNo={1}
-      totalRounds={4}
-      onRoundComplete={onRoundComplete}
-      random={seeded()}
-    />
+    <DailyOrder level={LEVEL} roundNo={1} totalRounds={4} onRoundComplete={onRoundComplete} random={seeded()} />
   );
   const tap = (label: string) => fireEvent.press(view.getByLabelText(label));
   return { ...view, trial, tap };
 }
 
-beforeEach(() => jest.useFakeTimers());
+beforeEach(() => {
+  jest.useFakeTimers();
+  // The game remembers routines it has shown; each test starts fresh, so the
+  // trial built here is the one the component builds.
+  forgetTasks();
+});
 afterEach(async () => {
   await jest.runOnlyPendingTimersAsync();
   jest.clearAllTimers();

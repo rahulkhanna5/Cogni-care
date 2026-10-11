@@ -1,13 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import { ActionCard } from '@/games/shared/ActionCard';
 import type { GamePlayProps } from '@/games/shell/types';
 import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
-import { buildTrial } from './levels';
+import { buildTrial, recentTasks, rememberTask } from './levels';
 import { stepPicture } from './scenes';
 
 type Props = GamePlayProps & { random?: () => number };
@@ -15,11 +15,16 @@ type Props = GamePlayProps & { random?: () => number };
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function DailyOrder({ level, onRoundComplete, random = Math.random }: Props) {
+  // Avoids the routines shown in the last few rounds, so going up a level (or
+  // playing on) never repeats the task just done.
   const trial = useMemo(
-    () => buildTrial(level, random),
+    () => buildTrial(level, random, recentTasks()),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [level]
   );
+  useEffect(() => {
+    rememberTask(trial.task.id);
+  }, [trial]);
 
   const [placed, setPlaced] = useState<string[]>([]);
   const [wrong, setWrong] = useState<string | null>(null);

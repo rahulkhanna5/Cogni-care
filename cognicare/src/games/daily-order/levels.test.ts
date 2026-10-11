@@ -1,4 +1,4 @@
-import { buildTrial, DAILY_LEVELS, dailyLevel, eligibleTasks } from './levels';
+import { buildTrial, DAILY_LEVELS, dailyLevel, eligibleTasks, pickTask, RECENT_WINDOW } from './levels';
 import { TASKS } from './tasks';
 
 describe('daily order trials', () => {
@@ -56,15 +56,84 @@ describe('daily order trials', () => {
     expect(sameAsAnswer).toBeLessThan(10);
   });
 
-  it('gets harder monotonically', () => {
+  it('adds exactly one card at every level — never the same load twice', () => {
     for (let i = 1; i < DAILY_LEVELS.length; i++) {
       const load = (l: { stepCount: number; distractors: number }) => l.stepCount + l.distractors;
-      expect(load(DAILY_LEVELS[i]!)).toBeGreaterThanOrEqual(load(DAILY_LEVELS[i - 1]!));
+      expect(load(DAILY_LEVELS[i]!)).toBe(load(DAILY_LEVELS[i - 1]!) + 1);
+      // And nothing is ever taken away to make room.
+      expect(DAILY_LEVELS[i]!.stepCount).toBeGreaterThanOrEqual(DAILY_LEVELS[i - 1]!.stepCount);
+      expect(DAILY_LEVELS[i]!.distractors).toBeGreaterThanOrEqual(DAILY_LEVELS[i - 1]!.distractors);
     }
   });
 });
 
+describe('a routine does not come round again', () => {
+  /** Plays `sessions` sessions of 4 rounds at each given level, as the app does. */
+  function play(levels: number[], seed = 1) {
+    let n = seed;
+    const rnd = () => {
+      n = (n * 9301 + 49297) % 233280;
+      return n / 233280;
+    };
+    const shown: { level: number; id: string }[] = [];
+    for (const level of levels) {
+      for (let round = 0; round < 4; round++) {
+        const recent = shown.map((s) => s.id);
+        shown.push({ level, id: buildTrial(level, rnd, recent).task.id });
+      }
+    }
+    return shown;
+  }
+
+  it('shows four different routines in one session, at every level', () => {
+    for (let level = 1; level <= DAILY_LEVELS.length; level++) {
+      for (let seed = 1; seed <= 25; seed++) {
+        const ids = play([level], seed).map((s) => s.id);
+        expect(new Set(ids).size).toBe(4);
+      }
+    }
+  });
+
+  it('never opens a new level with the routine that just ended the last one', () => {
+    for (let seed = 1; seed <= 25; seed++) {
+      const shown = play(
+        DAILY_LEVELS.map((_, i) => i + 1),
+        seed
+      );
+      for (let i = 1; i < shown.length; i++) expect(shown[i]!.id).not.toBe(shown[i - 1]!.id);
+    }
+  });
+
+  it('keeps clear of the last six, so a routine waits out more than a session', () => {
+    for (let seed = 1; seed <= 25; seed++) {
+      const shown = play([1, 2, 3, 4, 5, 6, 7, 8], seed).map((s) => s.id);
+      for (let i = 0; i < shown.length; i++) {
+        const window = shown.slice(Math.max(0, i - RECENT_WINDOW), i);
+        expect(window).not.toContain(shown[i]);
+      }
+    }
+  });
+
+  it('has several routines to choose from at EVERY level — the top ones used to have one', () => {
+    for (let level = 1; level <= DAILY_LEVELS.length; level++) {
+      expect(eligibleTasks(dailyLevel(level).stepCount).length).toBeGreaterThanOrEqual(RECENT_WINDOW + 2);
+    }
+  });
+
+  it('still returns something when asked to avoid everything', () => {
+    const everyone = eligibleTasks(3).map((t) => t.id);
+    expect(pickTask(1, everyone)).toBeDefined();
+  });
+});
+
 describe('task content', () => {
+  it('gives every routine the same length, so no level has a thin pool', () => {
+    for (const task of TASKS) {
+      expect(task.steps).toHaveLength(7);
+      expect(task.distractors).toHaveLength(3);
+    }
+  });
+
   it('has no duplicate steps inside a routine', () => {
     for (const task of TASKS) {
       expect(new Set(task.steps).size).toBe(task.steps.length);

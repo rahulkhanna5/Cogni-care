@@ -9,6 +9,8 @@ import {
   Folder,
   Magnifier,
   Motion,
+  Paper,
+  Pen,
   Person,
   Phone,
   Plain,
@@ -108,6 +110,36 @@ export const BILL: Scenes = {
       <Scaled x={112} y={34} s={1.5}>
         <Receipt x={0} y={0} tilt={8} />
       </Scaled>
+    </G>
+  ),
+  'Mark the next due date on your calendar': () => (
+    <G>
+      <Plain fill={DESK} />
+      <Scaled x={44} y={8} s={2.3}>
+        <Calendar x={0} y={0} mark={7} />
+      </Scaled>
+      <Pen x={92} y={68} tilt={35} />
+      <Reach from={{ x: 168, y: 120 }} to={{ x: 105, y: 50 }} sleeve={SHIRT} />
+    </G>
+  ),
+  'Write the amount in your account book': () => (
+    <G>
+      <Plain fill={DESK} />
+      <Paper x={34} y={8} w={92} h={100} lines={7} heading="#8A6FB0" />
+      <Pen x={92} y={74} tilt={35} />
+      <Reach from={{ x: 168, y: 124 }} to={{ x: 106, y: 54 }} sleeve={SHIRT} />
+    </G>
+  ),
+  'Put it off until next month': () => (
+    <G>
+      <Plain fill={DESK} />
+      <Scaled x={64} y={8} s={2.2}>
+        <Calendar x={0} y={0} mark={7} next />
+      </Scaled>
+      <Scaled x={8} y={50} s={1.3}>
+        <Bill x={0} y={0} tilt={-14} />
+      </Scaled>
+      <Motion x={62} y={84} dir="left" n={2} />
     </G>
   ),
 };

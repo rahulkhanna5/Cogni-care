@@ -11,8 +11,8 @@ import {
   Hook,
   House,
   Motion,
-  outline,
   Outdoors,
+  outline,
   Paper,
   Pen,
   Person,
@@ -144,6 +144,17 @@ export const SHOPPING: Scenes = {
       <Door x={120} y={92} open />
       <Person x={92} y={60} s={0.8} legs="walk" look="right" shirt={SHIRT} />
       <Motion x={70} y={44} dir="left" n={2} />
+    </G>
+  ),
+  'Leave the shopping at the shop': () => (
+    <G>
+      <Room wall="#F3EEE4" />
+      <Person x={124} y={86} s={0.8} look="left" shirt={C.plum} hands={[{ x: 106, y: 64 }, null]} />
+      <Counter y={84} />
+      <Till x={148} y={80} />
+      <Bag x={74} y={84} full />
+      <Person x={28} y={112} look="left" shirt={SHIRT} />
+      <Motion x={6} y={66} dir="left" n={2} />
     </G>
   ),
 };

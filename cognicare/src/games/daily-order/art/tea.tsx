@@ -4,6 +4,7 @@ import {
   Bubbles,
   C,
   Car,
+  Chairs,
   Clock,
   Cup,
   Drops,
@@ -16,8 +17,8 @@ import {
   outline,
   Person,
   Reach,
-  Scaled,
   Room,
+  Scaled,
   Steam,
   Stream,
   SugarBowl,
@@ -106,6 +107,27 @@ export const TEA: Scenes = {
       <Person x={116} y={80} s={0.95} legs="stand" look="left" hands={[{ x: 62, y: 60 }, null]} shirt={C.terracotta}>
         <Cup x={52} y={70} fill="tea" />
       </Person>
+    </G>
+  ),
+  'Carry the cup to your chair': () => (
+    <G>
+      <Room />
+      <Chairs x={104} y={92} n={1} />
+      <Person x={54} y={86} s={0.9} legs="walk" look="right" shirt={C.terracotta} hands={[null, { x: 80, y: 70 }]} />
+      <Cup x={82} y={76} s={1.3} fill="tea" />
+      <Steam x={84} y={54} n={2} />
+      <Motion x={14} y={60} dir="left" n={2} />
+    </G>
+  ),
+  'Put the tea bag in the kettle': () => (
+    <G>
+      <Kitchen />
+      <Kettle x={80} y={102} s={2} onBase />
+      <Scaled x={80} y={14} s={1.5}>
+        <TeaBag x={0} y={0} />
+      </Scaled>
+      <Motion x={60} y={56} dir="down" n={2} />
+      <Reach from={{ x: 168, y: -10 }} to={{ x: 92, y: 12 }} pose="pinch" sleeve={C.terracotta} />
     </G>
   ),
 };

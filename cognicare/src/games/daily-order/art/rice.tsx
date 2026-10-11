@@ -1,20 +1,23 @@
-import { G } from 'react-native-svg';
+import { G, Rect } from 'react-native-svg';
 
 import {
   Bowl,
   C,
   Clock,
   Flames,
+  Fork,
   Grains,
   Hob,
   Kitchen,
   Knob,
+  Moon,
   Motion,
   PetrolCan,
   Plate,
   Pot,
   Reach,
   RiceSack,
+  Scaled,
   Scoop,
   Steam,
   Stream,
@@ -118,6 +121,26 @@ export const RICE: Scenes = {
       <PetrolCan x={128} y={46} tilt={-60} />
       <Reach from={{ x: 168, y: 70 }} to={{ x: 140, y: 52 }} sleeve={SLEEVE} />
       <Motion x={42} y={40} dir="left" n={2} />
+    </G>
+  ),
+  'Fluff the rice with a fork': () => (
+    <G>
+      <Kitchen />
+      <Scaled x={78} y={112} s={1.7}>
+        <Pot x={0} y={0} contents="rice" />
+      </Scaled>
+      <Fork x={86} y={72} tilt={22} />
+      <Steam x={76} y={42} n={2} />
+      <Reach from={{ x: 168, y: 6 }} to={{ x: 100, y: 38 }} pose="pinch" sleeve={SLEEVE} />
+    </G>
+  ),
+  'Leave the pot on all night': () => (
+    <G>
+      <Kitchen />
+      <Rect x={0} y={0} width={160} height={120} fill="#1B2440" opacity={0.6} />
+      <Moon x={124} y={30} />
+      <Clock x={26} y={28} r={13} h={2} m={0} />
+      <Stove flame="low" lid bubbles={false} />
     </G>
   ),
 };

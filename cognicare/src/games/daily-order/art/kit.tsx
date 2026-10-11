@@ -1277,3 +1277,34 @@ export function Cupboard({ x, y, open = true }: Pt & { open?: boolean }) {
     </G>
   );
 }
+
+/** A fork, tines at x,y and the handle running up; `tilt` leans it. */
+export function Fork({ x, y, tilt = 0 }: Pt & { tilt?: number }) {
+  return (
+    <G transform={`translate(${x} ${y}) rotate(${tilt})`}>
+      <Line x1={0} y1={-11} x2={0} y2={-36} {...stroke(4, INK)} />
+      <Line x1={0} y1={-11} x2={0} y2={-36} {...stroke(2, C.steel)} />
+      <Rect x={-6} y={-13} width={12} height={4} rx={1.5} fill={C.steel} {...O} />
+      {[-4.5, 0, 4.5].map((dx) => (
+        <Line key={dx} x1={dx} y1={-12} x2={dx} y2={0} {...stroke(2.2)} />
+      ))}
+    </G>
+  );
+}
+
+/** A crescent moon and a few stars — night. */
+export function Moon({ x, y }: Pt) {
+  return (
+    <G>
+      <Path d={`M${x} ${y - 14} A14 14 0 1 0 ${x + 14} ${y + 8} A11 11 0 1 1 ${x} ${y - 14} Z`} fill="#FFE9A8" {...O} />
+      {[
+        [-26, 6],
+        [-40, -10],
+        [24, -10],
+        [-12, 24],
+      ].map(([dx, dy]) => (
+        <Circle key={`${dx}${dy}`} cx={x + dx} cy={y + dy} r={1.8} fill="#FFFFFF" />
+      ))}
+    </G>
+  );
+}

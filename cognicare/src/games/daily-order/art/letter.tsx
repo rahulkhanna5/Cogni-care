@@ -1,7 +1,9 @@
 import { G, Line, Rect } from 'react-native-svg';
 
 import {
+  Bin,
   C,
+  Clock,
   edge,
   Envelope,
   Motion,
@@ -12,6 +14,7 @@ import {
   Plain,
   PostBox,
   Reach,
+  Room,
   Scaled,
   Stamp,
   stroke,
@@ -102,6 +105,39 @@ export const LETTER: Scenes = {
       <Motion x={126} y={22} dir="up" n={2} />
       <Reach from={{ x: 168, y: -12 }} to={{ x: 112, y: 18 }} pose="pinch" sleeve={SHIRT} />
       <Reach from={{ x: -8, y: 128 }} to={{ x: 40, y: 98 }} sleeve={SHIRT} />
+    </G>
+  ),
+  'Drop it in the post box': () => (
+    <G>
+      <Outdoors />
+      <Scaled x={76} y={-20} s={2.2}>
+        <PostBox x={0} y={60} />
+      </Scaled>
+      <Envelope x={56} y={-4} address stamp tilt={-8} />
+      <Motion x={48} y={8} dir="down" n={2} />
+      <Reach from={{ x: 168, y: 10 }} to={{ x: 100, y: 12 }} pose="pinch" sleeve={SHIRT} />
+    </G>
+  ),
+  'Check when the post is collected': () => (
+    <G>
+      <Outdoors />
+      <Scaled x={44} y={-8} s={1.7}>
+        <PostBox x={0} y={62} />
+      </Scaled>
+      <Line x1={100} y1={52} x2={100} y2={88} {...stroke(3)} />
+      <Clock x={100} y={36} r={18} h={5} m={0} />
+      <Person x={136} y={90} s={0.8} glasses look="left" shirt={SHIRT} hands={[{ x: 118, y: 70 }, null]} />
+    </G>
+  ),
+  'Put the letter in the bin instead': () => (
+    <G>
+      <Room />
+      <Scaled x={50} y={0} s={2}>
+        <Bin x={20} y={58} />
+      </Scaled>
+      <Envelope x={70} y={6} address stamp tilt={-12} />
+      <Motion x={56} y={22} dir="down" n={2} />
+      <Reach from={{ x: 168, y: -6 }} to={{ x: 112, y: 14 }} pose="pinch" sleeve={SHIRT} />
     </G>
   ),
 };

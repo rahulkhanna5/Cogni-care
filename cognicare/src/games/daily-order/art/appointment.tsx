@@ -1,4 +1,4 @@
-import { G } from 'react-native-svg';
+import { G, Rect } from 'react-native-svg';
 
 import {
   Bag,
@@ -18,6 +18,7 @@ import {
   Scaled,
   Speech,
   Tablets,
+  outline,
 } from './kit';
 import type { Scenes } from './types';
 
@@ -98,6 +99,39 @@ export const APPOINTMENT: Scenes = {
       <Door x={124} y={92} open />
       <Person x={104} y={62} s={0.8} legs="walk" look="right" shirt={SHIRT} />
       <Motion x={84} y={46} dir="left" n={2} />
+    </G>
+  ),
+  'Go in when the doctor calls you': () => (
+    <G>
+      <Room wall="#E8F0EE" />
+      <Door x={116} y={92} open />
+      <Person x={134} y={92} s={0.75} look="left" shirt={C.green} mouth="open" />
+      <Speech x={100} y={20} flip />
+      <Person x={46} y={86} s={0.9} legs="walk" look="right" shirt={SHIRT} />
+      <Motion x={14} y={56} dir="right" n={2} />
+    </G>
+  ),
+  'Ask when to come back': () => (
+    <G>
+      <Room wall="#E8F0EE" />
+      <Reception x={122} y={78} />
+      <Scaled x={58} y={4} s={1}>
+        <Calendar x={0} y={0} mark={12} next />
+      </Scaled>
+      <Person x={34} y={116} look="right" shirt={SHIRT} mouth="open" />
+      <Speech x={40} y={36} />
+    </G>
+  ),
+  'Forget your medicines list at home': () => (
+    <G>
+      <Room />
+      <Rect x={6} y={74} width={58} height={7} rx={2} fill={C.wood} {...outline} />
+      <Rect x={12} y={81} width={5} height={18} fill={C.woodDark} />
+      <Rect x={53} y={81} width={5} height={18} fill={C.woodDark} />
+      <Paper x={16} y={38} w={34} h={36} lines={3} boxes heading={C.red} tilt={-6} />
+      <Door x={116} y={92} open />
+      <Person x={90} y={86} s={0.85} legs="walk" look="right" shirt={SHIRT} />
+      <Motion x={66} y={54} dir="right" n={2} />
     </G>
   ),
 };

@@ -3,6 +3,7 @@ import { Ellipse, G } from 'react-native-svg';
 import {
   C,
   Counter,
+  Cupboard,
   edge,
   Glass,
   Jug,
@@ -111,6 +112,31 @@ export const MEDICINE: Scenes = {
       <Counter y={104} />
       <Glass x={134} y={102} s={1.5} level={0.7} />
       <Motion x={148} y={80} dir="right" n={2} />
+    </G>
+  ),
+  'Close the bottle tightly': () => (
+    <G>
+      <Room table />
+      <PillBottle x={80} y={84} s={2.2} />
+      <Motion x={52} y={42} dir="down" n={2} />
+      <Reach from={{ x: 168, y: 18 }} to={{ x: 88, y: 24 }} pose="pinch" sleeve={SHIRT} />
+    </G>
+  ),
+  'Put the bottle back in the cupboard': () => (
+    <G>
+      <Room wall="#F4ECDD" />
+      <Cupboard x={68} y={14} open />
+      <PillBottle x={104} y={36} s={0.75} />
+      <Reach from={{ x: 168, y: 100 }} to={{ x: 110, y: 30 }} sleeve={SHIRT} />
+    </G>
+  ),
+  'Leave the bottle open on the table': () => (
+    <G>
+      <Room table />
+      <PillBottle x={104} y={84} s={1.8} open tilt={-80} />
+      <Scaled x={44} y={80} s={1.6}>
+        <Tablets x={0} y={0} n={3} />
+      </Scaled>
     </G>
   ),
 };
