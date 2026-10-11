@@ -124,15 +124,21 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   a down-drifter at once (they would pass through each other), and lanes take
   turns at direction so position never gives away which way an item goes.
   The overlap tests replay every level on a 320dp phone frame by frame.
-- **Sound Forest's animals differ in rhythm and timbre, not just pitch**
-  (`scripts/gen-audio.mjs`). Five pip trains a semitone or two apart were
-  indistinguishable to anyone; pitch is also the cue age erodes first. Duck
-  and crow are real recordings (BigSoundBank, CC0): `scripts/cut-recordings.py`
-  cuts one call from each original in `assets/audio/source/originals/`, then
-  gen-audio places it left/right/centre. `sound-forest/audio.test.ts` checks the
-  shipped files — under 760ms, sharp onset, right ear, not faint, not clipped.
-  The `play-animal-sounds` npm package holds no audio, only soundbible links,
-  several personal-use-only; do not install it.
+- **Sound Forest's five animals are all real recordings** — dog, goat, cat,
+  duck, crow — because synthesised calls failed four ways (see the header of
+  `scripts/gen-audio.mjs`): tones read as buzzing, low sines vanish on a phone
+  speaker (it rolls off below ~500Hz), a soft fade-in destroys localisation
+  (computed from a sound's **onset**), and a pip a semitone apart is the same
+  animal to everyone. `scripts/cut-recordings.py` cuts one call from each
+  original in `assets/audio/source/originals/`, then gen-audio places it
+  left/right/centre. `sound-forest/audio.test.ts` checks the shipped files —
+  under 760ms, sharp onset, right ear, not faint, not clipped. Duck and crow are
+  CC0 (BigSoundBank); dog, goat and cat are Mixkit, whose licence allows use in
+  an app but not stand-alone redistribution, so those three originals are
+  gitignored and only the cut clips are committed. A level uses the first N in
+  `ANIMALS`, so that list is in difficulty order. The `play-animal-sounds` npm
+  package holds no audio, only soundbible links, several personal-use-only; do
+  not install it.
 - **Face ink in Emotion Meadow is a fixed dark constant**, not the theme text
   colour — the face is always a light circle, so theme ink would make the
   features vanish.

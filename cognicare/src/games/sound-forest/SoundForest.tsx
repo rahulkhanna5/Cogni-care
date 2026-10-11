@@ -321,14 +321,14 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
             icon="arrow-back"
             variant="secondary"
             style={{ flex: 1 }}
-            onPress={() => playAnimal(animals[0] ?? 'owl', 'left')}
+            onPress={() => playAnimal(animals[0] ?? 'dog', 'left')}
           />
           <Button
             label="Right"
             icon="arrow-forward"
             variant="secondary"
             style={{ flex: 1 }}
-            onPress={() => playAnimal(animals[0] ?? 'owl', 'right')}
+            onPress={() => playAnimal(animals[0] ?? 'dog', 'right')}
           />
         </View>
         <Text variant="caption" color="textMuted" center>

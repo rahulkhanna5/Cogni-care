@@ -8,7 +8,7 @@ import {
 } from './levels';
 import type { Animal } from './sounds';
 
-const ANIMALS: Animal[] = ['owl', 'crow', 'frog'];
+const ANIMALS: Animal[] = ['dog', 'crow', 'goat'];
 
 describe('sound forest', () => {
   it('rotates through all three mini-games', () => {
@@ -31,9 +31,9 @@ describe('sound forest', () => {
   });
 
   it('marks a series item as a target only when it is the target animal', () => {
-    const series = buildSeries(forestLevel(5), ANIMALS, 'owl');
+    const series = buildSeries(forestLevel(5), ANIMALS, 'dog');
     for (const item of series) {
-      expect(item.isTarget).toBe(item.animal === 'owl');
+      expect(item.isTarget).toBe(item.animal === 'dog');
     }
   });
 

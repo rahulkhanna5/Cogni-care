@@ -17,56 +17,35 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'audio
 const RATE = 22050;
 
 /**
- * One call per animal.
+ * One call per animal — every animal in Sound Forest is now a real recording,
+ * cut to a single call by scripts/cut-recordings.py.
  *
- * Four earlier attempts and what each got wrong:
+ * Why not synthesise them: four attempts at imitating calls with tones failed.
+ * Modulated tones read as buzzing; low sines were inaudible on a phone speaker
+ * (it rolls off below ~500Hz); a gentle fade-in destroyed localisation, which
+ * is computed from a sound's ONSET; and giving every animal the same three
+ * pips a semitone apart made them indistinguishable. A real dog, goat, cat,
+ * duck and crow differ in rhythm and timbre — the cues that survive age — and
+ * need nothing invented. The synthesiser below is kept for Dual Task Flow's
+ * two pips.
  *
- * 1. Modulated tones imitating calls — read as wobbling and buzzing.
- * 2. Pure sines at 260-660Hz with a long soft fade. Calm, but inaudible in
- *    practice: a phone speaker rolls off steeply below ~500Hz, so the 262Hz
- *    owl barely existed. Protecting against age-related hearing loss by going
- *    LOW ignored what the hardware can actually reproduce.
- * 3. That same slow fade-in also destroyed localisation. The auditory system
- *    locates a sound from its ONSET — interaural time and level differences
- *    are computed at the attack. A gentle 100ms ramp removes exactly the cue
- *    Sound Forest is built on.
- *
- * 4. Fixing 1-3 gave every animal the SAME three pips, differing only in pitch
- *    by one or two semitones (owl C5, frog D5). Nobody could tell owl from
- *    frog, healthy or not — and the detect and recall turns are only fair if
- *    the animals are unmistakable. Pitch is also the cue that fades first with
- *    age; rhythm and timbre hold up far better.
- *
- * So each animal differs in how many notes it has, how long they are, which
- * way the pitch moves and how the note sounds — any one of those alone would
- * tell them apart. Kept from before: 500-1500Hz, which small speakers handle
- * and which sits below where presbycusis bites; a 6ms attack on every note,
- * because localisation is computed from onsets; harmonics for loudness. Every
- * call ends inside 750ms, since the tightest level plays one every 900ms.
+ * A recording is placed left, right and centre exactly as a synthesised voice
+ * was. Every call ends inside 750ms, since the tightest level plays one every
+ * 900ms.
  */
 const note = (at, dur, from, to = from, am = 0) => ({ at, dur, from, to, am });
 
 /** Harmonic weights, fundamental first. */
 const TIMBRE = {
-  soft: [1, 0.25, 0.08], // near-pure: a hoot
-  buzzy: [1, 0.7, 0.55, 0.45, 0.35, 0.3], // rich, and pulsed below: a croak
-  nasal: [0.6, 1, 0.8, 0.6, 0.4], // strong 2nd-3rd harmonics: a quack
-  bright: [1, 0.3, 0.1], // clean and high: chirps and trills
-  tone: [1, 0.35, 0.15], // Dual Task Flow's pips, unchanged
+  tone: [1, 0.35, 0.15], // Dual Task Flow's pips
 };
 
 const VOICES = {
-  // Two long, smooth, falling hoots, slow: "hoo… hoo".
-  owl: { timbre: 'soft', notes: [note(0, 280, 620, 560), note(430, 320, 560, 500)] },
-  // One long rasping croak that lifts at the end: "rrrr-ibbit".
-  frog: { timbre: 'buzzy', gain: 1.7, notes: [note(0, 420, 520, 640, 32)] },
-  // A real mallard's quack and a real crow's caw (BigSoundBank, CC0), cut by
-  // scripts/cut-recordings.py to one call each. A recording is placed left,
-  // right and centre exactly like a synthesised voice.
+  dog: { recording: 'dog' },
+  goat: { recording: 'goat' },
+  cat: { recording: 'cat' },
   duck: { recording: 'duck' },
   crow: { recording: 'crow' },
-  // A fast, high, even trill of eight clicks.
-  cricket: { timbre: 'bright', notes: Array.from({ length: 8 }, (_, k) => note(k * 55, 28, 1400)) },
 };
 
 /** Dual Task Flow's two-way choice: an octave apart, unmistakable. */

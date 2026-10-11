@@ -16,9 +16,19 @@ Each clip is:
   - Levelled close to the synthesised voices' loudness, without clipping,
     so no animal is the faint one.
 
-Sources (both CC0 1.0, BigSoundBank.com, Joseph Sardin — credit optional):
+Sources:
   duck  #0276 "Ducks"    — the second quack, 0.78-1.11s: the cleanest, 28dB clear of the background
   crow  #0956 "Crows 2"  — the first caw, 0.15-0.57s: the later ones run 0.8-0.9s, too long
+        (both CC0 1.0, BigSoundBank.com, Joseph Sardin — credit optional)
+  dog   Mixkit "Dog barking twice"        — the first bark, 0.04-0.20s
+  goat  Mixkit "Farm goat baa"            — the one bleat, 0.26-1.00s, trimmed to fit
+  cat   Mixkit "Cartoon kitty begging meow" — the first meow, 0.18-0.92s
+        (Mixkit Sound Effects Free License: free to use in an app, commercial
+        or not, no credit needed; not to be redistributed as a stand-alone
+        sound — see https://mixkit.co/license/#sfxFree)
+        The three Mixkit originals are NOT committed (the repo is public): put
+        the .wav files named in CALLS into assets/audio/source/originals/
+        before re-running. The clips cut from them are committed.
 """
 
 import os
@@ -36,6 +46,9 @@ RATE = 22050
 CALLS = {
     'duck': ('bigsoundbank-0276-ducks.mp3', 0.74, 1.12),
     'crow': ('bigsoundbank-0956-crows-2.mp3', 0.10, 0.58),
+    'dog': ('mixkit-dog-barking-twice-1.wav', 0.03, 0.20),
+    'goat': ('mixkit-farm-goat-baa-1763.wav', 0.24, 1.00),
+    'cat': ('mixkit-cartoon-kitty-begging-meow-92.wav', 0.16, 0.92),
 }
 
 PRE_ROLL_S = 0.004  # before the onset

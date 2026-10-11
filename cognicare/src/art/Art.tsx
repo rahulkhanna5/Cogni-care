@@ -363,18 +363,56 @@ const DRAWINGS: Record<ArtName, () => ReactElement> = {
   ),
 
   /* --------------------------------- forest --------------------------------- */
-  owl: () => (
+  // The three farm and house animals Sound Forest plays real recordings of.
+  // Each is a face with one feature that is unmistakable at 40dp: floppy ears
+  // and a lolling tongue, curved horns and a beard, pointed ears and whiskers.
+  dog: () => (
     <>
-      <Path d="M26 36 L29 15 L42 28 Z" fill="#8A5E3B" {...O} />
-      <Path d="M74 36 L71 15 L58 28 Z" fill="#8A5E3B" {...O} />
-      <Ellipse cx={50} cy={57} rx={30} ry={32} fill="#9C6C45" {...O} />
-      <Ellipse cx={50} cy={67} rx={18} ry={18} fill="#E3C39B" />
-      <Path d="M42 68 L46 72 L50 68 L54 72 L58 68" stroke="#9C6C45" strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      <Circle cx={38} cy={46} r={11} fill="#FFFFFF" {...O} />
-      <Circle cx={62} cy={46} r={11} fill="#FFFFFF" {...O} />
-      <Circle cx={38} cy={46} r={5} fill={INK} />
-      <Circle cx={62} cy={46} r={5} fill={INK} />
-      <Path d="M45 55 L55 55 L50 63 Z" fill="#F2A33A" {...O} strokeWidth={2.5} />
+      <Path d="M25 28 C9 32 7 62 18 72 C29 72 35 54 34 36 Z" fill="#8A5E3B" {...O} />
+      <Path d="M75 28 C91 32 93 62 82 72 C71 72 65 54 66 36 Z" fill="#8A5E3B" {...O} />
+      <Ellipse cx={50} cy={50} rx={27} ry={26} fill="#D9A15F" {...O} />
+      <Ellipse cx={50} cy={62} rx={16} ry={13} fill="#F6E7CF" {...O} strokeWidth={2.5} />
+      <Path d="M42 68 C45 78 55 78 58 68 Z" fill="#E57C7C" {...O} strokeWidth={2.5} />
+      <Ellipse cx={50} cy={55} rx={6.5} ry={4.5} fill={INK} />
+      <Path d="M50 59 L50 66" {...line(2.5)} />
+      <Circle cx={38} cy={42} r={4.2} fill={INK} />
+      <Circle cx={62} cy={42} r={4.2} fill={INK} />
+      <Circle cx={39.3} cy={40.7} r={1.4} fill="#FFFFFF" />
+      <Circle cx={63.3} cy={40.7} r={1.4} fill="#FFFFFF" />
+    </>
+  ),
+  goat: () => (
+    <>
+      <Path d="M36 30 C28 14 19 9 12 14 C19 15 24 22 31 38 Z" fill="#CDB98F" {...O} strokeWidth={3} />
+      <Path d="M64 30 C72 14 81 9 88 14 C81 15 76 22 69 38 Z" fill="#CDB98F" {...O} strokeWidth={3} />
+      <Path d="M27 46 L7 41 L19 57 Z" fill="#E8DCC4" {...O} />
+      <Path d="M73 46 L93 41 L81 57 Z" fill="#E8DCC4" {...O} />
+      <Path d="M44 78 L50 95 L56 78 Z" fill="#E8DCC4" {...O} strokeWidth={2.5} />
+      <Path d="M30 36 C30 22 70 22 70 36 C72 60 62 80 50 82 C38 80 28 60 30 36 Z" fill="#F4EEE2" {...O} />
+      <Ellipse cx={40} cy={45} rx={6.5} ry={4.8} fill="#F7E9A6" {...O} strokeWidth={2.5} />
+      <Ellipse cx={60} cy={45} rx={6.5} ry={4.8} fill="#F7E9A6" {...O} strokeWidth={2.5} />
+      <Ellipse cx={40} cy={45} rx={4} ry={1.7} fill={INK} />
+      <Ellipse cx={60} cy={45} rx={4} ry={1.7} fill={INK} />
+      <Ellipse cx={50} cy={68} rx={10} ry={8} fill="#EBC9C0" {...O} strokeWidth={2.5} />
+      <Circle cx={46} cy={67} r={1.7} fill={INK} />
+      <Circle cx={54} cy={67} r={1.7} fill={INK} />
+    </>
+  ),
+  cat: () => (
+    <>
+      <Path d="M21 46 L23 14 L45 30 Z" fill="#F2A65A" {...O} />
+      <Path d="M79 46 L77 14 L55 30 Z" fill="#F2A65A" {...O} />
+      <Path d="M27 37 L28 24 L38 31 Z" fill="#F4B6B6" />
+      <Path d="M73 37 L72 24 L62 31 Z" fill="#F4B6B6" />
+      <Ellipse cx={50} cy={57} rx={30} ry={26} fill="#F2A65A" {...O} />
+      <Path d="M50 33 L50 43 M40 35 L42 43 M60 35 L58 43" {...line(2.5)} stroke="#B56A2B" />
+      <Ellipse cx={38} cy={53} rx={6.5} ry={7} fill="#B8E07A" {...O} strokeWidth={2.5} />
+      <Ellipse cx={62} cy={53} rx={6.5} ry={7} fill="#B8E07A" {...O} strokeWidth={2.5} />
+      <Ellipse cx={38} cy={53} rx={2.2} ry={5.5} fill={INK} />
+      <Ellipse cx={62} cy={53} rx={2.2} ry={5.5} fill={INK} />
+      <Path d="M45.5 64 L54.5 64 L50 69.5 Z" fill="#F08A9A" {...O} strokeWidth={2} />
+      <Path d="M50 69.5 C50 75 43 76 40 72 M50 69.5 C50 75 57 76 60 72" {...line(2.2)} />
+      <Path d="M17 58 L33 63 M17 69 L33 67 M83 58 L67 63 M83 69 L67 67" {...line(2)} />
     </>
   ),
   // A crow, not a songbird: Sound Forest plays a real crow's caw, and a blue
@@ -390,30 +428,6 @@ const DRAWINGS: Record<ArtName, () => ReactElement> = {
       <Path d="M76 35 L94 42 L76 48 Z" fill="#6B6772" {...O} />
       <Circle cx={68} cy={37} r={4.5} fill="#FFFFFF" />
       <Circle cx={69} cy={37} r={2.2} fill={INK} />
-    </>
-  ),
-  frog: () => (
-    <>
-      <Ellipse cx={50} cy={62} rx={36} ry={24} fill="#6DBE4B" {...O} />
-      <Circle cx={33} cy={40} r={13} fill="#6DBE4B" {...O} />
-      <Circle cx={67} cy={40} r={13} fill="#6DBE4B" {...O} />
-      <Circle cx={33} cy={40} r={7} fill="#FFFFFF" />
-      <Circle cx={67} cy={40} r={7} fill="#FFFFFF" />
-      <Circle cx={33} cy={41} r={3.5} fill={INK} />
-      <Circle cx={67} cy={41} r={3.5} fill={INK} />
-      <Path d="M32 66 C42 76 58 76 68 66" {...line(3)} />
-      <Circle cx={25} cy={62} r={3} fill="#F2A0A0" />
-      <Circle cx={75} cy={62} r={3} fill="#F2A0A0" />
-    </>
-  ),
-  cricket: () => (
-    <>
-      <Path d="M30 31 C20 15 12 12 7 14 M35 28 C31 12 24 6 17 6" {...line(2.5)} />
-      <Path d="M52 64 L46 84 M44 60 L34 78 M72 58 C86 50 94 60 88 70 L76 86" {...line(3)} />
-      <Ellipse cx={58} cy={57} rx={28} ry={13} fill="#7FA34A" {...O} transform="rotate(-18 58 57)" />
-      <Path d="M48 50 C60 38 78 36 88 42 C76 50 62 56 50 56 Z" fill="#9CBF5E" {...O} />
-      <Circle cx={34} cy={39} r={11} fill="#6B8E3C" {...O} />
-      <Circle cx={31} cy={37} r={3} fill={INK} />
     </>
   ),
   duck: () => (

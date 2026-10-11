@@ -40,3 +40,9 @@ yarn-error.*
 cognicare/Cogni care/
 *.xcuserstate
 xcuserdata/
+
+# Mixkit's licence allows its sounds inside an app, not redistributed as
+# stand-alone files, and this repo is public. The three originals are kept
+# local (download them from mixkit.co — names are in scripts/cut-recordings.py);
+# the short clips cut from them, which the app ships, are committed.
+cognicare/assets/audio/source/originals/mixkit-*

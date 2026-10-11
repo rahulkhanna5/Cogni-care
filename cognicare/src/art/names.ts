@@ -40,10 +40,10 @@ export const ART_NAMES = [
   'weed',
   'shell',
   // forest (Sound Forest)
-  'owl',
+  'dog',
   'crow',
-  'frog',
-  'cricket',
+  'goat',
+  'cat',
   'duck',
 ] as const;
 

@@ -1,31 +1,33 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
-export type Animal = 'owl' | 'crow' | 'frog' | 'cricket' | 'duck';
+export type Animal = 'dog' | 'crow' | 'goat' | 'cat' | 'duck';
 export type Position = 'left' | 'right' | 'centre';
 
 export const ANIMALS: { id: Animal; label: string }[] = [
-  { id: 'owl', label: 'Owl' },
+  // Order is difficulty order: a level uses the first N, so the two that open
+  // the game — a short sharp bark and a rough caw — are the easiest to tell apart.
+  { id: 'dog', label: 'Dog' },
   { id: 'crow', label: 'Crow' },
-  { id: 'frog', label: 'Frog' },
-  { id: 'cricket', label: 'Cricket' },
+  { id: 'goat', label: 'Goat' },
+  { id: 'cat', label: 'Cat' },
   { id: 'duck', label: 'Duck' },
 ];
 
 /* Static requires — Metro needs literal paths, so this table cannot be built
  * from template strings. */
 const FILES: Record<string, number> = {
-  'owl-left': require('../../../assets/audio/owl-left.wav'),
-  'owl-right': require('../../../assets/audio/owl-right.wav'),
-  'owl-centre': require('../../../assets/audio/owl-centre.wav'),
+  'dog-left': require('../../../assets/audio/dog-left.wav'),
+  'dog-right': require('../../../assets/audio/dog-right.wav'),
+  'dog-centre': require('../../../assets/audio/dog-centre.wav'),
   'crow-left': require('../../../assets/audio/crow-left.wav'),
   'crow-right': require('../../../assets/audio/crow-right.wav'),
   'crow-centre': require('../../../assets/audio/crow-centre.wav'),
-  'frog-left': require('../../../assets/audio/frog-left.wav'),
-  'frog-right': require('../../../assets/audio/frog-right.wav'),
-  'frog-centre': require('../../../assets/audio/frog-centre.wav'),
-  'cricket-left': require('../../../assets/audio/cricket-left.wav'),
-  'cricket-right': require('../../../assets/audio/cricket-right.wav'),
-  'cricket-centre': require('../../../assets/audio/cricket-centre.wav'),
+  'goat-left': require('../../../assets/audio/goat-left.wav'),
+  'goat-right': require('../../../assets/audio/goat-right.wav'),
+  'goat-centre': require('../../../assets/audio/goat-centre.wav'),
+  'cat-left': require('../../../assets/audio/cat-left.wav'),
+  'cat-right': require('../../../assets/audio/cat-right.wav'),
+  'cat-centre': require('../../../assets/audio/cat-centre.wav'),
   'duck-left': require('../../../assets/audio/duck-left.wav'),
   'duck-right': require('../../../assets/audio/duck-right.wav'),
   'duck-centre': require('../../../assets/audio/duck-centre.wav'),
