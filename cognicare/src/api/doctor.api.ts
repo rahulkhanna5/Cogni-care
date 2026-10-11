@@ -46,13 +46,13 @@ export const listPatients = (accessToken: string) =>
 export const getPatient = (accessToken: string, id: string) =>
   request<{ patient: PatientSummary }>(`/patients/${id}`, { accessToken });
 
-export const getAssessments = (accessToken: string, id: string) =>
-  request<{ assessments: ServerAssessment[] }>(`/patients/${id}/assessments?limit=12`, {
+export const getAssessments = (accessToken: string, id: string, limit = 12) =>
+  request<{ assessments: ServerAssessment[] }>(`/patients/${id}/assessments?limit=${limit}`, {
     accessToken,
   });
 
-export const getSessions = (accessToken: string, id: string) =>
-  request<{ sessions: ServerSession[] }>(`/patients/${id}/sessions?limit=100`, { accessToken });
+export const getSessions = (accessToken: string, id: string, limit = 100) =>
+  request<{ sessions: ServerSession[] }>(`/patients/${id}/sessions?limit=${limit}`, { accessToken });
 
 /* --------------------------------- remarks --------------------------------- */
 
