@@ -55,26 +55,36 @@ export const modeForRound = (roundNo: number): ForestMode =>
 
 /* ------------------------------ trial builders ----------------------------- */
 
+/**
+ * Which animal the "listen for one" round asks for. Each level moves on to the
+ * next animal in play, and never asks for the one the level before did — it
+ * used to be the first animal at every level. `all` is the full list in
+ * difficulty order; a level uses the first `animalCount` of it.
+ */
+export function detectTarget(level: number, all: Animal[]): Animal {
+  let previous: Animal | null = null;
+  let cursor = 0;
+  for (let l = 1; l <= Math.max(level, 1); l++) {
+    const n = Math.min(forestLevel(l).animalCount, all.length);
+    let at = cursor % n;
+    if (n > 1 && all[at] === previous) at = (at + 1) % n;
+    previous = all[at]!;
+    cursor = at + 1;
+  }
+  return previous!;
+}
+
 export type LocaliseTrial = { animal: Animal; position: Position };
 export type SeriesItem = { animal: Animal; position: Position; isTarget: boolean };
 
-export function buildLocalisation(
-  spec: ForestLevel,
-  animals: Animal[],
-  rnd = Math.random
-): LocaliseTrial[] {
+export function buildLocalisation(spec: ForestLevel, animals: Animal[], rnd = Math.random): LocaliseTrial[] {
   return Array.from({ length: spec.localisationTrials }, () => ({
     animal: animals[Math.floor(rnd() * animals.length)],
     position: spec.positions[Math.floor(rnd() * spec.positions.length)],
   }));
 }
 
-export function buildSeries(
-  spec: ForestLevel,
-  animals: Animal[],
-  target: Animal,
-  rnd = Math.random
-): SeriesItem[] {
+export function buildSeries(spec: ForestLevel, animals: Animal[], target: Animal, rnd = Math.random): SeriesItem[] {
   const others = animals.filter((a) => a !== target);
   return Array.from({ length: spec.seriesLength }, () => {
     // Roughly a third targets: frequent enough to stay engaging, rare enough

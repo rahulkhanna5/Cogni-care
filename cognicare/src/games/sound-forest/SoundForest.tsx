@@ -11,6 +11,7 @@ import { Button, Card, SurfaceProvider, Text, useReduceMotion, type IconName } f
 import {
   buildLocalisation,
   buildSequence,
+  detectTarget,
   buildSeries,
   forestLevel,
   modeForRound,
@@ -72,7 +73,7 @@ export function SoundForest({ level, roundNo, onRoundComplete, random = Math.ran
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [level, roundNo]
   );
-  const target = animals[0];
+  const target = detectTarget(level, ANIMALS.map((a) => a.id));
   const series = useMemo(
     () => buildSeries(spec, animals, target, random),
     // eslint-disable-next-line react-hooks/exhaustive-deps
