@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 333) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 409) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -94,30 +94,40 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   alarms, skipped stops are misses. `gameDistance` defaults to drawn length:
   with no labels on the map, a road that looks short but scores long is a
   trap. Edge places' names sit in the map margin — a pill is wider than a
-  block. Only Level 1 exists; old saves (to 15) clamp to it.
+  block. Six levels: Level 1 is written by hand, 2 to 6 are built from a short
+  spec (`data/town.ts`, `data/towns.ts`), each a different town. Old saves (to
+  15) clamp to level 6. `engine/difficulty.ts` scores every trip and
+  `data/levels.test.ts` fails unless each level beats the last by 2+.
+- **Daily Order never repeats a task as you go up** (`daily-order/levels.ts`).
+  Every routine has SEVEN steps and THREE wrong steps, so every level has all
+  eight routines to draw from; a round avoids the last six shown (module
+  memory, `forgetTasks()` in tests). It used to pick at random from routines
+  long enough for the level, and only one reached 7 steps — so levels 9 and
+  10 showed grocery shopping every time. Eight levels, each adding exactly one
+  card (3 → 10); the old ten had three levels that traded a wrong step for a
+  step and felt the same.
 - **Daily Order steps are pictures** (`daily-order/scenes.tsx`): each step's
   scene is found by the step's exact words, so a new step needs only a scene
   in `daily-order/art/` — sequencing and scoring never see pictures. Every
   scene is built from one kit (`art/kit.tsx`: one person, shared props,
-  160×120, the app's ink outline) so 60+ drawings stay one set. Wrong steps
+  160×120, the app's ink outline) so 80 drawings stay one set. Wrong steps
   get ordinary-looking pictures too — a cross or warning would give the answer
   away. A step without a scene shows `ActionCard`'s fallback (routine icon,
   bold words); `scenes.test.tsx` fails if a shipped step lacks one or a scene
   key matches no step.
-- **A patient chooses their own doctor** (`care/`, `app/find-doctor.tsx`,
-  Profile → "Your doctor"). Asking creates a PENDING request that shares
-  nothing until an admin approves it; the patient can withdraw or stop sharing
-  at any time with no admin step. Doctors still cannot initiate — naming a
-  patient would disclose they are one.
-- **The doctor's screens answer "who needs a look?" first** (`care/insight.ts`,
-  `care/doctor/`). The list ranks patients by reasons computed from the rows the
-  server already returns: no play for 7 days, check-in 5+ points worse or a
-  worse band, a game down 10+ points (last 3 sessions vs the 5 before). Games
-  and the check-in stay separate and say which way is good — higher for games,
-  LOWER for the check-in. Not built, because each needs a server change:
-  misses vs false alarms per game, per-question answers, sharing a note with
-  the patient, and one summary endpoint (the list currently reads each
-  patient's sessions separately, so each read is logged).
+- **Every level of every game must be harder than the last**
+  (`games/ladder.test.ts`). It audits each game's table on its EFFECTIVE axes —
+  no axis may get easier, and at least one must get harder — and
+  `levels.smoke.test.tsx` draws every level of every game. Add an axis here
+  when you add one to a table. It exists because a client saw tasks repeat, and
+  the audit found Emotion Meadow levels 2-4 identical (four feelings can only
+  make four faces, and "subtle" never reaches the animal faces) and 11-15 one
+  level.
+- **Emotion Meadow's ladder** (`emotion-meadow/levels.ts`): faces 3-6 (capped
+  by the pool), feelings 4 then 6, a share of look-alike trials (the answer
+  beside a feeling it is confused with, `LOOK_ALIKES`), and subtlety 1.0 to
+  0.45 (the floor `Face.tsx` draws). The same question is never asked twice
+  running.
 - **Falling items travel in lanes** (`games/shared/lanes.ts`): Market Rush 3,
   Speedy Current 4. Random position plus random entry time stacked items on
   top of each other. In Speedy Current a lane never carries an up-swimmer and
@@ -157,6 +167,9 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   tokens rotate, so N parallel refreshes with the same old token look like
   token reuse and can sign the user out. The refresh in flight is shared
   (`store/auth.ts`, tested in `auth.refresh.test.ts`).
+- Jest's default 5s timeout fails the long simulated-turn tests (Speedy
+  Current, Market Rush) only when the whole suite runs in parallel — they take
+  ~1.7s alone. `testTimeout` is 30s in `package.json`; do not lower it.
 - **Never put a test file under `src/app/`.** expo-router makes every file
   there a route, so `find-doctor.test.tsx` broke the whole web bundle
   ("expect is not defined"). Tests of a screen live beside its feature
