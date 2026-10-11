@@ -9,7 +9,7 @@ import { colors, radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 import { EMOTION_LABELS, Face, type Emotion } from './Face';
 import { animalFace, ANIMALS, hasAnimalFacesFor } from './animals';
-import { meadowLevel, TRIALS_PER_ROUND } from './levels';
+import { LOOK_ALIKES, meadowLevel, TRIALS_PER_ROUND } from './levels';
 import { hasPhotosFor, pickPhoto } from './photos';
 
 type Props = GamePlayProps & { random?: () => number };
@@ -19,16 +19,64 @@ const MEADOW: ImageSourcePropType = require('../../../assets/images/emotion-mead
 
 type Trial = { faces: Emotion[]; answer: number };
 
-export function buildTrials(pool: Emotion[], faceCount: number, trials: number, rnd: () => number): Trial[] {
-  return Array.from({ length: trials }, () => {
+export function buildTrials(
+  pool: Emotion[],
+  faceCount: number,
+  trials: number,
+  rnd: () => number,
+  /** Share of trials (0..1) built around a look-alike pair — see MEADOW_LEVELS. */
+  similar = 0
+): Trial[] {
+  const size = Math.min(faceCount, pool.length);
+  const pick = <T,>(xs: T[]) => xs[Math.floor(rnd() * xs.length)]!;
+
+  // Which trials are the look-alike ones: an exact number per round, in a
+  // random order, rather than each trial rolling dice.
+  const order = Array.from({ length: trials }, (_, i) => i);
+  for (let i = order.length - 1; i > 0 && similar > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [order[i], order[j]] = [order[j]!, order[i]!];
+  }
+  const lookAlike = new Set(order.slice(0, Math.round(similar * trials)));
+
+  const out: Trial[] = [];
+  let previous: Emotion | null = null;
+
+  for (let t = 0; t < trials; t++) {
     // Distinct emotions per trial, otherwise two faces could both be correct.
-    const available = [...pool];
     const faces: Emotion[] = [];
-    while (faces.length < Math.min(faceCount, pool.length) && available.length) {
-      faces.push(available.splice(Math.floor(rnd() * available.length), 1)[0]);
+    let target: Emotion | null = null;
+
+    if (lookAlike.has(t)) {
+      const withTwin = pool.filter((e) => LOOK_ALIKES[e].some((p) => pool.includes(p)));
+      if (withTwin.length) {
+        const fresh = withTwin.filter((e) => e !== previous);
+        target = pick(fresh.length ? fresh : withTwin);
+        faces.push(target, pick(LOOK_ALIKES[target].filter((p) => pool.includes(p))));
+      }
     }
-    return { faces, answer: Math.floor(rnd() * faces.length) };
-  });
+
+    const available = pool.filter((e) => !faces.includes(e));
+    while (faces.length < size && available.length) {
+      faces.push(available.splice(Math.floor(rnd() * available.length), 1)[0]!);
+    }
+
+    if (target) {
+      // The pair was placed first; mix them in so position gives nothing away.
+      for (let i = faces.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [faces[i], faces[j]] = [faces[j]!, faces[i]!];
+      }
+    }
+
+    let answer = target ? faces.indexOf(target) : Math.floor(rnd() * faces.length);
+    // The same question twice running reads as the same task again.
+    if (!target && faces.length > 1 && faces[answer] === previous) answer = (answer + 1) % faces.length;
+
+    previous = faces[answer]!;
+    out.push({ faces, answer });
+  }
+  return out;
 }
 
 type TileState = 'idle' | 'correct' | 'mistake';
@@ -52,7 +100,7 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
   const { width } = useWindowDimensions();
 
   const trials = useMemo(
-    () => buildTrials(spec.pool, spec.faceCount, TRIALS_PER_ROUND, random),
+    () => buildTrials(spec.pool, spec.faceCount, TRIALS_PER_ROUND, random, spec.similar),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [level]
   );
@@ -145,13 +193,7 @@ export function EmotionMeadow({ level, onRoundComplete, random = Math.random }: 
                 // After a pick, the right face is always shown — a wrong pick is a
                 // chance to see the answer, not only a mark against the player.
                 const state: TileState =
-                  picked === null
-                    ? 'idle'
-                    : i === trial.answer
-                      ? 'correct'
-                      : i === picked
-                        ? 'mistake'
-                        : 'idle';
+                  picked === null ? 'idle' : i === trial.answer ? 'correct' : i === picked ? 'mistake' : 'idle';
 
                 return (
                   <Pressable

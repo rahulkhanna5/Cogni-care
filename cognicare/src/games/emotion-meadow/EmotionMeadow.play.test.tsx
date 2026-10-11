@@ -33,8 +33,9 @@ beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
 
 describe('a round of Emotion Meadow with the animals', () => {
-  // random = 0 everywhere: trials are [happy, sad, angry] with the answer
-  // first, and the round starts on the dog.
+  // random = 0 everywhere: every trial shows [happy, sad, angry], the round
+  // starts on the dog, and the question moves on whenever it would repeat —
+  // so the answers go happy, sad, happy, sad.
   const zero = () => 0;
 
   // The next trial arrives from a timer, outside act; findByText waits for
@@ -51,17 +52,17 @@ describe('a round of Emotion Meadow with the animals', () => {
 
     await fireEvent.press(view.getByLabelText('Face 1')); // right
     await jest.advanceTimersByTimeAsync(900);
-    expect(await view.findByText('Which cat looks happy?')).toBeTruthy(); // next trial, next animal
-
-    await fireEvent.press(view.getByLabelText('Face 2')); // wrong
+    // Next trial, next animal — and never the same question twice running.
+    expect(await view.findByText('Which cat looks sad?')).toBeTruthy();
+    await fireEvent.press(view.getByLabelText('Face 1')); // wrong: sad is the second face
     await jest.advanceTimersByTimeAsync(900);
     expect(await view.findByText('Which panda looks happy?')).toBeTruthy();
 
     await fireEvent.press(view.getByLabelText('Face 1'));
     await jest.advanceTimersByTimeAsync(900);
-    expect(await view.findByText('Which lion looks happy?')).toBeTruthy();
+    expect(await view.findByText('Which lion looks sad?')).toBeTruthy();
 
-    await fireEvent.press(view.getByLabelText('Face 1'));
+    await fireEvent.press(view.getByLabelText('Face 2'));
     await jest.advanceTimersByTimeAsync(900);
 
     expect(onRoundComplete).toHaveBeenCalledWith(
