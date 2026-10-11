@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { API_BASE_URL } from '@/api/client';
+import { MyDoctorCard } from '@/care/MyDoctorCard';
 import { useAuth } from '@/store/auth';
 import { useSession } from '@/store/session';
 import { pendingCount, pushPending, type SyncResult } from '@/sync/sync';
@@ -149,6 +150,10 @@ export default function Profile() {
             </Banner>
           ))}
       </Card>
+
+      {/* Who this patient shares with. Patients only: a doctor or admin has no
+          results of their own to share. */}
+      {user?.role === 'PATIENT' && <MyDoctorCard />}
 
       <Card style={{ gap: space.md }}>
         <Text variant="heading">About</Text>
