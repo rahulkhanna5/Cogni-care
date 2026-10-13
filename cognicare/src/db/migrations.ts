@@ -113,6 +113,16 @@ const MIGRATIONS: ((db: SQLiteDatabase) => Promise<void>)[] = [
         ON assessments(player_id) WHERE synced_at IS NULL;
     `);
   },
+
+  // v4 — every game starts at level 1 again. For a while a check-in preset the
+  // starting level of games not yet played (Normal 8 … Severe 1); that was
+  // withdrawn. Put any unplayed game back to 1; a level earned by playing
+  // (total_plays > 0) is left alone.
+  async (db) => {
+    await db.execAsync(`
+      UPDATE game_progress SET current_level = 1, last_direction = NULL WHERE total_plays = 0;
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

@@ -81,37 +81,6 @@ export async function updateProgress(
   );
 }
 
-/**
- * Sets where each game starts, from the latest check-in. Only games the player
- * has never played are touched: a level they earned is never overwritten by a
- * questionnaire. A game with no row yet gets one, so the Games list can show
- * the starting level before the first play.
- */
-export async function presetStartLevels(
-  db: SQLiteDatabase,
-  playerId: number,
-  levels: Record<string, number>
-): Promise<void> {
-  await db.withTransactionAsync(async () => {
-    for (const [gameId, level] of Object.entries(levels)) {
-      await db.runAsync(
-        'INSERT OR IGNORE INTO game_progress (player_id, game_id, current_level) VALUES (?, ?, ?)',
-        playerId,
-        gameId,
-        level
-      );
-      await db.runAsync(
-        `UPDATE game_progress
-            SET current_level = ?, last_direction = NULL
-          WHERE player_id = ? AND game_id = ? AND total_plays = 0`,
-        level,
-        playerId,
-        gameId
-      );
-    }
-  });
-}
-
 export async function listProgress(
   db: SQLiteDatabase,
   playerId: number

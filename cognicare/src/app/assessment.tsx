@@ -12,8 +12,7 @@ import {
   scoreAssessment,
   type Answers,
 } from '@/assessment/scoring';
-import { START_LEVEL, startLevelsFor } from '@/assessment/startLevels';
-import { getSetting, presetStartLevels, saveAssessment, setSetting } from '@/db/queries';
+import { getSetting, saveAssessment, setSetting } from '@/db/queries';
 import { AreaBars } from '@/charts/AreaBars';
 import { chart } from '@/charts/colors';
 import { DOMAIN_LABELS, type Domain } from '@/db/types';
@@ -99,8 +98,6 @@ export default function Assessment() {
         score,
         QUESTIONS.map((q) => ({ no: q.no, domain: q.domain }))
       );
-      // Games not yet played start where this band says; earned levels stay.
-      await presetStartLevels(db, player.id, startLevelsFor(score.band));
       await setSetting(db, draftKey(player.id), '');
       setDone(score);
     },
@@ -158,10 +155,6 @@ export default function Assessment() {
             {info.blurb}
           </Text>
         </Card>
-
-        <Banner tone="info" icon="game-controller-outline">
-          {`Games you have not played yet will start from level ${START_LEVEL[done.band]}, set from this check-in. Each game moves up or down as you play.`}
-        </Banner>
 
         <Card style={{ gap: space.md }}>
           <View style={{ gap: space.xs }}>

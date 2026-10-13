@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 548) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 544) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -157,15 +157,10 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   away. A step without a scene shows `ActionCard`'s fallback (routine icon,
   bold words); `scenes.test.tsx` fails if a shipped step lacks one or a scene
   key matches no step.
-- **The check-in sets where each game starts** (`assessment/startLevels.ts`).
-  Normal 8, Mild 5, Moderate 3, Severe 1, capped at each game's top level.
-  The direction is deliberate and was confirmed with the owner: the check-in
-  score runs the opposite way to a game score (higher = more impairment), so a
-  healthier band starts further up and a more impaired one at level 1, where a
-  first win is certain. It is written once, when a check-in is saved
-  (`presetStartLevels`), and only to games with `total_plays = 0` — a level the
-  player earned is never overwritten by a questionnaire. The ladder then moves
-  them as usual.
+- **Every game starts at level 1, whatever the check-in says.** A check-in
+  once preset unplayed games' starting level by band (Normal 8 … Severe 1);
+  the owner withdrew it. Local migration v4 put unplayed games back to 1.
+  Levels move only through play (`scoring/adaptive.ts`).
 - **Every level of every game must be harder than the last**
   (`games/ladder.test.ts`). It audits each game's table on its EFFECTIVE axes —
   no axis may get easier, and at least one must get harder — and
