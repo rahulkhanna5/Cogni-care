@@ -21,7 +21,7 @@ type Props = {
   onPress?: () => void;
 };
 
-const FILL: Record<StepState, { fill: string; edge: string; surface: Surface }> = {
+const FILLOf = (): Record<StepState, { fill: string; edge: string; surface: Surface }> => ({
   available: { fill: colors.surface, edge: colors.edge, surface: 'surface' },
   placed: {
     fill: colors.selected,
@@ -33,7 +33,7 @@ const FILL: Record<StepState, { fill: string; edge: string; surface: Surface }> 
     edge: colors.danger,
     surface: 'dangerSoft',
   },
-};
+});
 
 /**
  * A step as a picture card: the action drawn on top, its words underneath.
@@ -43,7 +43,7 @@ const FILL: Record<StepState, { fill: string; edge: string; surface: Surface }> 
  */
 export function ActionCard({ text, picture, fallbackIcon, state, position, width, onPress }: Props) {
   const motion = useFeedbackMotion(state === 'mistake' ? 'mistake' : null);
-  const look = FILL[state];
+  const look = FILLOf()[state];
 
   const box: ViewStyle = {
     width,

@@ -10,12 +10,12 @@ import { Text } from './Text';
 
 type Tone = 'error' | 'warning' | 'success' | 'info';
 
-const TONES: Record<Tone, { fill: string; edge: string; icon: IconName; surface: Surface }> = {
+const TONESOf = (): Record<Tone, { fill: string; edge: string; icon: IconName; surface: Surface }> => ({
   error: { fill: colors.dangerSoft, edge: colors.danger, icon: 'alert-circle-outline', surface: 'dangerSoft' },
   warning: { fill: colors.warningSoft, edge: colors.warning, icon: 'warning-outline', surface: 'warningSoft' },
   success: { fill: colors.successSoft, edge: colors.success, icon: 'checkmark-circle-outline', surface: 'successSoft' },
   info: { fill: colors.surfaceRaised, edge: colors.edge, icon: 'hourglass-outline', surface: 'raised' },
-};
+});
 
 type Props = {
   tone: Tone;
@@ -26,7 +26,7 @@ type Props = {
 
 /** Each tone has its own icon shape — never colour alone. */
 export function Banner({ tone, children, icon }: Props) {
-  const t = TONES[tone];
+  const t = TONESOf()[tone];
   return (
     <SurfaceProvider value={t.surface}>
       <View

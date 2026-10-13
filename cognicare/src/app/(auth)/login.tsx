@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
+import { TopBar } from '@/chrome/TopBar';
 import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { space } from '@/theme/tokens';
@@ -54,6 +55,7 @@ export default function Login() {
 
   return (
     <Screen>
+      <TopBar inset={false} />
       <View style={{ gap: space.md, marginTop: space.xl }}>
         <Logo size={64} />
         <View style={{ gap: space.xs }}>

@@ -17,7 +17,7 @@
  * Edges of anything you can tap or type into are held to 3:1.
  */
 
-export const colors = {
+const LIGHT = {
   /* ------------------------------- surfaces ------------------------------- */
   /** The page. */
   bg: '#F8FAFC',
@@ -90,9 +90,83 @@ export const colors = {
   dangerText: '#A71D1D',
 
   disabled: '#94A3B8',
-} as const;
+};
 
-export type ColorName = keyof typeof colors;
+export type ColorName = keyof typeof LIGHT;
+export type Palette = Record<ColorName, string>;
+
+/**
+ * The dark theme. Same rules, measured the same way (tokens.test.ts runs every
+ * contrast check on both): 7:1 for text on the surface it sits on, 3:1 for
+ * marks and edges. On a dark page the owner's blue is too dim as a mark, so
+ * shapes use a lighter blue, and a primary button is light blue with DARK text
+ * (`textInverse`). Illustrations keep their light tile and dark ink in both
+ * themes — they are pictures, not chrome.
+ */
+const DARK: Palette = {
+  bg: '#0B1220',
+  surface: '#141C2E',
+  surfaceRaised: '#1B2538',
+  field: '#141C2E',
+  tabBar: '#141C2E',
+  selected: '#1A2B4F',
+  tint: '#1E3A6E',
+  tile: LIGHT.tile,
+  ink: LIGHT.ink,
+
+  text: '#F1F5F9',
+  textMuted: '#B6C2D2',
+  textInverse: '#0B1220',
+  placeholder: '#94A3B8',
+
+  accent: '#93C5FD',
+  accentOnCard: '#BFDBFE',
+  accentBright: '#60A5FA',
+  halo: '#3B5BA9',
+
+  teal: '#2DD4BF',
+
+  edge: '#8291A7',
+  divider: '#263247',
+
+  success: '#4ADE80',
+  successSoft: '#0F2E1D',
+  successText: '#86EFAC',
+  warning: '#FBBF24',
+  warningSoft: '#33260A',
+  warningText: '#FCD34D',
+  danger: '#F87171',
+  dangerSoft: '#3A1414',
+  dangerText: '#FCA5A5',
+
+  disabled: '#475569',
+};
+
+export type ThemeMode = 'light' | 'dark';
+
+/**
+ * The live palette. One object, read at render time everywhere; switching the
+ * theme rewrites its values and the root re-draws the app (see _layout.tsx).
+ * Never copy a colour into a module-level constant — it would not follow.
+ */
+export const colors: Palette = { ...LIGHT };
+let current: ThemeMode = 'light';
+const listeners = new Set<() => void>();
+
+export function applyTheme(mode: ThemeMode) {
+  if (mode === current) return;
+  Object.assign(colors, mode === 'dark' ? DARK : LIGHT);
+  current = mode;
+  listeners.forEach((l) => l());
+}
+
+export const themeMode = () => current;
+/** For tables derived from the palette (contrast.ts) to rebuild themselves. */
+export const onThemeChange = (l: () => void) => {
+  listeners.add(l);
+  return () => listeners.delete(l);
+};
+export const PALETTES = { light: LIGHT, dark: DARK } as const;
 
 /** 8pt scale. Generous by design — dense layouts are hard to target accurately. */
 export const space = {

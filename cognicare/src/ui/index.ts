@@ -9,7 +9,7 @@ export { InfoRow } from './InfoRow';
 export { Logo } from './Logo';
 export { RoleToggle } from './RoleToggle';
 export { Score } from './Score';
-export { Screen } from './Screen';
+export { BarAbove, Screen } from './Screen';
 export { ScreenHeader } from './ScreenHeader';
 export { Skeleton, SkeletonCard, SkeletonList } from './Skeleton';
 export { StatTile } from './StatTile';

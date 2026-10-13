@@ -6,7 +6,7 @@ import { colors, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 
 const ICON = { success: 'checkmark-circle', warning: 'time-outline', muted: 'remove-circle-outline' } as const;
-const MARK = { success: colors.success, warning: colors.warning, muted: colors.edge } as const;
+const MARKOf = () => ({ success: colors.success, warning: colors.warning, muted: colors.edge });
 
 /** Where a connection stands: an icon AND words, never colour alone. */
 export function StatusPill({
@@ -19,7 +19,7 @@ export function StatusPill({
   const l = connectionLabel({ status, doctor_accepted_at });
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-      <Ionicons name={ICON[l.tone]} size={18} color={MARK[l.tone]} />
+      <Ionicons name={ICON[l.tone]} size={18} color={MARKOf()[l.tone]} />
       <Text variant="label" color={l.tone === 'muted' ? 'textMuted' : l.tone}>
         {l.text}
       </Text>

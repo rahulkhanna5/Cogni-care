@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { createPlayer, getPlayer, setSetting } from '@/db/queries';
+import { TopBar } from '@/chrome/TopBar';
 import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { ACTIVE_PLAYER_KEY, useSession } from '@/store/session';
@@ -43,6 +44,7 @@ export default function Welcome() {
 
   return (
     <Screen>
+      <TopBar inset={false} />
       <View style={{ gap: space.md, marginTop: space.xl }}>
         <Logo size={64} />
         <View style={{ gap: space.xs }}>

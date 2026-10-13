@@ -13,20 +13,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DatabaseGate } from '@/db/DatabaseGate';
 import { LanguageLoader } from '@/i18n';
+import { ThemeLoader, useThemeMode } from '@/theme/mode';
 import { migrate } from '@/db/migrations';
-import { colors } from '@/theme/tokens';
+import { colors, PALETTES, type Palette } from '@/theme/tokens';
 
-const NAV_THEME = {
+const navTheme = (c: Palette) => ({
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: colors.accent,
-    background: colors.bg,
-    card: colors.surface,
-    text: colors.text,
-    border: colors.divider,
+    primary: c.accent,
+    background: c.bg,
+    card: c.surface,
+    text: c.text,
+    border: c.divider,
   },
-};
+});
 
 function Booting() {
   return (
@@ -37,6 +38,7 @@ function Booting() {
 }
 
 export default function RootLayout() {
+  const mode = useThemeMode((s) => s.mode);
   // Load before anything renders: text laid out in the fallback face and then
   // swapped jumps and rewraps, which is disorienting for this audience.
   // A failed load still lets the app start in the system face.
@@ -54,15 +56,18 @@ export default function RootLayout() {
           {(attempt) => (
             <Suspense fallback={<Booting />}>
               <SQLiteProvider key={attempt} databaseName="cognicare.db" onInit={migrate} useSuspense>
-                <StatusBar style="dark" />
+                <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
                 <LanguageLoader />
+                <ThemeLoader />
                 {/* Without this the navigator paints its own default grey behind every
                     screen, which showed during transitions and overscroll. */}
-                <ThemeProvider value={NAV_THEME}>
+                {/* From `PALETTES[mode]`, not the live `colors`: the compiler can see
+                    `mode` change, but not a value inside a module object. */}
+                <ThemeProvider value={navTheme(PALETTES[mode])}>
                   <Stack
                     screenOptions={{
                       headerShown: false,
-                      contentStyle: { backgroundColor: colors.bg },
+                      contentStyle: { backgroundColor: PALETTES[mode].bg },
                     }}
                   />
                 </ThemeProvider>

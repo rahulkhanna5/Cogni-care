@@ -5,7 +5,8 @@ import { Text as RNText, View } from 'react-native';
 import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { colors, fonts } from '@/theme/tokens';
-import type { IconName } from '@/ui';
+import { TopBar } from '@/chrome/TopBar';
+import { BarAbove, type IconName } from '@/ui';
 
 /**
  * Active tab: a coral pill behind the icon plus a coral semibold label.
@@ -50,9 +51,11 @@ export default function TabsLayout() {
     };
 
   return (
+    <BarAbove.Provider value>
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: () => <TopBar />,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
@@ -90,6 +93,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="profile" options={{ title: t('tab.profile'), tabBarIcon: icon('person-outline') }} />
     </Tabs>
+    </BarAbove.Provider>
   );
 }
 

@@ -1,4 +1,4 @@
-import { colors } from './tokens';
+import { colors, onThemeChange } from './tokens';
 
 /** WCAG 2.x relative luminance of a #RRGGBB colour. */
 export function luminance(hex: string): number {
@@ -28,7 +28,7 @@ export type Surface =
   | 'successSoft'
   | 'warningSoft';
 
-export const surfaceFill: Record<Surface, string> = {
+const fills = (): Record<Surface, string> => ({
   bg: colors.bg,
   surface: colors.surface,
   raised: colors.surfaceRaised,
@@ -38,7 +38,11 @@ export const surfaceFill: Record<Surface, string> = {
   dangerSoft: colors.dangerSoft,
   successSoft: colors.successSoft,
   warningSoft: colors.warningSoft,
-};
+});
+
+/** Live: rewritten in place when the theme changes. */
+export const surfaceFill: Record<Surface, string> = fills();
+onThemeChange(() => Object.assign(surfaceFill, fills()));
 
 export type TextColor =
   | 'text'

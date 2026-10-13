@@ -14,16 +14,26 @@ import { colors } from '@/theme/tokens';
  */
 export const chart = {
   /** Game results. 5.2:1 as a mark on a card — graphics need 3:1. */
-  game: colors.accentBright,
+  get game() {
+    return colors.accentBright;
+  },
   /** Check-in results. 5.5:1 as a mark on a card. */
-  checkin: colors.teal,
+  get checkin() {
+    return colors.teal;
+  },
   /** Outline of an empty meter segment or bar track. */
-  outline: colors.edge,
+  get outline() {
+    return colors.edge;
+  },
   /** Axis rules and average lines. */
-  axis: colors.textMuted,
+  get axis() {
+    return colors.textMuted;
+  },
   /** Hairline under a dumbbell. */
-  track: colors.divider,
-} as const;
+  get track() {
+    return colors.divider;
+  },
+};
 
 /** Mark geometry, kept consistent across every chart. */
 export const mark = {

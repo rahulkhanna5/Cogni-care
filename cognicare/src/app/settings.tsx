@@ -9,6 +9,8 @@ import { SegmentTabs } from '@/care/doctor/parts';
 import { eraseDevice } from '@/db/queries';
 import { LANGUAGES, useLanguage, useSetLanguage, useT, type Lang } from '@/i18n';
 import { useAuth } from '@/store/auth';
+import { useSetThemeMode, useThemeMode } from '@/theme/mode';
+import type { ThemeMode } from '@/theme/tokens';
 import { useSession } from '@/store/session';
 import { space } from '@/theme/tokens';
 import { Banner, Button, Card, Screen, ScreenHeader, Text, TextField } from '@/ui';
@@ -24,6 +26,8 @@ export default function Settings() {
   const t = useT();
   const lang = useLanguage((s) => s.lang);
   const setLanguage = useSetLanguage();
+  const mode = useThemeMode((s) => s.mode);
+  const setMode = useSetThemeMode();
   const setPlayer = useSession((s) => s.setPlayer);
   const { user, accessToken, signOut } = useAuth();
 
@@ -83,6 +87,18 @@ export default function Settings() {
         <Text variant="caption" color="textMuted">
           {t('settings.languageNote')}
         </Text>
+      </Card>
+
+      <Card style={{ gap: space.md }}>
+        <Text variant="heading">{t('settings.theme')}</Text>
+        <SegmentTabs<ThemeMode>
+          tabs={[
+            { value: 'light', label: t('theme.light') },
+            { value: 'dark', label: t('theme.dark') },
+          ]}
+          value={mode}
+          onChange={(m) => setMode(m)}
+        />
       </Card>
 
       <Card style={{ gap: space.sm }}>

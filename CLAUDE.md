@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 462) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 539) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -79,6 +79,20 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   selection tint, coloured and muted text yields to main text. Never hard-code
   a text colour; ask for the intent. Game charts are blue, check-in charts
   teal — the two panels never share a colour.
+- **Light and dark themes share one live palette** (`theme/tokens.ts`:
+  `LIGHT`, `DARK`, `colors`). Switching rewrites `colors` in place, then
+  `useSetThemeMode` sends the app back through the start screen, which mounts
+  every screen afresh. A mere re-render is NOT enough: the React Compiler
+  memoises styles read from a module object, and a `key` on a provider did not
+  remount expo-router's screens. So never copy a colour into a module-level
+  constant (use a function or a getter — see `Banner`, `Card`, `chart`), and
+  in the root layout read `PALETTES[mode]`, which the compiler can track.
+  `tokens.test.ts` runs every contrast rule on both palettes. In dark mode a
+  primary button is light blue with dark text (`textInverse`); illustrations
+  keep their light tile and dark ink.
+- **Language and theme sit in a top bar** on every tab screen and on sign-in
+  and welcome (`chrome/TopBar.tsx`): English, हिन्दी, ਪੰਜਾਬੀ. The same three
+  tables (`i18n/strings.ts`) must have every key.
 - **Typography and layout follow the "Warm Lantern" design system** (brief:
   `DESIGN_PROMPT.md`; its dark colours were replaced by the light theme
   above). Font is Atkinson Hyperlegible Next, loaded in the root layout; each
@@ -314,6 +328,6 @@ is public.
 1. Rotate the Neon password — it has been shared in plain text.
 2. Neon holds two schemas: pre-existing Prisma tables (`"User"`, PascalCase)
    alongside these (`users`, snake_case). They coexist; it is a stopgap.
-3. Not built: the deck's advanced level variants; Hindi for the games and
-   the check-in.
+3. Not built: the deck's advanced level variants; Hindi and Punjabi for the
+   games and the check-in (the check-in needs a checked translation).
 4. App icon and splash are still Expo defaults.

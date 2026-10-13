@@ -3,15 +3,16 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 
 import { getSetting, setSetting } from '@/db/queries';
-import { EN, HI, type Key } from './strings';
+import { EN, HI, PA, type Key } from './strings';
 
-export type Lang = 'en' | 'hi';
+export type Lang = 'en' | 'hi' | 'pa';
 export const LANGUAGES: { value: Lang; label: string }[] = [
   { value: 'en', label: 'English' },
   { value: 'hi', label: 'हिन्दी' },
+  { value: 'pa', label: 'ਪੰਜਾਬੀ' },
 ];
 
-const TABLES: Record<Lang, Record<Key, string>> = { en: EN, hi: HI };
+const TABLES: Record<Lang, Record<Key, string>> = { en: EN, hi: HI, pa: PA };
 
 export const useLanguage = create<{ lang: Lang; set: (l: Lang) => void }>((set) => ({
   lang: 'en',
@@ -39,7 +40,7 @@ export function LanguageLoader() {
   useEffect(() => {
     getSetting(db, SETTING)
       .then((v) => {
-        if (v === 'en' || v === 'hi') useLanguage.getState().set(v);
+        if (v === 'en' || v === 'hi' || v === 'pa') useLanguage.getState().set(v);
       })
       .catch(() => undefined);
   }, [db]);

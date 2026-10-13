@@ -16,16 +16,16 @@ type Props = {
   style?: ViewStyle;
 };
 
-const FILL: Record<Tone, string> = {
+const FILLOf = (): Record<Tone, string> => ({
   surface: colors.surface,
   raised: colors.surfaceRaised,
   selected: colors.selected,
-};
+});
 
 /** Plain card — surface, radius 24, padding 24. */
 export function Card({ children, onPress, tone = 'surface', accessibilityLabel, style }: Props) {
   const base: ViewStyle = {
-    backgroundColor: FILL[tone],
+    backgroundColor: FILLOf()[tone],
     borderRadius: radius.lg,
     padding: space.lg,
     gap: space.sm,
