@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 440) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 444) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -198,6 +198,16 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   (`care/report/levels.ts`); the line says whether it is misses or wrong taps.
 - **With email verification off, admin approval does not wait on it**: the
   pending list reports the address as confirmed and approving stamps it.
+
+- **Terms and privacy are app text, versioned** (`legal/content.ts`,
+  `LEGAL_VERSION`). Sign-up will not submit until "terms" and "privacy" are
+  ticked (doctors also declare their details true); the version agreed to is
+  stored on the user (`terms_version`, `terms_accepted_at`, migration 005).
+  The server accepts a missing version only so an old APK can still register.
+  The text is a product draft, not legal advice: have it reviewed (India: DPDP
+  Act 2023) before launch, and bump the version whenever it changes. The
+  privacy text says the AI features send the patient's name — they do
+  (`patient-summary.service.ts`).
 
 ## Traps already paid for
 

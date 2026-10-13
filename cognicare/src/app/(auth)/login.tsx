@@ -123,6 +123,11 @@ export default function Login() {
         You can use the exercises without signing in. An account is only needed to
         share your progress with a doctor.
       </Text>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: space.lg }}>
+        <Button label="Terms and conditions" variant="quiet" fullWidth={false} onPress={() => router.push('/terms')} />
+        <Button label="Privacy policy" variant="quiet" fullWidth={false} onPress={() => router.push('/privacy')} />
+      </View>
     </Screen>
   );
 }

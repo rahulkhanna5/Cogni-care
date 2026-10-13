@@ -28,6 +28,8 @@ export type RegisterInput = {
   specialty?: string;
   licenseNumber?: string;
   bio?: string;
+  /** The LEGAL_VERSION the person agreed to. */
+  acceptedTermsVersion?: string;
 };
 
 export const register = (input: RegisterInput) =>

@@ -15,6 +15,7 @@ export type RegisterInput = {
   specialty?: string;
   licenseNumber?: string;
   bio?: string;
+  acceptedTermsVersion?: string;
 };
 
 export async function registerUser(input: RegisterInput): Promise<{
@@ -40,8 +41,8 @@ export async function registerUser(input: RegisterInput): Promise<{
     }
 
     const user = await queryOne<UserRow>(
-      `INSERT INTO users (name, email, password_hash, role, email_verified_at)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (name, email, password_hash, role, email_verified_at, terms_accepted_at, terms_version)
+       VALUES ($1, $2, $3, $4, $5, CASE WHEN $6::text IS NULL THEN NULL ELSE now() END, $6)
        RETURNING *`,
       [
         input.name.trim(),
@@ -49,6 +50,7 @@ export async function registerUser(input: RegisterInput): Promise<{
         passwordHash,
         input.role,
         config.requireEmailVerification ? null : new Date(),
+        input.acceptedTermsVersion ?? null,
       ],
       client
     );

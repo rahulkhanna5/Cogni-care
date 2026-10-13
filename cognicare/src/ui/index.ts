@@ -2,6 +2,7 @@ export { AnswerButton } from './AnswerButton';
 export { Banner } from './Banner';
 export { Button, type IconName } from './Button';
 export { Card } from './Card';
+export { Checkbox } from './Checkbox';
 export { Chip } from './Chip';
 export { HeroIcon } from './HeroIcon';
 export { InfoRow } from './InfoRow';

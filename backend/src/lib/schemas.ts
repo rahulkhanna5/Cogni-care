@@ -12,18 +12,27 @@ const email = z.string().trim().toLowerCase().email('Enter a valid email address
  * discriminated union so the type system, not a runtime `if`, guarantees a
  * doctor cannot be created without a specialty and licence number.
  */
+/**
+ * The terms/privacy version the app showed and the person ticked. Optional so
+ * an older app build can still register; every current build sends it, and
+ * the app will not submit until both boxes are ticked.
+ */
+const acceptedTermsVersion = z.string().trim().min(1).max(40).optional();
+
 export const registerSchema = z.discriminatedUnion('role', [
   z.object({
     role: z.literal('PATIENT'),
     name: z.string().trim().min(1).max(120),
     email,
     password,
+    acceptedTermsVersion,
   }),
   z.object({
     role: z.literal('DOCTOR'),
     name: z.string().trim().min(1).max(120),
     email,
     password,
+    acceptedTermsVersion,
     specialty: z.string().trim().min(2).max(120),
     licenseNumber: z.string().trim().min(3).max(80),
     bio: z.string().trim().max(2000).optional(),

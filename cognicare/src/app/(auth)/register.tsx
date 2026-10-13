@@ -6,7 +6,8 @@ import * as api from '@/api/auth.api';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, RoleToggle, Screen, Text, TextField } from '@/ui';
+import { LEGAL_VERSION } from '@/legal/content';
+import { Banner, Button, Card, Checkbox, RoleToggle, Screen, Text, TextField } from '@/ui';
 
 type Role = 'PATIENT' | 'DOCTOR';
 
@@ -21,13 +22,17 @@ export default function Register() {
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [bio, setBio] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [doctorDeclares, setDoctorDeclares] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const doctorFieldsOk =
     role === 'PATIENT' || (specialty.trim().length > 1 && licenseNumber.trim().length > 2);
+  const consentOk = acceptTerms && acceptPrivacy && (role === 'PATIENT' || doctorDeclares);
   const ready =
-    name.trim().length > 0 && email.trim().length > 0 && password.length >= 10 && doctorFieldsOk;
+    name.trim().length > 0 && email.trim().length > 0 && password.length >= 10 && doctorFieldsOk && consentOk;
 
   // The first thing still missing, in plain words.
   const reason = !name.trim()
@@ -36,7 +41,13 @@ export default function Register() {
       ? 'Type your email to continue.'
       : password.length < 10
         ? 'Your password needs at least 10 characters.'
-        : 'Add your specialty and registration number to continue.';
+        : !doctorFieldsOk
+          ? 'Add your specialty and registration number to continue.'
+          : !acceptTerms
+            ? 'Tick the box to agree to the terms and conditions.'
+            : !acceptPrivacy
+              ? 'Tick the box to agree to the privacy policy.'
+              : 'Tick the box to confirm your registration details are true.';
 
   async function submit() {
     setBusy(true);
@@ -50,6 +61,7 @@ export default function Register() {
         ...(role === 'DOCTOR'
           ? { specialty: specialty.trim(), licenseNumber: licenseNumber.trim(), bio: bio.trim() }
           : {}),
+        acceptedTermsVersion: LEGAL_VERSION,
       });
 
       // Development convenience: the server returns the verification token
@@ -130,7 +142,6 @@ export default function Register() {
             <Card style={{ gap: space.md }}>
               <Text variant="heading">What happens next</Text>
               {[
-                'Confirm your email address.',
                 'An administrator checks your registration number against the medical council register.',
                 'Once approved, patients can ask to be connected to you.',
               ].map((step, i) => (
@@ -160,6 +171,47 @@ export default function Register() {
               </Text>
             </Card>
           </>
+        )}
+      </View>
+
+      <View style={{ gap: space.xs }}>
+        <Text variant="heading">Before you continue</Text>
+        <Checkbox
+          checked={acceptTerms}
+          onChange={setAcceptTerms}
+          label="I have read and agree to the terms and conditions. Required."
+        >
+          <Text variant="body">
+            I have read and agree to the{' '}
+            <Text variant="body" color="accent" onPress={() => router.push('/terms')} style={{ textDecorationLine: 'underline' }}>
+              terms and conditions
+            </Text>
+            . (Required)
+          </Text>
+        </Checkbox>
+        <Checkbox
+          checked={acceptPrivacy}
+          onChange={setAcceptPrivacy}
+          label="I have read the privacy policy and agree to my health information being used as it describes. Required."
+        >
+          <Text variant="body">
+            I have read the{' '}
+            <Text variant="body" color="accent" onPress={() => router.push('/privacy')} style={{ textDecorationLine: 'underline' }}>
+              privacy policy
+            </Text>{' '}
+            and agree to my health information being used as it describes. (Required)
+          </Text>
+        </Checkbox>
+        {role === 'DOCTOR' && (
+          <Checkbox
+            checked={doctorDeclares}
+            onChange={setDoctorDeclares}
+            label="I confirm I am a registered medical practitioner and the details I gave are true. Required."
+          >
+            <Text variant="body">
+              I confirm I am a registered medical practitioner and the details I gave are true. (Required)
+            </Text>
+          </Checkbox>
         )}
       </View>
 
