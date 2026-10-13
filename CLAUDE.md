@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 539) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 548) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -91,8 +91,22 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   primary button is light blue with dark text (`textInverse`); illustrations
   keep their light tile and dark ink.
 - **Language and theme sit in a top bar** on every tab screen and on sign-in
-  and welcome (`chrome/TopBar.tsx`): English, हिन्दी, ਪੰਜਾਬੀ. The same three
-  tables (`i18n/strings.ts`) must have every key.
+  and welcome (`chrome/TopBar.tsx`): English, हिन्दी, ਪੰਜਾਬੀ.
+- **Translation is by exact English, at draw time** (`i18n/catalog.ts`).
+  `Text`, Button labels and field labels/placeholders look up what they are
+  about to draw; data and logic stay English (Daily Order still matches a
+  picture by the English step, scoring compares English). Lines with values
+  are patterns (`Level {0} of {1}`) and the values are looked up too. Tables
+  live in `scripts/i18n-tables/*.py` (English, Hindi, Punjabi); run
+  `python3 scripts/i18n-build.py src/i18n/catalog.data.ts` after editing —
+  never edit `catalog.data.ts`. CHANGE AN ENGLISH LINE AND ITS TRANSLATION
+  SILENTLY STOPS MATCHING: `catalog.test.ts` fails for check-in questions,
+  answers, game titles and Daily Order steps; other lines fall back to
+  English. Legal texts are paired by position (`legal/content.i18n.ts`).
+  Not translated on purpose: doctor PDF/CSV exports, research citations,
+  developer errors. The check-in translations are not clinically validated —
+  have a native-speaking clinician review them before relying on Hindi or
+  Punjabi scores.
 - **Typography and layout follow the "Warm Lantern" design system** (brief:
   `DESIGN_PROMPT.md`; its dark colours were replaced by the light theme
   above). Font is Atkinson Hyperlegible Next, loaded in the root layout; each
@@ -328,6 +342,6 @@ is public.
 1. Rotate the Neon password — it has been shared in plain text.
 2. Neon holds two schemas: pre-existing Prisma tables (`"User"`, PascalCase)
    alongside these (`users`, snake_case). They coexist; it is a stopgap.
-3. Not built: the deck's advanced level variants; Hindi and Punjabi for the
-   games and the check-in (the check-in needs a checked translation).
+3. Not built: the deck's advanced level variants. Hindi/Punjabi check-in
+   translations need clinical review.
 4. App icon and splash are still Expo defaults.

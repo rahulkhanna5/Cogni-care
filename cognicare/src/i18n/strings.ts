@@ -1,10 +1,9 @@
 /**
  * Words on the app's main screens, in English and Hindi.
  *
- * The games' instructions and the 25-item check-in stay English for now: the
- * check-in is a measurement instrument, and a translated questionnaire needs
- * its own checked translation before its scores can be compared. Add a key
- * here and both languages must have it (strings.test.ts fails otherwise).
+ * Keyed strings for the app's own chrome. Everything else on screen (games,
+ * the check-in, data) is translated by its exact English in catalog.ts. Add a
+ * key here and every language must have it (strings.test.ts fails otherwise).
  */
 export const EN = {
   'tab.review': 'Admin',
@@ -50,7 +49,7 @@ export const EN = {
 
   'settings.title': 'Settings',
   'settings.language': 'Language',
-  'settings.languageNote': 'Games and the check-in questions are in English for now.',
+  'settings.languageNote': 'Changes the whole app: every screen, the games and the check-in.',
   'settings.legal': 'Terms and privacy',
   'settings.thisPhone': 'This phone',
   'settings.erase': 'Erase everything on this phone',
@@ -128,7 +127,7 @@ export const HI: Record<Key, string> = {
 
   'settings.title': 'सेटिंग्स',
   'settings.language': 'भाषा',
-  'settings.languageNote': 'खेल और जाँच के सवाल अभी अंग्रेज़ी में हैं।',
+  'settings.languageNote': 'पूरा ऐप बदलता है: हर स्क्रीन, खेल और जाँच।',
   'settings.legal': 'नियम और गोपनीयता',
   'settings.thisPhone': 'यह फ़ोन',
   'settings.erase': 'इस फ़ोन से सब कुछ मिटाएँ',
@@ -203,7 +202,7 @@ export const PA: Record<Key, string> = {
 
   'settings.title': 'ਸੈਟਿੰਗਾਂ',
   'settings.language': 'ਭਾਸ਼ਾ',
-  'settings.languageNote': 'ਖੇਡਾਂ ਅਤੇ ਜਾਂਚ ਦੇ ਸਵਾਲ ਹਾਲੇ ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਹਨ।',
+  'settings.languageNote': 'ਪੂਰੀ ਐਪ ਬਦਲਦੀ ਹੈ: ਹਰ ਸਕਰੀਨ, ਖੇਡਾਂ ਅਤੇ ਜਾਂਚ।',
   'settings.legal': 'ਨਿਯਮ ਅਤੇ ਨਿੱਜਤਾ',
   'settings.thisPhone': 'ਇਹ ਫ਼ੋਨ',
   'settings.erase': 'ਇਸ ਫ਼ੋਨ ਤੋਂ ਸਭ ਕੁਝ ਮਿਟਾਓ',

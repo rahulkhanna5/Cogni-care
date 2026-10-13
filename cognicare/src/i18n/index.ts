@@ -1,11 +1,13 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect } from 'react';
-import { create } from 'zustand';
 
 import { getSetting, setSetting } from '@/db/queries';
+import { translateString } from './catalog';
 import { EN, HI, PA, type Key } from './strings';
 
-export type Lang = 'en' | 'hi' | 'pa';
+import { useLanguage, type Lang } from './language';
+
+export { useLanguage, type Lang };
 export const LANGUAGES: { value: Lang; label: string }[] = [
   { value: 'en', label: 'English' },
   { value: 'hi', label: 'हिन्दी' },
@@ -14,15 +16,12 @@ export const LANGUAGES: { value: Lang; label: string }[] = [
 
 const TABLES: Record<Lang, Record<Key, string>> = { en: EN, hi: HI, pa: PA };
 
-export const useLanguage = create<{ lang: Lang; set: (l: Lang) => void }>((set) => ({
-  lang: 'en',
-  set: (lang) => set({ lang }),
-}));
 
 /** Pure lookup, with {placeholders} filled in. Falls back to English. */
 export function translate(lang: Lang, key: Key, vars?: Record<string, string | number>): string {
   let s = TABLES[lang][key] ?? EN[key];
-  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
+  // Filled-in words are translated too ("Play {game}" with an English title).
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, translateString(lang, String(v)));
   return s;
 }
 

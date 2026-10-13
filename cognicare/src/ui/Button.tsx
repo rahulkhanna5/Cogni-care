@@ -2,6 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { ActivityIndicator, Pressable, View, type ViewStyle } from 'react-native';
 
+import { translateString } from '@/i18n/catalog';
+import { useLanguage } from '@/i18n/language';
 import { colors, radius, space, TOUCH_LARGE, TOUCH_MIN } from '@/theme/tokens';
 import { SurfaceProvider, useSurface } from './surface';
 import { Text } from './Text';
@@ -39,6 +41,7 @@ export function Button({
   accessibilityLabel,
   style,
 }: Props) {
+  const lang = useLanguage((st) => st.lang);
   const outer = useSurface();
   const blocked = !!disabled || !!busy;
   // Disabled is shown by shape — a dashed edge on a raised fill — not by
@@ -72,7 +75,7 @@ export function Button({
     <View style={[{ alignSelf: fullWidth ? 'stretch' : 'center', gap: space.xs }, style]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityLabel={translateString(lang, accessibilityLabel ?? label)}
         accessibilityState={{ disabled: blocked, busy: !!busy }}
         accessibilityHint={looksDisabled ? disabledReason : undefined}
         disabled={blocked}

@@ -2,6 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { forwardRef, useState } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 
+import { translateString } from '@/i18n/catalog';
+import { useLanguage } from '@/i18n/language';
 import { colors, fonts, radius, space, TOUCH_MIN } from '@/theme/tokens';
 import { Text } from './Text';
 
@@ -22,6 +24,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
   { label, error, hint, minLines, multiline, onFocus, onBlur, ...input },
   ref
 ) {
+  const lang = useLanguage((st) => st.lang);
   const [focused, setFocused] = useState(false);
   const edgeWidth = error || focused ? 3 : 2;
   const edgeColor = error ? colors.danger : focused ? colors.accent : colors.edge;
@@ -35,6 +38,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
         {...input}
         multiline={multiline}
         placeholderTextColor={colors.placeholder}
+        placeholder={input.placeholder ? translateString(lang, input.placeholder) : undefined}
         selectionColor={colors.accent}
         onFocus={(e) => {
           setFocused(true);
@@ -44,7 +48,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
           setFocused(false);
           onBlur?.(e);
         }}
-        accessibilityLabel={input.accessibilityLabel ?? label}
+        accessibilityLabel={translateString(lang, input.accessibilityLabel ?? label)}
         style={{
           minHeight: multiline ? TOUCH_MIN * (minLines ?? 2) * 0.8 : TOUCH_MIN,
           borderWidth: edgeWidth,

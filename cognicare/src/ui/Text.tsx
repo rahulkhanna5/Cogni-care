@@ -5,6 +5,8 @@ import {
   type TextStyle,
 } from 'react-native';
 
+import { translateChildren, translateString } from '@/i18n/catalog';
+import { useLanguage } from '@/i18n/language';
 import { textColorOn, type TextColor } from '@/theme/contrast';
 import { fonts, type TypeVariant, type as typeScale } from '@/theme/tokens';
 import { useSurface } from './surface';
@@ -18,8 +20,11 @@ type Props = RNTextProps & {
 const isHeavy = (weight: TextStyle['fontWeight']) =>
   weight === '600' || weight === '700' || weight === '800' || weight === 'bold';
 
-export function Text({ variant = 'body', color = 'text', center, style, ...rest }: Props) {
+export function Text({ variant = 'body', color = 'text', center, style, children, accessibilityLabel, ...rest }: Props) {
   const surface = useSurface();
+  // Every word drawn by the app passes through here, so this is where the
+  // chosen language is applied (i18n/catalog.ts).
+  const lang = useLanguage((s) => s.lang);
   const base = typeScale[variant] as TextStyle;
 
   // A caller may still pass fontWeight in `style`. Android ignores it for a
@@ -42,7 +47,10 @@ export function Text({ variant = 'body', color = 'text', center, style, ...rest 
         center && { textAlign: 'center' },
         flatRest,
       ]}
+      accessibilityLabel={accessibilityLabel ? translateString(lang, accessibilityLabel) : undefined}
       {...rest}
-    />
+    >
+      {translateChildren(lang, children)}
+    </RNText>
   );
 }
