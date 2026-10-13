@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 457) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 462) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -291,7 +291,15 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   runs with nothing drawn. Verify gestures in Jest (`fireGestureHandler`)
   when the pane is not on screen.
 - Two browser tabs on the web preview fight over the on-device SQLite file
-  (OPFS lock) — keep one tab. `useKeepAwake` needs `suppressDeactivateWarnings`
+  (OPFS lock). The second tab now shows "open in another tab" with Try again
+  (`db/DatabaseGate.tsx`), which reloads the page: expo-sqlite caches the
+  failed open, so a remount alone would replay the error.
+- **Start-up never waits on the server.** The signed-in profile is kept beside
+  the tokens (`cognicare.profile`); the app opens as that person at once and
+  confirms with the server in the background, signing out only if the server
+  rejects the session. Waiting first meant a blank spinner for up to 40 s
+  while the free host woke. The background check shares `sharedRefresh` with
+  `authedFetch`, or two rotations at once look like token reuse. `useKeepAwake` needs `suppressDeactivateWarnings`
   or leaving a game throws on web.
 
 ## Accounts

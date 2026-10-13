@@ -11,6 +11,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DatabaseGate } from '@/db/DatabaseGate';
 import { LanguageLoader } from '@/i18n';
 import { migrate } from '@/db/migrations';
 import { colors } from '@/theme/tokens';
@@ -49,22 +50,26 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Suspense fallback={<Booting />}>
-          <SQLiteProvider databaseName="cognicare.db" onInit={migrate} useSuspense>
-            <StatusBar style="dark" />
-            <LanguageLoader />
-            {/* Without this the navigator paints its own default grey behind every
-                screen, which showed during transitions and overscroll. */}
-            <ThemeProvider value={NAV_THEME}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.bg },
-                }}
-              />
-            </ThemeProvider>
-          </SQLiteProvider>
-        </Suspense>
+        <DatabaseGate>
+          {(attempt) => (
+            <Suspense fallback={<Booting />}>
+              <SQLiteProvider key={attempt} databaseName="cognicare.db" onInit={migrate} useSuspense>
+                <StatusBar style="dark" />
+                <LanguageLoader />
+                {/* Without this the navigator paints its own default grey behind every
+                    screen, which showed during transitions and overscroll. */}
+                <ThemeProvider value={NAV_THEME}>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: colors.bg },
+                    }}
+                  />
+                </ThemeProvider>
+              </SQLiteProvider>
+            </Suspense>
+          )}
+        </DatabaseGate>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -33,6 +33,23 @@ const store = {
       : SecureStore.deleteItemAsync(key),
 };
 
+/** Who was signed in, kept beside the tokens so the app can open offline. */
+const PROFILE_KEY = 'cognicare.profile';
+type CachedProfile = { user: api.ApiUser; pendingApproval: boolean };
+const parseProfile = (raw: string | null): CachedProfile | null => {
+  try {
+    const p = raw ? (JSON.parse(raw) as CachedProfile) : null;
+    return p && p.user && typeof p.user.id === 'string' ? p : null;
+  } catch {
+    return null;
+  }
+};
+const rememberProfile = (p: CachedProfile | null) =>
+  (p ? store.set(PROFILE_KEY, JSON.stringify(p)) : store.remove(PROFILE_KEY)).catch(() => undefined);
+
+/** Longest the first launch after an update waits for the server. */
+const FIRST_CHECK_MS = 4000;
+
 /** The refresh in flight, if any — see authedFetch. */
 let refreshing: Promise<{ accessToken: string; refreshToken: string }> | null = null;
 
@@ -69,51 +86,42 @@ export const useAuth = create<AuthState>((set, get) => ({
   hydrated: false,
 
   hydrate: async () => {
+    let accessToken: string | null = null;
+    let refreshToken: string | null = null;
+    let cached: CachedProfile | null = null;
     try {
-      const [accessToken, refreshToken] = await Promise.all([
-        store.get(ACCESS_KEY),
-        store.get(REFRESH_KEY),
-      ]);
-
-      if (!accessToken || !refreshToken) {
-        set({ hydrated: true });
-        return;
-      }
-
-      try {
-        const { user, pendingApproval } = await api.me(accessToken);
-        set({ user, accessToken, refreshToken, pendingApproval, hydrated: true });
-      } catch {
-        // Stored token is stale — try the refresh before giving up, so a user
-        // who opens the app after a week is not signed out needlessly.
-        try {
-          const rotated = await api.refresh(refreshToken);
-          const { user, pendingApproval } = await api.me(rotated.accessToken);
-          await persist(rotated.accessToken, rotated.refreshToken);
-          set({
-            user,
-            accessToken: rotated.accessToken,
-            refreshToken: rotated.refreshToken,
-            pendingApproval,
-            hydrated: true,
-          });
-        } catch (error) {
-          // Only a server that REJECTED the refresh token ends the session.
-          // Offline, or a server that did not answer, is not a reason to sign
-          // someone out — keep the tokens and try again next launch.
-          const unreachable = error instanceof ApiError && error.status === 0;
-          if (!unreachable) await persist(null, null);
-          set({ user: null, accessToken: null, refreshToken: null, hydrated: true });
-        }
-      }
+      [accessToken, refreshToken] = await Promise.all([store.get(ACCESS_KEY), store.get(REFRESH_KEY)]);
+      cached = parseProfile(await store.get(PROFILE_KEY));
     } catch {
-      set({ hydrated: true });
+      // Unreadable storage: start signed out rather than not at all.
     }
+
+    if (!accessToken || !refreshToken) {
+      set({ hydrated: true });
+      return;
+    }
+
+    // Open at once as the person who was signed in. The server is asked in
+    // the background: waiting for it first meant a blank spinner for up to
+    // 40 s whenever the free host was asleep, and offline it signed people
+    // out of an app whose exercises need no network at all.
+    if (cached) {
+      set({ user: cached.user, accessToken, refreshToken, pendingApproval: cached.pendingApproval, hydrated: true });
+      void confirmSession(accessToken, refreshToken);
+      return;
+    }
+
+    // An install from before the profile was kept: nothing to show yet, so
+    // wait for the server, but never longer than a short beat.
+    const confirmed = confirmSession(accessToken, refreshToken);
+    await Promise.race([confirmed, new Promise((r) => setTimeout(r, FIRST_CHECK_MS))]);
+    set({ hydrated: true });
   },
 
   signIn: async (email, password) => {
     const result = await api.login(email, password);
     await persist(result.accessToken, result.refreshToken);
+    await rememberProfile({ user: result.user, pendingApproval: result.pendingApproval });
     set({
       user: result.user,
       accessToken: result.accessToken,
@@ -128,6 +136,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     // Revoke server-side too, so a stolen refresh token dies with the session.
     if (refreshToken) await api.logout(refreshToken).catch(() => undefined);
     await persist(null, null);
+    await rememberProfile(null);
     set({ user: null, accessToken: null, refreshToken: null, pendingApproval: false });
   },
 
@@ -147,18 +156,55 @@ export const useAuth = create<AuthState>((set, get) => ({
 
       // Refresh tokens rotate, so a second refresh with the same old token is
       // treated as reuse. Calls that expire together share ONE refresh.
-      refreshing ??= (async () => {
-        try {
-          const rotated = await api.refresh(refreshToken!);
-          await persist(rotated.accessToken, rotated.refreshToken);
-          set({ accessToken: rotated.accessToken, refreshToken: rotated.refreshToken });
-          return rotated;
-        } finally {
-          refreshing = null;
-        }
-      })();
-      const rotated = await refreshing;
+      const rotated = await sharedRefresh(refreshToken!);
       return fn(rotated.accessToken);
     }
   },
 }));
+
+/**
+ * Asks the server who the stored tokens belong to, refreshing once if the
+ * access token expired, and brings the app's state in line. Only a server that
+ * REJECTS the session signs the person out; an unreachable one changes nothing.
+ */
+async function confirmSession(accessToken: string, refreshToken: string): Promise<void> {
+  const set = useAuth.setState;
+  try {
+    const { user, pendingApproval } = await api.me(accessToken);
+    set({ user, pendingApproval });
+    await rememberProfile({ user, pendingApproval });
+    return;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 0) return; // offline / asleep: keep going
+  }
+  try {
+    const rotated = await sharedRefresh(refreshToken);
+    const { user, pendingApproval } = await api.me(rotated.accessToken);
+    await rememberProfile({ user, pendingApproval });
+    set({ user, pendingApproval });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 0) return;
+    await persist(null, null);
+    await rememberProfile(null);
+    set({ user: null, accessToken: null, refreshToken: null, pendingApproval: false });
+  }
+}
+
+/**
+ * The one refresh in flight. Refresh tokens rotate, so a second refresh with
+ * the same old token looks like reuse and can end the session: everything that
+ * refreshes (authedFetch, the start-up check) shares this promise.
+ */
+function sharedRefresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  refreshing ??= (async () => {
+    try {
+      const rotated = await api.refresh(refreshToken);
+      await persist(rotated.accessToken, rotated.refreshToken);
+      useAuth.setState({ accessToken: rotated.accessToken, refreshToken: rotated.refreshToken });
+      return rotated;
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
+}
