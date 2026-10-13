@@ -39,6 +39,11 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   exactly the users this app is for.
 - **The device is the source of truth.** Everything writes to on-device SQLite
   first and syncs after, so play never waits on a network.
+- **Email verification is switched off** (`REQUIRE_EMAIL_VERIFICATION`, default
+  false). There is no mail provider, so no one could ever confirm an address
+  and every new account was locked out of the API. Off, an account is
+  confirmed at registration (and existing ones at next sign-in); doctors still
+  need an admin's approval. Set it to `true` on Render once mail is wired up.
 - **`isVerified` is computed, never stored.** The database keeps
   `email_verified_at` and `approved_at` apart because they are different
   decisions. One flag would let a doctor approve themselves from their inbox.

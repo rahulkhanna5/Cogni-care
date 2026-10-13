@@ -46,15 +46,20 @@ authRoutes.post('/register', registerLimiter, async (req, res, next) => {
 
     // TODO(email): hand emailVerifyToken to the mail provider. Returned in the
     // response only outside production so the flow is testable without SMTP.
-    console.log(`[email] verify token for ${user.email}: ${emailVerifyToken}`);
+    if (emailVerifyToken) console.log(`[email] verify token for ${user.email}: ${emailVerifyToken}`);
 
     res.status(201).json({
       user: toPublicUser(user),
       // Tells the app which screen to show next without it having to infer
       // the rule from role + flags.
-      nextStep:
-        user.role === 'DOCTOR' ? 'VERIFY_EMAIL_THEN_AWAIT_APPROVAL' : 'VERIFY_EMAIL',
-      ...(config.env !== 'production' ? { devEmailVerifyToken: emailVerifyToken } : {}),
+      nextStep: config.requireEmailVerification
+        ? user.role === 'DOCTOR'
+          ? 'VERIFY_EMAIL_THEN_AWAIT_APPROVAL'
+          : 'VERIFY_EMAIL'
+        : user.role === 'DOCTOR'
+          ? 'AWAIT_APPROVAL'
+          : 'SIGN_IN',
+      ...(config.env !== 'production' && emailVerifyToken ? { devEmailVerifyToken: emailVerifyToken } : {}),
     });
   } catch (error) {
     next(error);
@@ -107,6 +112,14 @@ authRoutes.post('/login', loginLimiter, async (req, res, next) => {
     const ok = await verifyPassword(user.password_hash, password);
     if (!ok) throw Errors.invalidCredentials();
     if (!user.is_active) throw Errors.accountDisabled();
+
+    // Verification is switched off: confirm accounts made before the switch.
+    if (!config.requireEmailVerification && !user.email_verified_at) {
+      await query('UPDATE users SET email_verified_at = now() WHERE id = $1 AND email_verified_at IS NULL', [
+        user.id,
+      ]);
+      user.email_verified_at = new Date();
+    }
 
     const session = await issueSession(user, meta(req));
 

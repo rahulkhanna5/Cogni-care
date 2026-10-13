@@ -26,6 +26,15 @@ export const config = {
     ttlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30),
   },
 
+  /**
+   * Off for now: there is no mail provider, so nobody could ever confirm an
+   * address. When off, an account counts as confirmed from the moment it is
+   * created (and existing ones on next sign-in). Doctors still need an admin's
+   * approval — that is a separate decision. Set REQUIRE_EMAIL_VERIFICATION=true
+   * once mail is wired up.
+   */
+  requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === 'true',
+
   tokens: {
     emailVerifyTtlHours: Number(process.env.EMAIL_VERIFY_TTL_HOURS ?? 24),
     passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES ?? 30),

@@ -19,7 +19,8 @@ export type RegisterInput = {
 
 export async function registerUser(input: RegisterInput): Promise<{
   user: UserRow;
-  emailVerifyToken: string;
+  /** null when verification is switched off — there is nothing to confirm. */
+  emailVerifyToken: string | null;
 }> {
   // ADMIN can never be created from a request body. See README, "Admin bootstrap".
   if (input.role === 'ADMIN' && !config.allowAdminSelfRegistration) {
@@ -39,10 +40,16 @@ export async function registerUser(input: RegisterInput): Promise<{
     }
 
     const user = await queryOne<UserRow>(
-      `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (name, email, password_hash, role, email_verified_at)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [input.name.trim(), input.email, passwordHash, input.role],
+      [
+        input.name.trim(),
+        input.email,
+        passwordHash,
+        input.role,
+        config.requireEmailVerification ? null : new Date(),
+      ],
       client
     );
     if (!user) throw Errors.internal();
@@ -70,12 +77,14 @@ export async function registerUser(input: RegisterInput): Promise<{
       );
     }
 
-    const emailVerifyToken = await issueOneTimeToken(
-      user.id,
-      'EMAIL_VERIFY',
-      config.tokens.emailVerifyTtlHours * 60,
-      client
-    );
+    const emailVerifyToken = config.requireEmailVerification
+      ? await issueOneTimeToken(
+          user.id,
+          'EMAIL_VERIFY',
+          config.tokens.emailVerifyTtlHours * 60,
+          client
+        )
+      : null;
 
     return { user, emailVerifyToken };
   });
