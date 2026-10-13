@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 544) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 550) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -157,6 +157,12 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   away. A step without a scene shows `ActionCard`'s fallback (routine icon,
   bold words); `scenes.test.tsx` fails if a shipped step lacks one or a scene
   key matches no step.
+- **The check-in is weekly** (`assessment/schedule.ts`). A finished check-in
+  locks it for six days; it opens on the seventh, the same weekday next week,
+  counted in local calendar days. The Check-in tab disables its button and
+  says when it opens; the check-in screen refuses too (any other way in). A
+  check-in already under way can always be finished. The lock reads the
+  phone's own history, so a patient on a new phone is not locked.
 - **Every game starts at level 1, whatever the check-in says.** A check-in
   once preset unplayed games' starting level by band (Normal 8 … Severe 1);
   the owner withdrew it. Local migration v4 put unplayed games back to 1.

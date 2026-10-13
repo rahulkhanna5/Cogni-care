@@ -4,13 +4,14 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { TOTAL_QUESTIONS } from '@/assessment/questions';
+import { checkInWindow, formatOpensOn } from '@/assessment/schedule';
 import { bandInfo, firstUnanswered, type Answers } from '@/assessment/scoring';
 import { AreaBars } from '@/charts/AreaBars';
 import { assessmentHistory, getSetting } from '@/db/queries';
 import { DOMAIN_LABELS, type Assessment, type Domain } from '@/db/types';
 import { useSession } from '@/store/session';
 import { space } from '@/theme/tokens';
-import { Button, Card, InfoRow, Score, Screen, Text } from '@/ui';
+import { Banner, Button, Card, InfoRow, Score, Screen, Text } from '@/ui';
 
 const draftKey = (playerId: number) => `assessment_draft_${playerId}`;
 
@@ -62,6 +63,10 @@ export default function Assess() {
 
   const latest = history[0];
   const previous = history[1];
+  // Weekly: locked for six days after a finished check-in. A check-in already
+  // under way can always be finished.
+  const window = checkInWindow(latest?.taken_at);
+  const locked = window.locked && resumeAt === null;
 
   return (
     <Screen>
@@ -97,9 +102,22 @@ export default function Assess() {
         </Card>
       )}
 
+      {locked && window.opensOn ? (
+        <Banner tone="info" icon="lock-closed-outline">
+          <Text variant="label">Done for this week</Text>
+          <Text variant="body">
+            {window.daysLeft === 1
+              ? `Your next check-in opens tomorrow, ${formatOpensOn(window.opensOn)}.`
+              : `Your next check-in opens on ${formatOpensOn(window.opensOn)}, in ${window.daysLeft} days.`}
+          </Text>
+        </Banner>
+      ) : null}
+
       <Button
         label={resumeAt ? `Continue from question ${resumeAt}` : 'Start check-in'}
-        icon={resumeAt ? 'arrow-forward' : 'clipboard-outline'}
+        icon={resumeAt ? 'arrow-forward' : locked ? 'lock-closed-outline' : 'clipboard-outline'}
+        disabled={locked}
+        disabledReason="The check-in is once a week, so changes have time to show."
         onPress={() => router.push('/assessment')}
       />
 

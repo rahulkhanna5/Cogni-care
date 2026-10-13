@@ -746,7 +746,9 @@ export const EXACT_HI: Record<string, string> = {
   "Write the letter": "चिट्ठी लिखें",
   "look-alike feelings, very subtle expressions": "मिलती-जुलती भावनाएँ, बहुत हल्के भाव",
   "You changed the route once. Planning the whole way before walking earns more points.": "आपने रास्ता एक बार बदला। चलने से पहले पूरा रास्ता सोचने पर ज़्यादा अंक मिलते हैं।",
-  "Needs a look.": "ध्यान देने लायक।"
+  "Needs a look.": "ध्यान देने लायक।",
+  "Done for this week": "इस हफ़्ते की जाँच हो गई",
+  "The check-in is once a week, so changes have time to show.": "जाँच हफ़्ते में एक बार होती है, ताकि बदलाव दिखने का समय मिले।"
 };
 
 export const EXACT_PA: Record<string, string> = {
@@ -1493,7 +1495,9 @@ export const EXACT_PA: Record<string, string> = {
   "Write the letter": "ਚਿੱਠੀ ਲਿਖੋ",
   "look-alike feelings, very subtle expressions": "ਮਿਲਦੀਆਂ-ਜੁਲਦੀਆਂ ਭਾਵਨਾਵਾਂ, ਬਹੁਤ ਹਲਕੇ ਭਾਵ",
   "You changed the route once. Planning the whole way before walking earns more points.": "ਤੁਸੀਂ ਰਾਹ ਇੱਕ ਵਾਰ ਬਦਲਿਆ। ਤੁਰਨ ਤੋਂ ਪਹਿਲਾਂ ਪੂਰਾ ਰਾਹ ਸੋਚਣ ਨਾਲ ਵੱਧ ਅੰਕ ਮਿਲਦੇ ਹਨ।",
-  "Needs a look.": "ਧਿਆਨ ਦੇਣ ਯੋਗ।"
+  "Needs a look.": "ਧਿਆਨ ਦੇਣ ਯੋਗ।",
+  "Done for this week": "ਇਸ ਹਫ਼ਤੇ ਦੀ ਜਾਂਚ ਹੋ ਗਈ",
+  "The check-in is once a week, so changes have time to show.": "ਜਾਂਚ ਹਫ਼ਤੇ ਵਿੱਚ ਇੱਕ ਵਾਰ ਹੁੰਦੀ ਹੈ, ਤਾਂ ਜੋ ਬਦਲਾਅ ਦਿਸਣ ਦਾ ਸਮਾਂ ਮਿਲੇ।"
 };
 
 export const TEMPLATES_HI: [string, string][] = [
@@ -1992,6 +1996,14 @@ export const TEMPLATES_HI: [string, string][] = [
   [
     "{0} of {1} in place",
     "{1} में से {0} सही जगह"
+  ],
+  [
+    "Your next check-in opens tomorrow, {0}.",
+    "आपकी अगली जाँच कल, {0} को खुलेगी।"
+  ],
+  [
+    "Your next check-in opens on {0}, in {1} days.",
+    "आपकी अगली जाँच {0} को, {1} दिन में खुलेगी।"
   ]
 ];
 
@@ -2491,5 +2503,13 @@ export const TEMPLATES_PA: [string, string][] = [
   [
     "{0} of {1} in place",
     "{1} ਵਿੱਚੋਂ {0} ਸਹੀ ਥਾਂ"
+  ],
+  [
+    "Your next check-in opens tomorrow, {0}.",
+    "ਤੁਹਾਡੀ ਅਗਲੀ ਜਾਂਚ ਕੱਲ੍ਹ, {0} ਨੂੰ ਖੁੱਲ੍ਹੇਗੀ।"
+  ],
+  [
+    "Your next check-in opens on {0}, in {1} days.",
+    "ਤੁਹਾਡੀ ਅਗਲੀ ਜਾਂਚ {0} ਨੂੰ, {1} ਦਿਨਾਂ ਵਿੱਚ ਖੁੱਲ੍ਹੇਗੀ।"
   ]
 ];

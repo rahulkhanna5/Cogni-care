@@ -12,7 +12,8 @@ import {
   scoreAssessment,
   type Answers,
 } from '@/assessment/scoring';
-import { getSetting, saveAssessment, setSetting } from '@/db/queries';
+import { getSetting, latestAssessment, saveAssessment, setSetting } from '@/db/queries';
+import { checkInWindow, formatOpensOn, type CheckInWindow } from '@/assessment/schedule';
 import { AreaBars } from '@/charts/AreaBars';
 import { chart } from '@/charts/colors';
 import { DOMAIN_LABELS, type Domain } from '@/db/types';
@@ -31,6 +32,7 @@ export default function Assessment() {
   const [index, setIndex] = useState(0); // 0-based position in QUESTIONS
   const [loading, setLoading] = useState(true);
   const [done, setDone] = useState<ReturnType<typeof scoreAssessment> | null>(null);
+  const [lockedUntil, setLockedUntil] = useState<CheckInWindow | null>(null);
 
   /* Restore an interrupted check-in. 25 questions is a long way for this
      audience to get in one sitting, and losing the lot to a phone call would
@@ -47,8 +49,19 @@ export default function Assessment() {
     let cancelled = false;
 
     (async () => {
-      const raw = await getSetting(db, draftKey(player.id));
+      const [raw, last] = await Promise.all([getSetting(db, draftKey(player.id)), latestAssessment(db, player.id)]);
       if (cancelled) return;
+
+      // Weekly lock — the Check-in tab disables its button, and this catches
+      // any other way in (the dashboard, a link). A check-in under way may
+      // always be finished.
+      const hasDraft = !!raw && raw !== '' && raw !== '{}';
+      const w = checkInWindow(last?.taken_at);
+      if (w.locked && !hasDraft) {
+        setLockedUntil(w);
+        setLoading(false);
+        return;
+      }
 
       if (raw) {
         try {
@@ -114,6 +127,23 @@ export default function Assessment() {
             <Skeleton key={i} height={56} />
           ))}
         </View>
+      </Screen>
+    );
+  }
+
+  if (lockedUntil?.opensOn) {
+    return (
+      <Screen>
+        <ScreenHeader title="Check-in" onBack={() => router.back()} />
+        <Banner tone="info" icon="lock-closed-outline">
+          <Text variant="label">Done for this week</Text>
+          <Text variant="body">
+            {lockedUntil.daysLeft === 1
+              ? `Your next check-in opens tomorrow, ${formatOpensOn(lockedUntil.opensOn)}.`
+              : `Your next check-in opens on ${formatOpensOn(lockedUntil.opensOn)}, in ${lockedUntil.daysLeft} days.`}
+          </Text>
+        </Banner>
+        <Button label="Go back" variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
