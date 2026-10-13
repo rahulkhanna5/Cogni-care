@@ -88,3 +88,39 @@ export const saveRemark = (
 
 export const listRemarks = (accessToken: string, patientId: string) =>
   request<{ remarks: Remark[] }>(`/patients/${patientId}/remarks`, { accessToken });
+
+/* ------------------------- requests waiting for me ------------------------- */
+
+/** One row of the doctor's own assignment list. */
+export type MyRequest = {
+  id: string;
+  status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REVOKED';
+  requested_at: string;
+  approved_at: string | null;
+  doctor_accepted_at?: string | null;
+  patient_id: string;
+  patient_name: string;
+};
+
+/** Approved by an admin and not yet answered by this doctor. */
+export const awaitingMe = (all: MyRequest[]) =>
+  all.filter((r) => r.status === 'ACTIVE' && r.doctor_accepted_at === null);
+
+export const myRequests = (accessToken: string) =>
+  request<{ assignments: MyRequest[] }>('/assignments', { accessToken });
+
+/** Opens the patient's results to this doctor. */
+export const acceptRequest = (accessToken: string, id: string) =>
+  request<{ assignment: unknown }>(`/assignments/${id}/accept`, {
+    method: 'POST',
+    body: {},
+    accessToken,
+  });
+
+/** Closes the request. The patient sees it as not accepted; nothing is shared. */
+export const declineRequest = (accessToken: string, id: string) =>
+  request<{ assignment: unknown }>(`/assignments/${id}/decline`, {
+    method: 'POST',
+    body: {},
+    accessToken,
+  });

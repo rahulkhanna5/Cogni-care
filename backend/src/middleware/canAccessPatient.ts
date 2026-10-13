@@ -57,6 +57,7 @@ export async function canAccessPatient(
     const assignment = await queryOne<{ id: string }>(
       `SELECT id FROM assignments
         WHERE doctor_id = $1 AND patient_id = $2 AND status = 'ACTIVE'
+          AND doctor_accepted_at IS NOT NULL
         LIMIT 1`,
       [requesterId, patientId]
     );
@@ -134,7 +135,8 @@ export async function assignedPatientIds(doctor: AuthUser): Promise<string[]> {
   if (!doctor.approvedAt) return [];
   const rows = await queryOne<{ ids: string[] }>(
     `SELECT COALESCE(array_agg(patient_id), '{}') AS ids
-       FROM assignments WHERE doctor_id = $1 AND status = 'ACTIVE'`,
+       FROM assignments
+      WHERE doctor_id = $1 AND status = 'ACTIVE' AND doctor_accepted_at IS NOT NULL`,
     [doctor.id]
   );
   return rows?.ids ?? [];

@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 414) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 422) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -47,6 +47,14 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - **`isVerified` is computed, never stored.** The database keeps
   `email_verified_at` and `approved_at` apart because they are different
   decisions. One flag would let a doctor approve themselves from their inbox.
+- **A doctor is asked, after the admin.** patient asks → admin approves
+  (`ACTIVE`) → doctor accepts (`doctor_accepted_at`). Access opens only when
+  both have said yes: `canAccessPatient`, `assignedPatientIds` and the patient
+  list all require `doctor_accepted_at IS NOT NULL`. A decline is an ordinary
+  `REJECTED` row. It is a column, not a status, so the "ACTIVE needs an
+  approver" constraint is untouched; migration 004 backfills existing ACTIVE
+  rows as accepted so no current relationship is cut. The doctor's Patients
+  tab shows the waiting requests above the list (`IncomingRequests`).
 - **Authorisation never trusts JWT claims.** Role, approval and assignment are
   re-read per request, so revoking a doctor takes effect immediately rather
   than whenever their token expires.
@@ -203,6 +211,12 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - `expo-secure-store` is native-only and throws on web.
 - Sound: phone speakers roll off below ~500Hz, and localisation is computed
   from a sound's **onset** — a slow fade-in destroys it.
+- **Render does not run migrations by itself.** `buildCommand` only compiles,
+  and `tsc` does not copy `.sql`. `server.ts` now awaits `migrate()` before
+  listening (and exits if it fails, so the platform keeps the previous deploy),
+  and `migrate.ts` falls back to `src/db/migrations` when run from `dist/`.
+  Migrations must stay additive: the old instance serves during the new one's
+  boot.
 - **Inside `withTransaction`, pass the transaction's `client` to every query.**
   Refresh rotation once issued the new token on the pool; its FK to the row
   locked `FOR UPDATE` deadlocked against its own transaction, so every token

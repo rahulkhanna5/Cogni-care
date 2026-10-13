@@ -22,6 +22,11 @@ export type MyAssignment = {
   requested_at: string;
   approved_at: string | null;
   revoked_at: string | null;
+  /**
+   * null = the admin approved but the doctor has not answered yet. Undefined
+   * only from a server that predates the doctor's step: treated as accepted.
+   */
+  doctor_accepted_at?: string | null;
   doctor_id: string;
   doctor_name: string;
 };

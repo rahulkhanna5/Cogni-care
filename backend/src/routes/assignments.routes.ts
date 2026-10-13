@@ -18,6 +18,8 @@ assignmentRoutes.use(authenticate, requireVerifiedEmail);
  *
  *   patient requests  -> PENDING
  *   admin approves    -> ACTIVE    (only an admin can reach this state)
+ *   doctor accepts    -> ACTIVE + doctor_accepted_at  (access opens only now)
+ *   doctor declines   -> REJECTED
  *   admin rejects     -> REJECTED
  *   patient revokes   -> REVOKED   (immediate, no admin step)
  *   admin revokes     -> REVOKED
@@ -112,6 +114,7 @@ assignmentRoutes.get('/', async (req, res, next) => {
 
     const rows = await query(
       `SELECT a.id, a.status, a.requested_at, a.approved_at, a.revoked_at,
+              a.doctor_accepted_at,
               d.id AS doctor_id, d.name AS doctor_name,
               p.id AS patient_id, p.name AS patient_name
          FROM assignments a
@@ -123,6 +126,71 @@ assignmentRoutes.get('/', async (req, res, next) => {
     );
 
     res.json({ assignments: rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* ------------------------------ doctor actions ----------------------------- */
+
+/**
+ * The doctor's own answer, after the admin's. Re-read from the database every
+ * time: the doctor must still be approved and active, and the row must be
+ * theirs, ACTIVE, and not yet answered. A doctor can only ever answer a
+ * request an admin has already approved.
+ */
+async function openRequestForDoctor(assignmentId: string, doctorId: string) {
+  const doctor = await queryOne<{ approved_at: Date | null; is_active: boolean }>(
+    'SELECT approved_at, is_active FROM users WHERE id = $1',
+    [doctorId]
+  );
+  if (!doctor?.is_active) throw Errors.accountDisabled();
+  if (!doctor.approved_at) throw Errors.doctorPendingApproval();
+
+  const row = await queryOne<{ status: string; doctor_accepted_at: Date | null }>(
+    'SELECT status, doctor_accepted_at FROM assignments WHERE id = $1 AND doctor_id = $2',
+    [assignmentId, doctorId]
+  );
+  // Someone else's request looks exactly like one that does not exist.
+  if (!row) throw Errors.notFound('Request');
+  if (row.status !== 'ACTIVE' || row.doctor_accepted_at) {
+    throw Errors.conflict('REQUEST_NOT_AWAITING_YOU', 'This request is not waiting for your answer.');
+  }
+}
+
+assignmentRoutes.post('/:id/accept', requireRole('DOCTOR'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await openRequestForDoctor(String(id), req.user!.id);
+
+    const row = await queryOne(
+      `UPDATE assignments SET doctor_accepted_at = now()
+        WHERE id = $1 AND doctor_id = $2 AND status = 'ACTIVE' AND doctor_accepted_at IS NULL
+        RETURNING id, status, doctor_accepted_at`,
+      [id, req.user!.id]
+    );
+    if (!row) throw Errors.conflict('REQUEST_NOT_AWAITING_YOU', 'This request is not waiting for your answer.');
+    res.json({ assignment: row });
+  } catch (error) {
+    next(error);
+  }
+});
+
+assignmentRoutes.post('/:id/decline', requireRole('DOCTOR'), async (req, res, next) => {
+  try {
+    const { reason } = rejectAssignmentSchema.parse(req.body ?? {});
+    const { id } = req.params;
+    await openRequestForDoctor(String(id), req.user!.id);
+
+    const row = await queryOne(
+      `UPDATE assignments
+          SET status = 'REJECTED', revoked_at = now(), revoked_by = $2, revoke_reason = $3
+        WHERE id = $1 AND doctor_id = $2 AND status = 'ACTIVE' AND doctor_accepted_at IS NULL
+        RETURNING id, status`,
+      [id, req.user!.id, reason ?? null]
+    );
+    if (!row) throw Errors.conflict('REQUEST_NOT_AWAITING_YOU', 'This request is not waiting for your answer.');
+    res.json({ assignment: row });
   } catch (error) {
     next(error);
   }

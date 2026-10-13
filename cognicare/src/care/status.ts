@@ -13,7 +13,21 @@ export type RequestView = {
   action: 'withdraw' | 'stop' | null;
 };
 
-export function describeRequest(a: Pick<MyAssignment, 'status' | 'doctor_name'>): RequestView {
+/** Approved by an admin, but the doctor has not said yes yet. */
+export const awaitingDoctor = (a: Pick<MyAssignment, 'status' | 'doctor_accepted_at'>) =>
+  a.status === 'ACTIVE' && a.doctor_accepted_at === null;
+
+export function describeRequest(
+  a: Pick<MyAssignment, 'status' | 'doctor_name' | 'doctor_accepted_at'>
+): RequestView {
+  if (awaitingDoctor(a)) {
+    return {
+      headline: `Waiting for ${a.doctor_name} to accept`,
+      detail: `Your request was approved. Nothing is shared until ${a.doctor_name} accepts it.`,
+      tone: 'info',
+      action: 'withdraw',
+    };
+  }
   switch (a.status) {
     case 'PENDING':
       return {

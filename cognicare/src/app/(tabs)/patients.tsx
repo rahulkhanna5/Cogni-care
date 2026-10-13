@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import * as doctorApi from '@/api/doctor.api';
+import { IncomingRequests } from '@/care/doctor/IncomingRequests';
 import { ReasonList } from '@/care/doctor/parts';
 import { needsLookFirst, statusLine, summarise, type PatientInsight } from '@/care/insight';
 import { useAuth } from '@/store/auth';
@@ -28,6 +29,7 @@ export default function Patients() {
   const { user, authedFetch } = useAuth();
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [waiting, setWaiting] = useState<doctorApi.MyRequest[]>([]);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -39,6 +41,15 @@ export default function Patients() {
       const { patients } = await authedFetch((token) => doctorApi.listPatients(token));
       setRows(patients);
       setLoading(false);
+
+      // Requests waiting for this doctor's yes/no. A failure here must not
+      // hide the patient list, so it is its own try.
+      try {
+        const { assignments } = await authedFetch((t) => doctorApi.myRequests(t));
+        setWaiting(doctorApi.awaitingMe(assignments));
+      } catch {
+        setWaiting([]);
+      }
 
       // Fill each patient's summary in as it arrives, so the list is usable
       // straight away rather than waiting on the slowest one.
@@ -95,6 +106,8 @@ export default function Patients() {
         </Text>
       </View>
 
+      {!error && <IncomingRequests requests={waiting} onAnswered={load} />}
+
       {/* The pending state is called out separately from a generic failure:
           it resolves by waiting, and saying "could not load" would be wrong. */}
       {error?.code === 'DOCTOR_PENDING_APPROVAL' ? (
@@ -119,12 +132,15 @@ export default function Patients() {
           </Text>
         </Card>
       ) : rows.length === 0 ? (
+        waiting.length > 0 ? null : (
         <Card>
           <Text variant="heading">No patients yet</Text>
           <Text variant="body" color="textMuted">
-            Patients appear here once they have asked you to be their doctor and an administrator has approved it.
+            Patients appear here once they have asked you to be their doctor, an administrator has approved it, and you
+            have accepted.
           </Text>
         </Card>
+        )
       ) : (
         <>
           {rows.length >= SEARCH_FROM && (

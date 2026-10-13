@@ -1,11 +1,17 @@
 import { realpathSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { guardCheckedOut, pool } from './pool.js';
 
-const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
+const HERE = dirname(fileURLToPath(import.meta.url));
+// `tsc` does not copy .sql files, so when this runs from dist/ the migrations
+// are still in src/. Prefer the sibling folder, fall back to the source one.
+const MIGRATIONS_DIR = [join(HERE, 'migrations'), join(HERE, '..', '..', '..', 'src', 'db', 'migrations')].find(
+  (d) => existsSync(d)
+)!;
 
 /**
  * Applies every .sql file in migrations/ that has not run yet, in filename

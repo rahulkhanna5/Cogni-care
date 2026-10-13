@@ -1,5 +1,5 @@
 import type { MyAssignment } from '@/api/care.api';
-import { describeRequest, openRequestFor, requestErrorMessage, visibleRequests } from './status';
+import { awaitingDoctor, describeRequest, openRequestFor, requestErrorMessage, visibleRequests } from './status';
 
 const row = (over: Partial<MyAssignment>): MyAssignment => ({
   id: 'a1',
@@ -18,6 +18,21 @@ describe('describeRequest', () => {
     expect(v.headline).toBe('Waiting for approval');
     expect(v.detail).toMatch(/Nothing is shared/);
     expect(v.action).toBe('withdraw');
+  });
+
+  it('approved by an admin but not yet by the doctor says so, and shares nothing', () => {
+    const r = row({ status: 'ACTIVE', doctor_accepted_at: null });
+    expect(awaitingDoctor(r)).toBe(true);
+    const v = describeRequest(r);
+    expect(v.headline).toBe('Waiting for Dr Rao to accept');
+    expect(v.detail).toMatch(/Nothing is shared until Dr Rao accepts/);
+    expect(v.action).toBe('withdraw');
+  });
+
+  it('once the doctor accepts it is sharing, and an older server reads the same', () => {
+    expect(awaitingDoctor(row({ status: 'ACTIVE', doctor_accepted_at: '2026-10-13T10:00:00Z' }))).toBe(false);
+    expect(awaitingDoctor(row({ status: 'ACTIVE' }))).toBe(false); // field absent
+    expect(describeRequest(row({ status: 'ACTIVE', doctor_accepted_at: '2026-10-13T10:00:00Z' })).action).toBe('stop');
   });
 
   it('an active one names the doctor and offers to stop', () => {

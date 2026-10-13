@@ -75,6 +75,7 @@ patientRoutes.get('/', async (req, res, next) => {
            FROM assignments a
            JOIN users u ON u.id = a.patient_id
           WHERE a.doctor_id = $1 AND a.status = 'ACTIVE'
+            AND a.doctor_accepted_at IS NOT NULL
           ORDER BY u.name
           LIMIT $2 OFFSET $3`,
         [user.id, limit, offset]

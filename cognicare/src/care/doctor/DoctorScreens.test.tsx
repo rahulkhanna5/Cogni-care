@@ -64,7 +64,23 @@ jest.mock('@/api/doctor.api', () => ({
   getSessions: async (_t: string, id: string) => ({ sessions: mockSessionsFor[id] ?? [] }),
   getAssessments: async (_t: string, id: string) => ({ assessments: mockCheckInsFor[id] ?? [] }),
   listRemarks: async () => ({ remarks: [] }),
+  myRequests: async () => ({ assignments: mockWaiting }),
+  awaitingMe: (all: { status: string; doctor_accepted_at?: string | null }[]) =>
+    all.filter((r) => r.status === 'ACTIVE' && r.doctor_accepted_at === null),
+  acceptRequest: async () => ({ assignment: {} }),
+  declineRequest: async () => ({ assignment: {} }),
 }));
+const mockWaiting = [
+  {
+    id: 'a-new',
+    status: 'ACTIVE',
+    requested_at: ago(2),
+    approved_at: ago(1),
+    doctor_accepted_at: null,
+    patient_id: 'p-new',
+    patient_name: 'Nila',
+  },
+];
 const mockPatients = patients;
 const mockSessionsFor = sessionsFor;
 const mockCheckInsFor = checkInsFor;
@@ -86,10 +102,23 @@ describe('the doctor’s patient list', () => {
     expect(await view.findByText('Check-in 8 points worse')).toBeTruthy();
     expect(await view.findByText('Nothing stands out')).toBeTruthy();
 
-    const names = view.getAllByRole('button').map((b) => b.props.accessibilityLabel as string);
+    const names = view
+      .getAllByRole('button')
+      .map((b) => b.props.accessibilityLabel as string | undefined)
+      .filter((n): n is string => !!n && /^(Zoya|Asha)/.test(n));
     expect(names[0]).toMatch(/^Zoya/);
     expect(names[1]).toMatch(/^Asha/);
     expect(view.getByText('2 patients · 1 to look at')).toBeTruthy();
+  });
+});
+
+describe('requests waiting on the doctor', () => {
+  it('shows the patient who asked, above the list, with Accept and Decline', async () => {
+    const view = await render(wrap(<Patients />));
+    expect(await view.findByText('1 patient is waiting for your answer')).toBeTruthy();
+    expect(view.getByText('Nila')).toBeTruthy();
+    expect(view.getByText('Accept')).toBeTruthy();
+    expect(view.getByText('Decline')).toBeTruthy();
   });
 });
 
