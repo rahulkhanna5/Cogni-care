@@ -128,3 +128,21 @@ export const declineRequest = (accessToken: string, id: string) =>
     body: {},
     accessToken,
   });
+
+/* ---------------------------------- rounds ---------------------------------- */
+
+/** One round of one session, with its game, level and date. */
+export type ServerRound = {
+  game_id: string;
+  started_at: string;
+  round_no: number;
+  level: number;
+  hits: number;
+  misses: number;
+  false_alarms: number;
+  accuracy: number;
+  avg_reaction_ms: number | null;
+};
+
+export const getRounds = (accessToken: string, id: string) =>
+  request<{ rounds: ServerRound[] }>(`/patients/${id}/rounds`, { accessToken });

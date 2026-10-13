@@ -64,6 +64,7 @@ jest.mock('@/api/doctor.api', () => ({
   getSessions: async (_t: string, id: string) => ({ sessions: mockSessionsFor[id] ?? [] }),
   getAssessments: async (_t: string, id: string) => ({ assessments: mockCheckInsFor[id] ?? [] }),
   listRemarks: async () => ({ remarks: [] }),
+  getRounds: async () => ({ rounds: [] }),
   myRequests: async () => ({ assignments: mockWaiting }),
   awaitingMe: (all: { status: string; doctor_accepted_at?: string | null }[]) =>
     all.filter((r) => (r.status === 'PENDING' || r.status === 'ACTIVE') && r.doctor_accepted_at === null),

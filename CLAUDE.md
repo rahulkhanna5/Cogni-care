@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 430) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 440) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -184,6 +184,21 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - **No face photographs are bundled.** See `src/games/emotion-meadow/photos.ts`
   for why and for the licensed sets to apply to.
 
+- **The admin portal is four sections** (`app/(tabs)/admin.tsx`): Review
+  (approvals), Connections (every patient↔doctor pair, grouped by who it is
+  waiting on), Patients, Doctors (`src/admin/`). A patient opens the same
+  detail screen a doctor uses, under the admin's logged `ADMIN_OVERRIDE`; a
+  doctor opens `app/admin-doctor/[id].tsx`. Directory data is one query per
+  list on the server (`/admin/patients`, `/admin/doctors[/:id]`).
+- **Exports are built from pure functions** (`care/report/build.ts`, tested),
+  then saved by `share.ts`: web downloads the CSV and opens the print dialog
+  for the PDF; a phone shares the PDF file and the CSV as text
+  (`expo-file-system` is not installed). "Stuck" = two or more hard rounds on
+  one level, a hard round being under 60% right or more mistakes than hits
+  (`care/report/levels.ts`); the line says whether it is misses or wrong taps.
+- **With email verification off, admin approval does not wait on it**: the
+  pending list reports the address as confirmed and approving stamps it.
+
 ## Traps already paid for
 
 - **`authedFetch` calls that expire together must share one refresh.** Refresh
@@ -254,6 +269,6 @@ is public.
 1. Rotate the Neon password — it has been shared in plain text.
 2. Neon holds two schemas: pre-existing Prisma tables (`"User"`, PascalCase)
    alongside these (`users`, snake_case). They coexist; it is a stopgap.
-3. Not built: the deck's advanced level variants, the PDF report
-   (`expo-print` installed, unused), settings, CSV export, i18n.
+3. Not built: the deck's advanced level variants, settings, i18n, patient
+   reviews of doctors, the patient-facing view of shared remarks.
 4. App icon and splash are still Expo defaults.

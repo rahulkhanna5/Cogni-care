@@ -7,6 +7,10 @@ import * as doctorApi from '@/api/doctor.api';
 import { CheckInPanel } from '@/care/doctor/CheckInPanel';
 import { GamesPanel, movement } from '@/care/doctor/GamesPanel';
 import { cap, Fact, formatDate, pct, ReasonList, SegmentTabs } from '@/care/doctor/parts';
+import { StuckLevels } from '@/care/doctor/StuckLevels';
+import { patientCsv, patientReportHtml } from '@/care/report/build';
+import { ExportButtons } from '@/care/report/ExportButtons';
+import { fileName, saveCsv, savePdf } from '@/care/report/share';
 import { RemarksPanel } from '@/care/doctor/RemarksPanel';
 import { agoText, bandTone, statusLine, summarise } from '@/care/insight';
 import { getGame } from '@/games/registry';
@@ -38,6 +42,7 @@ export default function PatientDetail() {
   const [assessments, setAssessments] = useState<doctorApi.ServerAssessment[]>([]);
   const [sessions, setSessions] = useState<doctorApi.ServerSession[]>([]);
   const [remarks, setRemarks] = useState<doctorApi.Remark[]>([]);
+  const [rounds, setRounds] = useState<doctorApi.ServerRound[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('overview');
@@ -60,6 +65,11 @@ export default function PatientDetail() {
         setAssessments(a.assessments);
         setSessions(s.sessions);
         setRemarks(r.remarks);
+        // Level-by-level detail is extra: a server without it must not blank the screen.
+        Promise.resolve()
+          .then(() => authedFetch((t) => doctorApi.getRounds(t, id)))
+          .then((x) => !cancelled && setRounds(x.rounds))
+          .catch(() => undefined);
       } catch (e) {
         if (!cancelled) setError(e instanceof ApiError ? e.message : 'Could not load this patient’s records.');
       } finally {
@@ -130,6 +140,17 @@ export default function PatientDetail() {
         onPress={() => router.push({ pathname: '/patient/[id]/chat', params: { id, name: patient?.name ?? '' } })}
       />
 
+      <ExportButtons
+        onPdf={async () => {
+          if (!patient) return;
+          await savePdf(patientReportHtml({ patient, sessions, rounds, assessments }));
+        }}
+        onCsv={async () => {
+          if (!patient) return;
+          await saveCsv(fileName(patient.name, 'csv'), patientCsv({ patient, sessions, rounds, assessments }));
+        }}
+      />
+
       <SegmentTabs tabs={TABS} value={tab} onChange={setTab} />
 
       {tab === 'overview' && (
@@ -177,7 +198,12 @@ export default function PatientDetail() {
         </View>
       )}
 
-      {tab === 'games' && <GamesPanel trends={insight.trends} />}
+      {tab === 'games' && (
+        <View style={{ gap: space.md }}>
+          <StuckLevels rounds={rounds} />
+          <GamesPanel trends={insight.trends} />
+        </View>
+      )}
       {tab === 'checkins' && <CheckInPanel assessments={assessments} />}
       {tab === 'notes' && (
         <RemarksPanel patientId={id} remarks={remarks} onAdded={(r) => setRemarks((prev) => [r, ...prev])} />

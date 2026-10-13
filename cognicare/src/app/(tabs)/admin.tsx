@@ -3,11 +3,17 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
+import { ConnectionsPanel } from '@/admin/ConnectionsPanel';
+import { DoctorsPanel } from '@/admin/DoctorsPanel';
+import { PatientsPanel } from '@/admin/PatientsPanel';
 import * as adminApi from '@/api/admin.api';
 import { ApiError } from '@/api/client';
+import { SegmentTabs } from '@/care/doctor/parts';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, InfoRow, Screen, SkeletonList, Text } from '@/ui';
+import { Banner, Button, Card, InfoRow, Screen, SkeletonList, StatTile, Text } from '@/ui';
+
+type Section = 'review' | 'connections' | 'patients' | 'doctors';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -32,10 +38,18 @@ export default function Admin() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [section, setSection] = useState<Section>('review');
+  const [allPatients, setAllPatients] = useState<adminApi.AdminPatient[]>([]);
+  const [allDoctors, setAllDoctors] = useState<adminApi.AdminDoctor[]>([]);
+  const [connections, setConnections] = useState<Awaited<ReturnType<typeof adminApi.allAssignments>>['assignments']>(
+    []
+  );
+  const [dirError, setDirError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setDirError(null);
     try {
       const [d, a] = await Promise.all([
         authedFetch((t) => adminApi.pendingDoctors(t)),
@@ -45,10 +59,25 @@ export default function Admin() {
       setAssignments(a.assignments);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not load the review queue.');
-    } finally {
-      setLoading(false);
     }
+    // The directories are separate: if they fail, the review queue still works.
+    try {
+      const [p, dr, c] = await Promise.all([
+        authedFetch((t) => adminApi.listAllPatients(t)),
+        authedFetch((t) => adminApi.listAllDoctors(t)),
+        authedFetch((t) => adminApi.allAssignments(t)),
+      ]);
+      setAllPatients(p.patients);
+      setAllDoctors(dr.doctors);
+      setConnections(c.assignments);
+    } catch (e) {
+      setDirError(e instanceof ApiError ? e.message : 'Could not load patients and doctors.');
+    }
+    setLoading(false);
   }, [authedFetch]);
+
+  const connectedCount = connections.filter((c) => c.status === 'ACTIVE' && c.doctor_accepted_at).length;
+  const reviewCount = doctors.length + assignments.length;
 
   useFocusEffect(
     useCallback(() => {
@@ -72,122 +101,153 @@ export default function Admin() {
   return (
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.sm }}>
-        <Text variant="display">Review</Text>
+        <Text variant="display">Admin</Text>
         <Text variant="body" color="textMuted">
-          Doctors and patient assignments waiting on you.
+          Approvals, who is connected to whom, and how every patient is doing.
         </Text>
       </View>
 
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+        <StatTile value={loading ? '…' : String(allPatients.length)} label="Patients" />
+        <StatTile value={loading ? '…' : String(allDoctors.length)} label="Doctors" />
+        <StatTile value={loading ? '…' : String(connectedCount)} label="Connected" />
+        <StatTile value={loading ? '…' : String(reviewCount)} label="To review" />
+      </View>
+
+      <SegmentTabs
+        tabs={[
+          { value: 'review', label: reviewCount ? `Review (${reviewCount})` : 'Review' },
+          { value: 'connections', label: 'Connections' },
+          { value: 'patients', label: 'Patients' },
+          { value: 'doctors', label: 'Doctors' },
+        ]}
+        value={section}
+        onChange={setSection}
+      />
+
       {error && <Banner tone="error">{error}</Banner>}
+      {section !== 'review' && dirError && <Banner tone="error">{dirError}</Banner>}
 
-      {/* ------------------------------ doctors ------------------------------ */}
+      {section !== 'review' &&
+        (loading ? (
+          <SkeletonList count={3} lines={3} />
+        ) : section === 'connections' ? (
+          <ConnectionsPanel rows={connections} />
+        ) : section === 'patients' ? (
+          <PatientsPanel patients={allPatients} />
+        ) : (
+          <DoctorsPanel doctors={allDoctors} />
+        ))}
 
-      <SectionTitle icon="medkit-outline" title={`Doctor applications (${doctors.length})`} />
+      {section === 'review' && (
+        <>
+          {/* ------------------------------ doctors ------------------------------ */}
 
-      {loading ? (
-        <SkeletonList count={2} lines={3} />
-      ) : doctors.length === 0 ? (
-        <Card>
-          <Text variant="body" color="textMuted">
-            Nothing waiting. New doctor registrations appear here.
-          </Text>
-        </Card>
-      ) : (
-        doctors.map((doctor) => (
-          <Card key={doctor.id} style={{ gap: space.md }}>
-            <View style={{ gap: 2 }}>
-              <Text variant="heading">{doctor.name}</Text>
-              <Text variant="caption" color="textMuted">
-                {doctor.email} · applied {formatDate(doctor.created_at)}
+          <SectionTitle icon="medkit-outline" title={`Doctor applications (${doctors.length})`} />
+
+          {loading ? (
+            <SkeletonList count={2} lines={3} />
+          ) : doctors.length === 0 ? (
+            <Card>
+              <Text variant="body" color="textMuted">
+                Nothing waiting. New doctor registrations appear here.
               </Text>
-            </View>
+            </Card>
+          ) : (
+            doctors.map((doctor) => (
+              <Card key={doctor.id} style={{ gap: space.md }}>
+                <View style={{ gap: 2 }}>
+                  <Text variant="heading">{doctor.name}</Text>
+                  <Text variant="caption" color="textMuted">
+                    {doctor.email} · applied {formatDate(doctor.created_at)}
+                  </Text>
+                </View>
 
-            {/* The three fields an admin is actually deciding on. They are
+                {/* The three fields an admin is actually deciding on. They are
                 self-reported and unverified — that is the whole point of the
                 review, so they are shown plainly rather than dressed up. */}
-            <View style={{ gap: space.xs }}>
-              <InfoRow label="Specialty" value={doctor.specialty} />
-              <InfoRow label="Registration no." value={doctor.license_number} />
-              {doctor.bio ? <InfoRow label="Bio" value={doctor.bio} /> : null}
-              <InfoRow label="Email confirmed" value={doctor.email_verified_at ? 'Yes' : 'Not yet'} />
-            </View>
+                <View style={{ gap: space.xs }}>
+                  <InfoRow label="Specialty" value={doctor.specialty} />
+                  <InfoRow label="Registration no." value={doctor.license_number} />
+                  {doctor.bio ? <InfoRow label="Bio" value={doctor.bio} /> : null}
+                  <InfoRow label="Email confirmed" value={doctor.email_verified_at ? 'Yes' : 'Not yet'} />
+                </View>
 
-            <Banner tone="warning">
-              Check the registration number against your medical council register before
-              approving.
-            </Banner>
+                <Banner tone="warning">
+                  Check the registration number against your medical council register before approving.
+                </Banner>
 
-            {doctor.email_verified_at ? (
-              <View style={{ flexDirection: 'row', gap: space.sm }}>
-                <Button
-                  label={busy === doctor.id ? 'Working…' : 'Approve'}
-                  icon="checkmark"
-                  busy={busy === doctor.id}
-                  disabled={busy !== null && busy !== doctor.id}
-                  onPress={() => act(doctor.id, () => authedFetch((t) => adminApi.approveDoctor(t, doctor.id)))}
-                  style={{ flex: 1 }}
-                />
-                <Button
-                  label="Reject"
-                  variant="secondary"
-                  disabled={busy !== null}
-                  onPress={() => act(doctor.id, () => authedFetch((t) => adminApi.disableUser(t, doctor.id)))}
-                  style={{ flex: 1 }}
-                />
-              </View>
-            ) : (
-              // The server refuses to approve an unconfirmed email, so the
-              // button is not offered rather than offered and then failing.
-              <Banner tone="info" icon="mail-unread-outline">
-                Cannot be approved until they confirm their email address.
-              </Banner>
-            )}
-          </Card>
-        ))
-      )}
+                {doctor.email_verified_at ? (
+                  <View style={{ flexDirection: 'row', gap: space.sm }}>
+                    <Button
+                      label={busy === doctor.id ? 'Working…' : 'Approve'}
+                      icon="checkmark"
+                      busy={busy === doctor.id}
+                      disabled={busy !== null && busy !== doctor.id}
+                      onPress={() => act(doctor.id, () => authedFetch((t) => adminApi.approveDoctor(t, doctor.id)))}
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      label="Reject"
+                      variant="secondary"
+                      disabled={busy !== null}
+                      onPress={() => act(doctor.id, () => authedFetch((t) => adminApi.disableUser(t, doctor.id)))}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                ) : (
+                  // The server refuses to approve an unconfirmed email, so the
+                  // button is not offered rather than offered and then failing.
+                  <Banner tone="info" icon="mail-unread-outline">
+                    Cannot be approved until they confirm their email address.
+                  </Banner>
+                )}
+              </Card>
+            ))
+          )}
 
-      {/* ---------------------------- assignments ---------------------------- */}
+          {/* ---------------------------- assignments ---------------------------- */}
 
-      <SectionTitle icon="people-outline" title={`Patient assignments (${assignments.length})`} />
+          <SectionTitle icon="people-outline" title={`Patient assignments (${assignments.length})`} />
 
-      {loading ? null : assignments.length === 0 ? (
-        <Card>
-          <Text variant="body" color="textMuted">
-            Nothing waiting. Requests appear here when a patient asks to be connected to a
-            doctor.
-          </Text>
-        </Card>
-      ) : (
-        assignments.map((a) => (
-          <Card key={a.id} style={{ gap: space.md }}>
-            <View style={{ gap: space.sm }}>
-              <PersonRow icon="person-outline" role="Patient" name={a.patient_name} />
-              <PersonRow icon="medkit-outline" role="Doctor" name={a.doctor_name} />
-            </View>
-            <Text variant="caption" color="textMuted">
-              Requested {formatDate(a.requested_at)}. Approving lets this doctor read this
-              patient’s results.
-            </Text>
+          {loading ? null : assignments.length === 0 ? (
+            <Card>
+              <Text variant="body" color="textMuted">
+                Nothing waiting. Requests appear here when a patient asks to be connected to a doctor.
+              </Text>
+            </Card>
+          ) : (
+            assignments.map((a) => (
+              <Card key={a.id} style={{ gap: space.md }}>
+                <View style={{ gap: space.sm }}>
+                  <PersonRow icon="person-outline" role="Patient" name={a.patient_name} />
+                  <PersonRow icon="medkit-outline" role="Doctor" name={a.doctor_name} />
+                </View>
+                <Text variant="caption" color="textMuted">
+                  Requested {formatDate(a.requested_at)}. Approving lets this doctor read this patient’s results.
+                </Text>
 
-            <View style={{ flexDirection: 'row', gap: space.sm }}>
-              <Button
-                label={busy === a.id ? 'Working…' : 'Approve'}
-                icon="checkmark"
-                busy={busy === a.id}
-                disabled={busy !== null && busy !== a.id}
-                onPress={() => act(a.id, () => authedFetch((t) => adminApi.approveAssignment(t, a.id)))}
-                style={{ flex: 1 }}
-              />
-              <Button
-                label="Reject"
-                variant="secondary"
-                disabled={busy !== null}
-                onPress={() => act(a.id, () => authedFetch((t) => adminApi.rejectAssignment(t, a.id)))}
-                style={{ flex: 1 }}
-              />
-            </View>
-          </Card>
-        ))
+                <View style={{ flexDirection: 'row', gap: space.sm }}>
+                  <Button
+                    label={busy === a.id ? 'Working…' : 'Approve'}
+                    icon="checkmark"
+                    busy={busy === a.id}
+                    disabled={busy !== null && busy !== a.id}
+                    onPress={() => act(a.id, () => authedFetch((t) => adminApi.approveAssignment(t, a.id)))}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    label="Reject"
+                    variant="secondary"
+                    disabled={busy !== null}
+                    onPress={() => act(a.id, () => authedFetch((t) => adminApi.rejectAssignment(t, a.id)))}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </Card>
+            ))
+          )}
+        </>
       )}
 
       <Button label="Refresh" variant="quiet" icon="refresh" onPress={load} />

@@ -281,6 +281,28 @@ patientRoutes.get('/:patientId/sessions', requirePatientAccess(), async (req, re
   }
 });
 
+/**
+ * Every round, with its game, level and date: the level-by-level detail behind
+ * "where do they get stuck". Misses and false alarms stay separate.
+ */
+patientRoutes.get('/:patientId/rounds', requirePatientAccess(), async (req, res, next) => {
+  try {
+    const { patientId } = patientScope(req);
+    const rows = await query(
+      `SELECT s.game_id, s.started_at, r.round_no, r.level, r.hits, r.misses, r.false_alarms,
+              r.accuracy, r.avg_reaction_ms
+         FROM game_rounds r JOIN game_sessions s ON s.id = r.session_id
+        WHERE s.patient_id = $1
+        ORDER BY s.started_at DESC, r.round_no
+        LIMIT 2000`,
+      [patientId]
+    );
+    res.json({ rounds: rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
 /* --------------------------------- remarks --------------------------------- */
 
 /**
