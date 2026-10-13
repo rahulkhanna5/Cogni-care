@@ -1,26 +1,14 @@
 import { ApiError, request } from './client';
 
-/** A fetch that honours its AbortSignal, like the real one. */
+/** A server that never answers, or answers headers and then stalls the body. */
 function stalledFetch(bodyStalls: boolean) {
-  return jest.fn((_url: string, init: { signal: AbortSignal }) => {
-    return new Promise<Response>((resolve, reject) => {
-      const abort = () => reject(new DOMException('signal is aborted without reason', 'AbortError'));
-      if (!bodyStalls) {
-        init.signal.addEventListener('abort', abort);
-        return; // never answers
-      }
-      resolve({
-        status: 200,
-        ok: true,
-        text: () =>
-          new Promise<string>((_r, rej) =>
-            init.signal.addEventListener('abort', () =>
-              rej(new DOMException('signal is aborted without reason', 'AbortError'))
-            )
-          ),
-      } as unknown as Response);
-    });
-  });
+  return jest.fn(
+    (_url: string, _init: RequestInit) =>
+      new Promise<Response>((resolve) => {
+        if (!bodyStalls) return; // never answers
+        resolve({ status: 200, ok: true, text: () => new Promise<string>(() => undefined) } as unknown as Response);
+      })
+  );
 }
 
 const reply = (status: number, text: string) =>
@@ -48,6 +36,34 @@ it('a body that stalls after the headers is also a network error, not a raw Abor
   const err = await result;
   expect(err).toBeInstanceOf(ApiError);
   expect(err).toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
+});
+
+it('times out without aborting: nothing is left to reject unhandled', async () => {
+  jest.useFakeTimers();
+  const f = stalledFetch(false);
+  globalThis.fetch = f as unknown as typeof fetch;
+  const result = request('/x', { timeoutMs: 1000 }).catch((e) => e);
+  await jest.advanceTimersByTimeAsync(1000);
+  expect(await result).toMatchObject({ code: 'NETWORK_ERROR' });
+  // No AbortSignal of our own was handed to fetch, so no abort can fire.
+  expect((f.mock.calls[0]![1] as RequestInit).signal).toBeUndefined();
+});
+
+it('a request that fails after the timeout is swallowed, not reported', async () => {
+  jest.useFakeTimers();
+  let fail!: (e: unknown) => void;
+  globalThis.fetch = jest.fn(() => new Promise<Response>((_r, rej) => (fail = rej))) as unknown as typeof fetch;
+  const unhandled = jest.fn();
+  process.on('unhandledRejection', unhandled);
+  const result = request('/x', { timeoutMs: 1000 }).catch((e) => e);
+  await jest.advanceTimersByTimeAsync(1000);
+  await result;
+  fail(new Error('connection reset'));
+  await jest.advanceTimersByTimeAsync(10);
+  jest.useRealTimers();
+  await new Promise((r) => setTimeout(r, 20));
+  process.off('unhandledRejection', unhandled);
+  expect(unhandled).not.toHaveBeenCalled();
 });
 
 it('an HTML error page from the host is a readable error, not "Unexpected token <"', async () => {

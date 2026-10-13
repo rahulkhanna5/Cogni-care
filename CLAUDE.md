@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 455) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 457) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -256,6 +256,11 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - `helmet` defaults to `Cross-Origin-Resource-Policy: same-origin`, which makes
   the browser discard every API response once the caller is cross-origin
   isolated.
+- **Never abort a fetch for a timeout** (`api/client.ts`). Aborting left an
+  internal promise rejected with no handler in Expo's native fetch, shown as
+  "Uncaught Error: signal is aborted without reason" although `request()` had
+  caught it. The timeout is a `Promise.race`; the abandoned request settles
+  on its own and is swallowed. Headers and body are both inside the race.
 - `expo-secure-store` is native-only and throws on web.
 - Sound: phone speakers roll off below ~500Hz, and localisation is computed
   from a sound's **onset** — a slow fade-in destroys it.

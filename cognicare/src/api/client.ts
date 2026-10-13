@@ -61,18 +61,13 @@ export const AI_TIMEOUT_MS = 120_000;
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, accessToken, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const forwardAbort = () => controller.abort();
-  signal?.addEventListener('abort', forwardAbort);
-
-  // The whole exchange — headers AND body — happens inside one guard, with the
-  // timer still running. A response whose body stalls, or is cut off, used to
-  // throw the browser's raw AbortError past the friendly message below, which
-  // surfaced as an "Uncaught Error: signal is aborted without reason".
-  let status: number;
-  let text: string;
-  try {
+  // The timeout is a race, NOT an abort. Aborting a fetch made Expo's native
+  // fetch (and some browsers) leave an internal promise rejected with no
+  // handler, which surfaced as "Uncaught Error: signal is aborted without
+  // reason" even though this function had caught it. On a timeout we simply
+  // stop waiting; the abandoned request finishes or fails on its own, and its
+  // outcome is swallowed below. A caller's own `signal` is still honoured.
+  const exchange = (async () => {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers: {
@@ -80,17 +75,30 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
         ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
+      signal,
     });
-    status = response.status;
-    text = status === 204 ? '' : await response.text();
+    // Headers AND body inside the race, so a reply that stalls half-way also
+    // times out instead of hanging.
+    const s = response.status;
+    return { status: s, text: s === 204 ? '' : await response.text() };
+  })();
+  exchange.catch(() => undefined); // never an unhandled rejection, even after a timeout
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('timeout')), timeoutMs);
+  });
+
+  let status: number;
+  let text: string;
+  try {
+    ({ status, text } = await Promise.race([exchange, timedOut]));
   } catch {
     // A dead server, a flaky connection and a timeout look the same to the
     // user. Give them something actionable rather than "Network request failed".
     throw new ApiError(0, 'NETWORK_ERROR', 'Could not reach the server. Check your connection.');
   } finally {
     clearTimeout(timer);
-    signal?.removeEventListener('abort', forwardAbort);
   }
 
   if (status === 204) return undefined as T;
