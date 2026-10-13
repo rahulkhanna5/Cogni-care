@@ -102,9 +102,13 @@ export type MyRequest = {
   patient_name: string;
 };
 
-/** Approved by an admin and not yet answered by this doctor. */
+/** Still open and not yet answered by this doctor — before or after the admin. */
 export const awaitingMe = (all: MyRequest[]) =>
-  all.filter((r) => r.status === 'ACTIVE' && r.doctor_accepted_at === null);
+  all.filter((r) => (r.status === 'PENDING' || r.status === 'ACTIVE') && r.doctor_accepted_at === null);
+
+/** Accepted by this doctor, still waiting for the administrator. */
+export const awaitingAdmin = (all: MyRequest[]) =>
+  all.filter((r) => r.status === 'PENDING' && !!r.doctor_accepted_at);
 
 export const myRequests = (accessToken: string) =>
   request<{ assignments: MyRequest[] }>('/assignments', { accessToken });

@@ -66,9 +66,14 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const forwardAbort = () => controller.abort();
   signal?.addEventListener('abort', forwardAbort);
 
-  let response: Response;
+  // The whole exchange — headers AND body — happens inside one guard, with the
+  // timer still running. A response whose body stalls, or is cut off, used to
+  // throw the browser's raw AbortError past the friendly message below, which
+  // surfaced as an "Uncaught Error: signal is aborted without reason".
+  let status: number;
+  let text: string;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers: {
         'content-type': 'application/json',
@@ -77,6 +82,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
+    status = response.status;
+    text = status === 204 ? '' : await response.text();
   } catch {
     // A dead server, a flaky connection and a timeout look the same to the
     // user. Give them something actionable rather than "Network request failed".
@@ -86,15 +93,27 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     signal?.removeEventListener('abort', forwardAbort);
   }
 
-  if (response.status === 204) return undefined as T;
+  if (status === 204) return undefined as T;
 
-  const text = await response.text();
-  const payload = text ? (JSON.parse(text) as unknown) : {};
+  // A waking or failing host can answer with an HTML page. That is not JSON,
+  // and "Unexpected token <" is not something to show anyone.
+  let payload: unknown = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      throw new ApiError(
+        status,
+        'BAD_RESPONSE',
+        'The server sent a reply the app could not read. Please try again in a moment.'
+      );
+    }
+  }
 
-  if (!response.ok) {
+  if (status < 200 || status >= 300) {
     const err = (payload as ApiErrorBody).error;
     throw new ApiError(
-      response.status,
+      status,
       err?.code ?? 'UNKNOWN',
       err?.message ?? 'Something went wrong.',
       err?.details

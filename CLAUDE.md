@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 422) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 428) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -47,8 +47,9 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
 - **`isVerified` is computed, never stored.** The database keeps
   `email_verified_at` and `approved_at` apart because they are different
   decisions. One flag would let a doctor approve themselves from their inbox.
-- **A doctor is asked, after the admin.** patient asks → admin approves
-  (`ACTIVE`) → doctor accepts (`doctor_accepted_at`). Access opens only when
+- **A doctor is asked, as well as the admin.** The doctor sees a request the
+  moment the patient sends it and can accept (`doctor_accepted_at`) or decline
+  before or after the admin approves (`ACTIVE`). Access opens only when
   both have said yes: `canAccessPatient`, `assignedPatientIds` and the patient
   list all require `doctor_accepted_at IS NOT NULL`. A decline is an ordinary
   `REJECTED` row. It is a column, not a status, so the "ACTIVE needs an

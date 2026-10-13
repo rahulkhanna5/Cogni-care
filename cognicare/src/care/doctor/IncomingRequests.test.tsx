@@ -49,6 +49,29 @@ it('names the patient and says what accepting means', async () => {
   expect(view.getByText(/If you decline, nothing is shared/)).toBeTruthy();
 });
 
+it('a request still with the administrator can be answered, and says so', async () => {
+  const view = await render(
+    wrap(<IncomingRequests requests={[request({ status: 'PENDING', approved_at: null })]} onAnswered={jest.fn()} />)
+  );
+  expect(view.getByText(/an administrator is also checking it/)).toBeTruthy();
+  expect(view.getByText(/once an administrator approves too/)).toBeTruthy();
+  expect(view.getByText('Accept')).toBeTruthy();
+});
+
+it('one the doctor already accepted shows as waiting for the administrator, with no buttons', async () => {
+  const view = await render(
+    wrap(
+      <IncomingRequests
+        requests={[]}
+        accepted={[request({ status: 'PENDING', approved_at: null, doctor_accepted_at: '2026-10-13T10:00:00Z' })]}
+        onAnswered={jest.fn()}
+      />
+    )
+  );
+  expect(view.getByText('You accepted · waiting for an administrator to approve')).toBeTruthy();
+  expect(view.queryByText('Accept')).toBeNull();
+});
+
 it('Accept sends that request id and tells the screen to reload', async () => {
   const onAnswered = jest.fn();
   const view = await render(wrap(<IncomingRequests requests={[request()]} onAnswered={onAnswered} />));

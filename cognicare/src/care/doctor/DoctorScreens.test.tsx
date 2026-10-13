@@ -66,7 +66,8 @@ jest.mock('@/api/doctor.api', () => ({
   listRemarks: async () => ({ remarks: [] }),
   myRequests: async () => ({ assignments: mockWaiting }),
   awaitingMe: (all: { status: string; doctor_accepted_at?: string | null }[]) =>
-    all.filter((r) => r.status === 'ACTIVE' && r.doctor_accepted_at === null),
+    all.filter((r) => (r.status === 'PENDING' || r.status === 'ACTIVE') && r.doctor_accepted_at === null),
+  awaitingAdmin: () => [],
   acceptRequest: async () => ({ assignment: {} }),
   declineRequest: async () => ({ assignment: {} }),
 }));

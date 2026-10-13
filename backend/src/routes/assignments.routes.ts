@@ -18,8 +18,9 @@ assignmentRoutes.use(authenticate, requireVerifiedEmail);
  *
  *   patient requests  -> PENDING
  *   admin approves    -> ACTIVE    (only an admin can reach this state)
- *   doctor accepts    -> ACTIVE + doctor_accepted_at  (access opens only now)
- *   doctor declines   -> REJECTED
+ *   doctor accepts    -> doctor_accepted_at (before or after the admin; access
+ *                        opens only when the row is ACTIVE AND accepted)
+ *   doctor declines   -> REJECTED   (at either stage)
  *   admin rejects     -> REJECTED
  *   patient revokes   -> REVOKED   (immediate, no admin step)
  *   admin revokes     -> REVOKED
@@ -134,10 +135,11 @@ assignmentRoutes.get('/', async (req, res, next) => {
 /* ------------------------------ doctor actions ----------------------------- */
 
 /**
- * The doctor's own answer, after the admin's. Re-read from the database every
+ * The doctor's own answer. It can come before or after the admin's, so the
+ * doctor sees a request the moment it is sent. Re-read from the database every
  * time: the doctor must still be approved and active, and the row must be
- * theirs, ACTIVE, and not yet answered. A doctor can only ever answer a
- * request an admin has already approved.
+ * theirs, still open (PENDING or ACTIVE), and not yet answered. Accepting a
+ * PENDING request shares nothing — access needs ACTIVE as well.
  */
 async function openRequestForDoctor(assignmentId: string, doctorId: string) {
   const doctor = await queryOne<{ approved_at: Date | null; is_active: boolean }>(
@@ -153,7 +155,7 @@ async function openRequestForDoctor(assignmentId: string, doctorId: string) {
   );
   // Someone else's request looks exactly like one that does not exist.
   if (!row) throw Errors.notFound('Request');
-  if (row.status !== 'ACTIVE' || row.doctor_accepted_at) {
+  if (!['PENDING', 'ACTIVE'].includes(row.status) || row.doctor_accepted_at) {
     throw Errors.conflict('REQUEST_NOT_AWAITING_YOU', 'This request is not waiting for your answer.');
   }
 }
@@ -165,7 +167,7 @@ assignmentRoutes.post('/:id/accept', requireRole('DOCTOR'), async (req, res, nex
 
     const row = await queryOne(
       `UPDATE assignments SET doctor_accepted_at = now()
-        WHERE id = $1 AND doctor_id = $2 AND status = 'ACTIVE' AND doctor_accepted_at IS NULL
+        WHERE id = $1 AND doctor_id = $2 AND status IN ('PENDING', 'ACTIVE') AND doctor_accepted_at IS NULL
         RETURNING id, status, doctor_accepted_at`,
       [id, req.user!.id]
     );
@@ -185,7 +187,7 @@ assignmentRoutes.post('/:id/decline', requireRole('DOCTOR'), async (req, res, ne
     const row = await queryOne(
       `UPDATE assignments
           SET status = 'REJECTED', revoked_at = now(), revoked_by = $2, revoke_reason = $3
-        WHERE id = $1 AND doctor_id = $2 AND status = 'ACTIVE' AND doctor_accepted_at IS NULL
+        WHERE id = $1 AND doctor_id = $2 AND status IN ('PENDING', 'ACTIVE') AND doctor_accepted_at IS NULL
         RETURNING id, status`,
       [id, req.user!.id, reason ?? null]
     );

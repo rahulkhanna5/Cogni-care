@@ -30,6 +30,7 @@ export default function Patients() {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [waiting, setWaiting] = useState<doctorApi.MyRequest[]>([]);
+  const [withAdmin, setWithAdmin] = useState<doctorApi.MyRequest[]>([]);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -47,8 +48,10 @@ export default function Patients() {
       try {
         const { assignments } = await authedFetch((t) => doctorApi.myRequests(t));
         setWaiting(doctorApi.awaitingMe(assignments));
+        setWithAdmin(doctorApi.awaitingAdmin(assignments));
       } catch {
         setWaiting([]);
+        setWithAdmin([]);
       }
 
       // Fill each patient's summary in as it arrives, so the list is usable
@@ -106,7 +109,7 @@ export default function Patients() {
         </Text>
       </View>
 
-      {!error && <IncomingRequests requests={waiting} onAnswered={load} />}
+      {!error && <IncomingRequests requests={waiting} accepted={withAdmin} onAnswered={load} />}
 
       {/* The pending state is called out separately from a generic failure:
           it resolves by waiting, and saying "could not load" would be wrong. */}
@@ -132,7 +135,7 @@ export default function Patients() {
           </Text>
         </Card>
       ) : rows.length === 0 ? (
-        waiting.length > 0 ? null : (
+        waiting.length + withAdmin.length > 0 ? null : (
         <Card>
           <Text variant="heading">No patients yet</Text>
           <Text variant="body" color="textMuted">
