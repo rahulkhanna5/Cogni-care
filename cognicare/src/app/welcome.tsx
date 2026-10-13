@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { createPlayer, getPlayer, setSetting } from '@/db/queries';
+import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { ACTIVE_PLAYER_KEY, useSession } from '@/store/session';
 import { colors, space } from '@/theme/tokens';
@@ -15,6 +16,7 @@ import { Button, Logo, Screen, Text, TextField } from '@/ui';
  * no email, no account. A login wall is where this audience drops out.
  */
 export default function Welcome() {
+  const t = useT();
   const db = useSQLiteContext();
   const router = useRouter();
   const setPlayer = useSession((s) => s.setPlayer);
@@ -44,15 +46,15 @@ export default function Welcome() {
       <View style={{ gap: space.md, marginTop: space.xl }}>
         <Logo size={64} />
         <View style={{ gap: space.xs }}>
-          <Text variant="display">Welcome</Text>
+          <Text variant="display">{t('welcome.title')}</Text>
           <Text variant="body" color="textMuted">
-            A few brain exercises, a few minutes a day. Let&apos;s start with your name.
+            {t('welcome.subtitle')}
           </Text>
         </View>
       </View>
 
       <TextField
-        label="Your name"
+        label={t('welcome.name')}
         value={name}
         onChangeText={setName}
         placeholder="First name"
@@ -62,16 +64,16 @@ export default function Welcome() {
       />
 
       <TextField
-        label="Your age (optional)"
+        label={t('welcome.age')}
         value={age}
-        onChangeText={(t) => setAge(t.replace(/[^0-9]/g, ''))}
+        onChangeText={(v) => setAge(v.replace(/[^0-9]/g, ''))}
         placeholder="e.g. 68"
         keyboardType="number-pad"
         maxLength={3}
       />
 
       <Button
-        label={saving ? 'Saving…' : 'Continue'}
+        label={saving ? 'Saving…' : t('welcome.continue')}
         onPress={handleContinue}
         busy={saving}
         disabled={name.trim().length === 0}

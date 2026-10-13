@@ -108,6 +108,9 @@ export type AdminDoctor = {
   patients: number;
   /** Open but still waiting on the admin or the doctor. */
   waiting: number;
+  /** Average stars from patients; null with no reviews. */
+  rating?: number | null;
+  reviews?: number;
 };
 
 export type AdminDoctorPatient = {
@@ -130,8 +133,9 @@ export type AdminDoctorPatient = {
 };
 
 export type AdminDoctorDetail = {
-  doctor: Omit<AdminDoctor, 'patients' | 'waiting'> & { bio: string | null };
+  doctor: Omit<AdminDoctor, 'patients' | 'waiting' | 'rating' | 'reviews'> & { bio: string | null };
   patients: AdminDoctorPatient[];
+  reviews?: { rating: number; comment: string | null; updated_at: string; patient_name: string }[];
 };
 
 export const listAllPatients = (accessToken: string) =>

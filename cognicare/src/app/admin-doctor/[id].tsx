@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import { ago, cap, day, pct } from '@/admin/format';
 import { StatusPill } from '@/admin/StatusPill';
 import { doctorCsv, doctorReportHtml } from '@/care/report/build';
+import { ReviewList } from '@/care/doctor/MyReviews';
 import { ExportButtons } from '@/care/report/ExportButtons';
 import { fileName, saveCsv, savePdf } from '@/care/report/share';
 import { useAuth } from '@/store/auth';
@@ -88,6 +89,11 @@ export default function AdminDoctor() {
         onPdf={() => savePdf(doctorReportHtml(data))}
         onCsv={() => saveCsv(fileName(doctor.name, 'csv'), doctorCsv(data))}
       />
+
+      <Card style={{ gap: space.md }}>
+        <Text variant="heading">Ratings from patients</Text>
+        <ReviewList reviews={data.reviews ?? []} />
+      </Card>
 
       <Text variant="heading">Patients</Text>
       {patients.length === 0 ? (

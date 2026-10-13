@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import { Text as RNText, View } from 'react-native';
 
+import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { colors, fonts } from '@/theme/tokens';
 import type { IconName } from '@/ui';
@@ -30,6 +31,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
 
 export default function TabsLayout() {
   const role = useAuth((s) => s.user?.role);
+  const t = useT();
   const isDoctor = role === 'DOCTOR';
   const isAdmin = role === 'ADMIN';
   const isPatientLike = !isDoctor && !isAdmin;
@@ -68,25 +70,25 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="admin"
-        options={{ title: 'Review', href: isAdmin ? undefined : null, tabBarIcon: icon('shield-checkmark-outline') }}
+        options={{ title: t('tab.review'), href: isAdmin ? undefined : null, tabBarIcon: icon('shield-checkmark-outline') }}
       />
       <Tabs.Screen
         name="patients"
-        options={{ title: 'Patients', href: isDoctor ? undefined : null, tabBarIcon: icon('people-outline') }}
+        options={{ title: t('tab.patients'), href: isDoctor ? undefined : null, tabBarIcon: icon('people-outline') }}
       />
       <Tabs.Screen
         name="dashboard"
-        options={{ title: 'Today', href: isPatientLike ? undefined : null, tabBarIcon: icon('home-outline') }}
+        options={{ title: t('tab.today'), href: isPatientLike ? undefined : null, tabBarIcon: icon('home-outline') }}
       />
       <Tabs.Screen
         name="games"
-        options={{ title: 'Games', href: isPatientLike ? undefined : null, tabBarIcon: icon('grid-outline') }}
+        options={{ title: t('tab.games'), href: isPatientLike ? undefined : null, tabBarIcon: icon('grid-outline') }}
       />
       <Tabs.Screen
         name="assess"
-        options={{ title: 'Check-in', href: isPatientLike ? undefined : null, tabBarIcon: icon('clipboard-outline') }}
+        options={{ title: t('tab.checkin'), href: isPatientLike ? undefined : null, tabBarIcon: icon('clipboard-outline') }}
       />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: icon('person-outline') }} />
+      <Tabs.Screen name="profile" options={{ title: t('tab.profile'), tabBarIcon: icon('person-outline') }} />
     </Tabs>
   );
 }

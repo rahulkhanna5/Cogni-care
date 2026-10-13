@@ -62,6 +62,8 @@ export type Remark = {
   plan: string | null;
   created_at: string;
   visible_to_patient: boolean;
+  /** Absent on notes added locally before a reload. */
+  author_id?: string;
   author_name: string;
 };
 
@@ -146,3 +148,18 @@ export type ServerRound = {
 
 export const getRounds = (accessToken: string, id: string) =>
   request<{ rounds: ServerRound[] }>(`/patients/${id}/rounds`, { accessToken });
+
+/* ------------------------------ sharing & reviews ----------------------------- */
+
+/** Share a note with the patient, or make it private again. Author or admin only. */
+export const setRemarkVisibility = (accessToken: string, patientId: string, remarkId: string, visible: boolean) =>
+  request<{ remark: { id: string; visible_to_patient: boolean } }>(`/patients/${patientId}/remarks/${remarkId}`, {
+    method: 'PATCH',
+    body: { visibleToPatient: visible },
+    accessToken,
+  });
+
+export type Review = { rating: number; comment: string | null; updated_at: string; patient_name: string };
+
+export const myReviews = (accessToken: string) =>
+  request<{ reviews: Review[] }>('/doctors/me/reviews', { accessToken });

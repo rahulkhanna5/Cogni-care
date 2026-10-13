@@ -121,3 +121,31 @@ export async function accuracyTrend(
   );
   return rows.map((r) => r.accuracy);
 }
+
+/**
+ * The last sessions of one game with their date and starting level, oldest
+ * first, for the per-session bar chart. SQLite's datetime('now') has a space
+ * and no zone; it is UTC, so it is made ISO before anything parses it.
+ */
+export async function sessionPoints(
+  db: SQLiteDatabase,
+  playerId: number,
+  gameId: string,
+  limit = 10
+): Promise<{ at: string; accuracy: number; level: number }[]> {
+  const rows = await db.getAllAsync<{ started_at: string; accuracy: number; level_start: number }>(
+    `SELECT started_at, accuracy, level_start FROM (
+        SELECT started_at, accuracy, level_start
+          FROM game_sessions
+         WHERE player_id = ? AND game_id = ? AND ended_at IS NOT NULL AND accuracy IS NOT NULL
+         ORDER BY started_at DESC
+         LIMIT ?
+     ) ORDER BY started_at ASC`,
+    playerId,
+    gameId,
+    limit
+  );
+  return rows.map((r) => ({ at: toIso(r.started_at), accuracy: r.accuracy, level: r.level_start }));
+}
+
+export const toIso = (sqlite: string) => (sqlite.includes('T') ? sqlite : `${sqlite.replace(' ', 'T')}Z`);

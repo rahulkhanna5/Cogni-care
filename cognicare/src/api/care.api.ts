@@ -29,6 +29,9 @@ export type MyAssignment = {
   doctor_accepted_at?: string | null;
   doctor_id: string;
   doctor_name: string;
+  /** The patient's own rating of this doctor, if they gave one. */
+  my_rating?: number | null;
+  my_comment?: string | null;
 };
 
 /** Approved doctors only — the server filters, so an unapproved account never appears. */
@@ -51,5 +54,13 @@ export const stopSharing = (accessToken: string, assignmentId: string) =>
   request<{ assignment: { id: string; status: AssignmentStatus } }>(`/assignments/${assignmentId}/revoke`, {
     method: 'POST',
     body: {},
+    accessToken,
+  });
+
+/** Rate a doctor you were connected to. Sending again replaces the rating. */
+export const rateDoctor = (accessToken: string, assignmentId: string, rating: number, comment?: string) =>
+  request<{ review: { rating: number; comment: string | null } }>(`/assignments/${assignmentId}/review`, {
+    method: 'PUT',
+    body: { rating, comment: comment?.trim() || undefined },
     accessToken,
   });

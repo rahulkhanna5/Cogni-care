@@ -49,6 +49,10 @@ export function DoctorsPanel({ doctors }: { doctors: AdminDoctor[] }) {
           </View>
           <InfoRow label="Patients" value={String(d.patients)} />
           <InfoRow label="Requests waiting" value={String(d.waiting)} />
+          <InfoRow
+            label="Patient rating"
+            value={d.rating != null && d.reviews ? `${d.rating.toFixed(1)} of 5 (${d.reviews})` : 'No ratings yet'}
+          />
         </Card>
       ))}
     </View>

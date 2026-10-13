@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { query } from '../db/pool.js';
 import { paginationSchema } from '../lib/schemas.js';
 import { authenticate, requireVerifiedEmail } from '../middleware/authenticate.js';
+import { requireRole } from '../middleware/requireRole.js';
 
 export const doctorRoutes = Router();
 doctorRoutes.use(authenticate, requireVerifiedEmail);
@@ -33,6 +34,23 @@ doctorRoutes.get('/', async (req, res, next) => {
     // license_number is intentionally not exposed — it is for admin review,
     // not for public display.
     res.json({ doctors: rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** A doctor's own reviews, newest first, with the average. */
+doctorRoutes.get('/me/reviews', requireRole('DOCTOR'), async (req, res, next) => {
+  try {
+    const rows = await query(
+      `SELECT r.rating, r.comment, r.updated_at, u.name AS patient_name
+         FROM reviews r JOIN users u ON u.id = r.patient_id
+        WHERE r.doctor_id = $1
+        ORDER BY r.updated_at DESC
+        LIMIT 100`,
+      [req.user!.id]
+    );
+    res.json({ reviews: rows });
   } catch (error) {
     next(error);
   }

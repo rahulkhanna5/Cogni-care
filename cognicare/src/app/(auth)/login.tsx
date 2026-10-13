@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
+import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { space } from '@/theme/tokens';
 import { Banner, Button, Logo, Screen, Text, TextField } from '@/ui';
 
 export default function Login() {
+  const t = useT();
   const router = useRouter();
   const signIn = useAuth((s) => s.signIn);
 
@@ -55,9 +57,9 @@ export default function Login() {
       <View style={{ gap: space.md, marginTop: space.xl }}>
         <Logo size={64} />
         <View style={{ gap: space.xs }}>
-          <Text variant="display">Welcome back</Text>
+          <Text variant="display">{t('login.title')}</Text>
           <Text variant="body" color="textMuted">
-            Sign in to continue.
+            {t('login.subtitle')}
           </Text>
         </View>
       </View>
@@ -108,25 +110,24 @@ export default function Login() {
           rather than adding a toggle here that could not do anything: the
           account itself decides the role, re-checked on every request. */}
       <Button
-        label="New here? Create a patient or doctor account"
+        label={t('login.create')}
         variant="secondary"
         onPress={() => router.push('/register')}
       />
 
       <Button
-        label="Continue without an account"
+        label={t('login.guest')}
         variant="quiet"
         onPress={() => router.replace('/welcome')}
       />
 
       <Text variant="caption" color="textMuted" center>
-        You can use the exercises without signing in. An account is only needed to
-        share your progress with a doctor.
+        {t('login.guestNote')}
       </Text>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: space.lg }}>
-        <Button label="Terms and conditions" variant="quiet" fullWidth={false} onPress={() => router.push('/terms')} />
-        <Button label="Privacy policy" variant="quiet" fullWidth={false} onPress={() => router.push('/privacy')} />
+        <Button label={t('legal.terms')} variant="quiet" fullWidth={false} onPress={() => router.push('/terms')} />
+        <Button label={t('legal.privacy')} variant="quiet" fullWidth={false} onPress={() => router.push('/privacy')} />
       </View>
     </Screen>
   );

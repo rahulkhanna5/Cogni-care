@@ -206,7 +206,14 @@ export default function PatientDetail() {
       )}
       {tab === 'checkins' && <CheckInPanel assessments={assessments} />}
       {tab === 'notes' && (
-        <RemarksPanel patientId={id} remarks={remarks} onAdded={(r) => setRemarks((prev) => [r, ...prev])} />
+        <RemarksPanel
+          patientId={id}
+          remarks={remarks}
+          onAdded={(r) => setRemarks((prev) => [r, ...prev])}
+          onChanged={(rid, visible) =>
+            setRemarks((prev) => prev.map((r) => (r.id === rid ? { ...r, visible_to_patient: visible } : r)))
+          }
+        />
       )}
 
       <Text variant="caption" color="textMuted">

@@ -298,3 +298,15 @@ export async function setSetting(
     value
   );
 }
+
+/**
+ * Erases everything this phone holds: every player and, through the foreign
+ * keys, their progress, sessions, rounds and check-ins; and every setting
+ * except the chosen language. Nothing on the server is touched.
+ */
+export async function eraseDevice(db: SQLiteDatabase): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM players');
+    await db.runAsync("DELETE FROM settings WHERE key <> 'language'");
+  });
+}

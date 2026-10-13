@@ -55,6 +55,12 @@ export const resetPasswordSchema = z.object({ token: z.string().min(1), password
 export const requestAssignmentSchema = z.object({ doctorId: z.string().uuid() });
 export const rejectAssignmentSchema = z.object({ reason: z.string().trim().max(500).optional() });
 export const revokeAssignmentSchema = z.object({ reason: z.string().trim().max(500).optional() });
+export const reviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(1000).optional(),
+});
+export const remarkVisibilitySchema = z.object({ visibleToPatient: z.boolean() });
+export const deleteAccountSchema = z.object({ password: z.string().min(1) });
 export const approveDoctorSchema = z.object({ note: z.string().trim().max(500).optional() });
 
 /* --------------------------- clinical data uploads -------------------------- */

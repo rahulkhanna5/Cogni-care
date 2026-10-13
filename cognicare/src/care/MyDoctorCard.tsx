@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { colors, space } from '@/theme/tokens';
 import { Banner, Button, Card, Skeleton, Text } from '@/ui';
+import { RateDoctor } from './RateDoctor';
 import { describeRequest, visibleRequests } from './status';
 import { useMyRequests } from './useMyRequests';
 
@@ -74,6 +75,10 @@ export function MyDoctorCard() {
                   </Text>
                 </View>
               </View>
+
+              {a.doctor_accepted_at && a.status === 'ACTIVE' && !asking && (
+                <RateDoctor assignment={a} onSaved={load} />
+              )}
 
               {view.action && !asking && (
                 <Button

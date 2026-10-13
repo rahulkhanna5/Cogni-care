@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client';
 import * as doctorApi from '@/api/doctor.api';
 import { useAuth } from '@/store/auth';
 import { colors, radius, space } from '@/theme/tokens';
-import { Banner, Button, Card, SurfaceProvider, Text, TextField } from '@/ui';
+import { Banner, Button, Card, Checkbox, SurfaceProvider, Text, TextField } from '@/ui';
 import { formatDate } from './parts';
 
 /**
@@ -18,10 +18,13 @@ export function RemarksPanel({
   patientId,
   remarks,
   onAdded,
+  onChanged,
 }: {
   patientId: string;
   remarks: doctorApi.Remark[];
   onAdded: (remark: doctorApi.Remark) => void;
+  /** A note's sharing changed on the server. */
+  onChanged?: (remarkId: string, visible: boolean) => void;
 }) {
   const { authedFetch, user } = useAuth();
 
@@ -32,6 +35,20 @@ export function RemarksPanel({
   const [drafting, setDrafting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [remarkError, setRemarkError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
+
+  async function share(remarkId: string, visible: boolean) {
+    setSharing(remarkId);
+    setRemarkError(null);
+    try {
+      await authedFetch((t) => doctorApi.setRemarkVisibility(t, patientId, remarkId, visible));
+      onChanged?.(remarkId, visible);
+    } catch (e) {
+      setRemarkError(e instanceof ApiError ? e.message : 'Could not change who can see this note.');
+    } finally {
+      setSharing(null);
+    }
+  }
 
   function openComposer() {
     setDraftBody('');
@@ -75,6 +92,7 @@ export function RemarksPanel({
         ...remark,
         plan: remark.plan ?? null,
         visible_to_patient: false,
+        author_id: user?.id,
         author_name: user?.name ?? 'You',
       });
       setComposerOpen(false);
@@ -90,9 +108,12 @@ export function RemarksPanel({
       <View style={{ gap: space.xs }}>
         <Text variant="heading">Notes</Text>
         <Text variant="body" color="textMuted">
-          Notes for the care team. Not shown to the patient.
+          Private to the care team unless you share a note. A shared note appears on the patient’s Profile as “Notes
+          from your doctor”.
         </Text>
       </View>
+
+      {!composerOpen && remarkError && <Banner tone="error">{remarkError}</Banner>}
 
       {!composerOpen && remarks.length === 0 && (
         <Text variant="body" color="textMuted">
@@ -118,6 +139,22 @@ export function RemarksPanel({
               </Text>
             </View>
             <Text variant="body">{r.body}</Text>
+            {!r.author_id || r.author_id === user?.id || user?.role === 'ADMIN' ? (
+              <Checkbox
+                checked={r.visible_to_patient}
+                onChange={(v) => share(r.id, v)}
+                label={r.visible_to_patient ? 'Shared with the patient. Tap to make private.' : 'Share this note with the patient'}
+              >
+                <Text variant="label">{sharing === r.id ? 'Saving…' : 'Share with the patient'}</Text>
+                <Text variant="caption" color="textMuted">
+                  {r.visible_to_patient ? 'The patient can read this note.' : 'Only the care team can read this note.'}
+                </Text>
+              </Checkbox>
+            ) : (
+              <Text variant="caption" color="textMuted">
+                {r.visible_to_patient ? 'Shared with the patient' : 'Private'}
+              </Text>
+            )}
             {r.plan && (
               <SurfaceProvider value="raised">
                 <View

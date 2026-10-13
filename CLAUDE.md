@@ -26,7 +26,7 @@ cd cognicare && npx expo start --port 8083   # NOT 8081, another project owns it
 cd backend   && npm run dev                  # :4000
 ```
 
-`npx tsc --noEmit` in either project; tests are `npx jest` (app, 444) and
+`npx tsc --noEmit` in either project; tests are `npx jest` (app, 455) and
 `npm test` (backend, 13).
 
 The phone reaches the API over the LAN, so the API base URL is derived from the
@@ -209,6 +209,28 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   privacy text says the AI features send the patient's name — they do
   (`patient-summary.service.ts`).
 
+- **Notes are private until the author shares them.** Each remark has a
+  "Share with the patient" box for its author (or an admin); the patient sees
+  shared ones as "Notes from your doctor" on Profile. The server filters, so a
+  private note never reaches a patient's phone.
+- **Ratings belong to a real connection** (`reviews`, migration 006): only a
+  patient whose doctor accepted can rate, one per connection, editable. Seen by
+  that doctor (Profile) and admins (doctor page, directory), never by other
+  patients — so the doctor directory shows no stars.
+- **Deleting an account depends on the role** (`POST /auth/delete-account`,
+  password required). A patient is deleted with everything (assignments are
+  deleted first: `requested_by` is NOT NULL with ON DELETE SET NULL). A doctor
+  is closed, not deleted — their notes are clinical records
+  (`remarks.author_id` RESTRICT) — which revokes every connection and ends
+  every session. An admin cannot delete themselves. Settings also erases the
+  phone (`eraseDevice`), keeping only the language.
+- **Hindi covers the main screens only** (`i18n/strings.ts`: tabs, Today,
+  Profile, Settings, login, welcome). Games and the check-in stay English: a
+  translated questionnaire needs a checked translation before its scores mean
+  the same thing. `strings.test.ts` fails if a key is missing in either
+  language. Atkinson Hyperlegible has no Devanagari; Hindi falls back to the
+  system font.
+
 ## Traps already paid for
 
 - **`authedFetch` calls that expire together must share one refresh.** Refresh
@@ -279,6 +301,6 @@ is public.
 1. Rotate the Neon password — it has been shared in plain text.
 2. Neon holds two schemas: pre-existing Prisma tables (`"User"`, PascalCase)
    alongside these (`users`, snake_case). They coexist; it is a stopgap.
-3. Not built: the deck's advanced level variants, settings, i18n, patient
-   reviews of doctors, the patient-facing view of shared remarks.
+3. Not built: the deck's advanced level variants; Hindi for the games and
+   the check-in.
 4. App icon and splash are still Expo defaults.

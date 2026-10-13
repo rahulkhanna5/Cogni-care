@@ -6,6 +6,7 @@ import {
   assessmentSchema,
   chatSchema,
   paginationSchema,
+  remarkVisibilitySchema,
   saveRemarkSchema,
   sessionSchema,
 } from '../lib/schemas.js';
@@ -392,7 +393,7 @@ patientRoutes.get('/:patientId/remarks', requirePatientAccess(), async (req, res
 
     const rows = await query(
       `SELECT r.id, r.body, r.plan, r.created_at, r.visible_to_patient,
-              u.name AS author_name
+              r.author_id, u.name AS author_name
          FROM remarks r
          JOIN users u ON u.id = r.author_id
         WHERE r.patient_id = $1
@@ -407,6 +408,33 @@ patientRoutes.get('/:patientId/remarks', requirePatientAccess(), async (req, res
     next(error);
   }
 });
+
+/**
+ * Share a note with the patient, or take it back. Only the doctor who wrote it
+ * (or an admin) may change it: a colleague cannot publish someone else's note.
+ */
+patientRoutes.patch(
+  '/:patientId/remarks/:remarkId',
+  requirePatientAccess(),
+  requireClinician,
+  async (req, res, next) => {
+    try {
+      const { patientId } = patientScope(req);
+      const { visibleToPatient } = remarkVisibilitySchema.parse(req.body);
+      const remarkId = String(req.params.remarkId);
+      const row = await queryOne(
+        `UPDATE remarks SET visible_to_patient = $3, updated_at = now()
+          WHERE id = $1 AND patient_id = $2 AND (author_id = $4 OR $5::boolean)
+          RETURNING id, visible_to_patient`,
+        [remarkId, patientId, visibleToPatient, req.user!.id, req.user!.role === 'ADMIN']
+      );
+      if (!row) throw Errors.notFound('Note');
+      res.json({ remark: row });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /* ---------------------------------- chat ----------------------------------- */
 

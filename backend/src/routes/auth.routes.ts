@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { config } from '../config.js';
-import { query, queryOne } from '../db/pool.js';
+import { query, queryOne, withTransaction } from '../db/pool.js';
 import { Errors } from '../lib/errors.js';
 import { fakeVerify, hashPassword, verifyPassword } from '../lib/password.js';
 import {
@@ -10,6 +10,7 @@ import {
   refreshSchema,
   registerSchema,
   resetPasswordSchema,
+  deleteAccountSchema,
   verifyEmailSchema,
 } from '../lib/schemas.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -131,6 +132,53 @@ authRoutes.post('/login', loginLimiter, async (req, res, next) => {
       user: toPublicUser(user),
       pendingApproval: user.role === 'DOCTOR' && !user.approved_at,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* ------------------------------ delete account ----------------------------- */
+
+/**
+ * Closing one's own account, after re-typing the password.
+ *
+ * A patient's account is DELETED with everything about them: results,
+ * check-ins, connections, notes about them, reviews. The access log keeps its
+ * rows with the name gone (ON DELETE SET NULL), so past access stays checkable.
+ *
+ * A doctor's account is CLOSED, not deleted: the notes they wrote are part of
+ * their patients' records (remarks.author_id is ON DELETE RESTRICT). Closing
+ * stops every connection, disables sign-in and ends every session at once.
+ * An admin cannot remove themselves this way — the last admin could.
+ */
+authRoutes.post('/delete-account', loginLimiter, authenticate, async (req, res, next) => {
+  try {
+    const { password } = deleteAccountSchema.parse(req.body);
+    const user = await queryOne<UserRow>('SELECT * FROM users WHERE id = $1', [req.user!.id]);
+    if (!user) throw Errors.notFound('Account');
+    if (!(await verifyPassword(user.password_hash, password))) throw Errors.invalidCredentials();
+    if (user.role === 'ADMIN') throw Errors.forbidden('An administrator account cannot be deleted from the app.');
+
+    await withTransaction(async (client) => {
+      if (user.role === 'PATIENT') {
+        // Assignments first: their requested_by points back at this user, and
+        // must not be set to NULL on a NOT NULL column mid-cascade.
+        await query('DELETE FROM assignments WHERE patient_id = $1', [user.id], client);
+        await query('DELETE FROM users WHERE id = $1', [user.id], client);
+      } else {
+        await query(
+          `UPDATE assignments SET status = 'REVOKED', revoked_at = now(), revoked_by = $1,
+                  revoke_reason = 'Doctor closed their account'
+            WHERE doctor_id = $1 AND status IN ('PENDING','ACTIVE')`,
+          [user.id],
+          client
+        );
+        await query('UPDATE users SET is_active = FALSE WHERE id = $1', [user.id], client);
+        await query('DELETE FROM refresh_tokens WHERE user_id = $1', [user.id], client);
+      }
+    });
+
+    res.json({ deleted: user.role === 'PATIENT', closed: user.role !== 'PATIENT' });
   } catch (error) {
     next(error);
   }

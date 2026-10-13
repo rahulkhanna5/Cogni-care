@@ -5,6 +5,7 @@ import { Errors } from '../lib/errors.js';
 import {
   rejectAssignmentSchema,
   requestAssignmentSchema,
+  reviewSchema,
   revokeAssignmentSchema,
 } from '../lib/schemas.js';
 import { authenticate, requireVerifiedEmail } from '../middleware/authenticate.js';
@@ -117,16 +118,52 @@ assignmentRoutes.get('/', async (req, res, next) => {
       `SELECT a.id, a.status, a.requested_at, a.approved_at, a.revoked_at,
               a.doctor_accepted_at,
               d.id AS doctor_id, d.name AS doctor_name,
+              rv.rating AS my_rating, rv.comment AS my_comment,
               p.id AS patient_id, p.name AS patient_name
          FROM assignments a
          JOIN users d ON d.id = a.doctor_id
          JOIN users p ON p.id = a.patient_id
+         LEFT JOIN reviews rv ON rv.assignment_id = a.id AND $2::boolean
         WHERE a.${column} = $1
         ORDER BY a.requested_at DESC`,
-      [user.id]
+      // A doctor's list never carries the rating; that is shown on its own,
+      // without tying it to the row the doctor acts on.
+      [user.id, user.role === 'PATIENT']
     );
 
     res.json({ assignments: rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* --------------------------------- reviews --------------------------------- */
+
+/**
+ * The patient rates a doctor they were actually connected to (both sides said
+ * yes), now or in the past. One review per connection; sending again edits it.
+ */
+assignmentRoutes.put('/:id/review', requireRole('PATIENT'), async (req, res, next) => {
+  try {
+    const { rating, comment } = reviewSchema.parse(req.body);
+    const id = String(req.params.id);
+    const a = await queryOne<{ doctor_id: string; status: string; doctor_accepted_at: Date | null }>(
+      'SELECT doctor_id, status, doctor_accepted_at FROM assignments WHERE id = $1 AND patient_id = $2',
+      [id, req.user!.id]
+    );
+    if (!a) throw Errors.notFound('Connection');
+    if (!a.doctor_accepted_at || !['ACTIVE', 'REVOKED'].includes(a.status)) {
+      throw Errors.conflict('NOT_CONNECTED', 'You can rate a doctor once you have been connected to them.');
+    }
+    const row = await queryOne(
+      `INSERT INTO reviews (assignment_id, patient_id, doctor_id, rating, comment)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (assignment_id)
+       DO UPDATE SET rating = EXCLUDED.rating, comment = EXCLUDED.comment, updated_at = now()
+       RETURNING rating, comment, updated_at`,
+      [id, req.user!.id, a.doctor_id, rating, comment || null]
+    );
+    res.json({ review: row });
   } catch (error) {
     next(error);
   }

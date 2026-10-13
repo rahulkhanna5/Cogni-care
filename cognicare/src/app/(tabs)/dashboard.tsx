@@ -6,17 +6,19 @@ import { View } from 'react-native';
 import { bandInfo } from '@/assessment/scoring';
 import { Dumbbell, type DumbbellRow } from '@/charts/Dumbbell';
 import { LevelMeter } from '@/charts/LevelMeter';
-import { Sparkline } from '@/charts/Sparkline';
+import { SessionBars, type SessionPoint } from '@/charts/SessionBars';
 import { assessmentHistory } from '@/db/queries';
-import { accuracyTrend, gameSummaries, todayStats, type GameSummary, type TodayStats } from '@/db/stats';
+import { gameSummaries, sessionPoints, todayStats, type GameSummary, type TodayStats } from '@/db/stats';
 import { DOMAIN_LABELS, type Assessment, type Domain } from '@/db/types';
 import { GAMES, getGame } from '@/games/registry';
 import { useAuth } from '@/store/auth';
+import { useT } from '@/i18n';
 import { useSession } from '@/store/session';
 import { space } from '@/theme/tokens';
 import { Button, Card, Score, Screen, StatTile, Text } from '@/ui';
 
 export default function Dashboard() {
+  const t = useT();
   const db = useSQLiteContext();
   const router = useRouter();
   const player = useSession((s) => s.player);
@@ -24,7 +26,7 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState<TodayStats | null>(null);
   const [summaries, setSummaries] = useState<GameSummary[]>([]);
-  const [trends, setTrends] = useState<Record<string, number[]>>({});
+  const [trends, setTrends] = useState<Record<string, SessionPoint[]>>({});
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
   useFocusEffect(
@@ -46,7 +48,7 @@ export default function Dashboard() {
 
         const played = games.filter((g) => g.plays > 0);
         const series = await Promise.all(
-          played.map((g) => accuracyTrend(db, player.id, g.game_id))
+          played.map((g) => sessionPoints(db, player.id, g.game_id))
         );
         if (cancelled) return;
         setTrends(Object.fromEntries(played.map((g, i) => [g.game_id, series[i]])));
@@ -75,20 +77,20 @@ export default function Dashboard() {
   return (
     <Screen>
       <Text variant="display" style={{ marginTop: space.sm }}>
-        {name ? `Hello, ${name}` : 'Hello'}
+        {name ? t('dash.helloName', { name }) : t('dash.hello')}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: space.sm }}>
-        <StatTile value={String(stats?.streak ?? 0)} label="Day streak" />
-        <StatTile value={String(stats?.sessionsToday ?? 0)} label="Today" />
-        <StatTile value={String(stats?.sessionsThisWeek ?? 0)} label="This week" />
+        <StatTile value={String(stats?.streak ?? 0)} label={t('dash.streak')} />
+        <StatTile value={String(stats?.sessionsToday ?? 0)} label={t('dash.today')} />
+        <StatTile value={String(stats?.sessionsThisWeek ?? 0)} label={t('dash.week')} />
       </View>
 
       {/* The one soft light on the page: what to do next. */}
       {nextGame && (
         <Card tone="selected" style={{ gap: space.md }}>
           <Text variant="caption" color="textMuted">
-            Suggested next
+            {t('dash.next')}
           </Text>
           <View style={{ gap: space.xs }}>
             <Text variant="title">{nextGame.title}</Text>
@@ -96,7 +98,7 @@ export default function Dashboard() {
               {nextGame.blurb}
             </Text>
           </View>
-          <Button label={`Play ${nextGame.title}`} icon="play" onPress={() => router.push(`/game/${nextGame.id}`)} />
+          <Button label={t('dash.play', { game: nextGame.title })} icon="play" onPress={() => router.push(`/game/${nextGame.id}`)} />
         </Card>
       )}
 
@@ -107,15 +109,15 @@ export default function Dashboard() {
           panels never share a colour either. */}
       <Card style={{ gap: space.lg }}>
         <View style={{ gap: space.xs }}>
-          <Text variant="heading">Trained</Text>
+          <Text variant="heading">{t('dash.trained')}</Text>
           <Text variant="body" color="textMuted">
-            How you are doing in the games. Higher is better.
+            {t('dash.trainedHelp')}
           </Text>
         </View>
 
         {playedGames.length === 0 ? (
           <Text variant="body" color="textMuted">
-            No games played yet. Your progress will show up here.
+            {t('dash.noGames')}
           </Text>
         ) : (
           <>
@@ -129,22 +131,14 @@ export default function Dashboard() {
                     level={summary.current_level}
                     max={meta?.maxLevel ?? 15}
                   />
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text variant="caption" color="textMuted">
-                      Accuracy, last {series.length} {series.length === 1 ? 'session' : 'sessions'}
-                    </Text>
-                    <Text variant="label">Avg {Math.round(summary.mean_accuracy * 100)}%</Text>
-                  </View>
-                  <Sparkline values={series} />
+                  <SessionBars points={series} />
+                  <Text variant="label">{t('dash.avg', { pct: Math.round(summary.mean_accuracy * 100) })}</Text>
                   <Text variant="caption" color="textMuted">
                     {summary.plays} {summary.plays === 1 ? 'session' : 'sessions'} · best {summary.best_score}
                   </Text>
                 </View>
               );
             })}
-            <Text variant="caption" color="textMuted">
-              Dashed line = your average.
-            </Text>
           </>
         )}
       </Card>

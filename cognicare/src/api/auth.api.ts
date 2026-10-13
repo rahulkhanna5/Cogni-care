@@ -67,3 +67,11 @@ export const resetPassword = (token: string, password: string) =>
     method: 'POST',
     body: { token, password },
   });
+
+/** A patient's account is deleted with all its data; a doctor's is closed. */
+export const deleteAccount = (accessToken: string, password: string) =>
+  request<{ deleted: boolean; closed: boolean }>('/auth/delete-account', {
+    method: 'POST',
+    body: { password },
+    accessToken,
+  });

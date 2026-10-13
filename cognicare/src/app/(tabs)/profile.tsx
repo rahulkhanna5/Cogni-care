@@ -5,7 +5,10 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { API_BASE_URL } from '@/api/client';
+import { MyReviews } from '@/care/doctor/MyReviews';
+import { DoctorNotesCard } from '@/care/DoctorNotesCard';
 import { MyDoctorCard } from '@/care/MyDoctorCard';
+import { useT } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { useSession } from '@/store/session';
 import { pendingCount, pushPending, type SyncResult } from '@/sync/sync';
@@ -17,6 +20,7 @@ export default function Profile() {
   const router = useRouter();
   const player = useSession((s) => s.player);
   const { user, pendingApproval, authedFetch, signOut } = useAuth();
+  const t = useT();
 
   const [pending, setPending] = useState(0);
   const [syncing, setSyncing] = useState(false);
@@ -54,9 +58,16 @@ export default function Profile() {
 
   return (
     <Screen>
-      <Text variant="display" style={{ marginTop: space.sm }}>
-        Profile
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.sm }}>
+        <Text variant="display">{t('profile.title')}</Text>
+        <Button
+          label={t('profile.settings')}
+          variant="quiet"
+          icon="settings-outline"
+          fullWidth={false}
+          onPress={() => router.push('/settings')}
+        />
+      </View>
 
       {/* Signed-in identity, or the local-only player. Both are valid states —
           the exercises never required an account. */}
@@ -75,9 +86,9 @@ export default function Profile() {
             <Ionicons name="person" size={34} color={colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text variant="heading">{user?.name ?? player?.name ?? 'Guest'}</Text>
+            <Text variant="heading">{user?.name ?? player?.name ?? t('profile.guest')}</Text>
             <Text variant="body" color="textMuted">
-              {user?.email ?? 'Not signed in'}
+              {user?.email ?? t('profile.notSignedIn')}
             </Text>
           </View>
         </View>
@@ -154,6 +165,8 @@ export default function Profile() {
       {/* Who this patient shares with. Patients only: a doctor or admin has no
           results of their own to share. */}
       {user?.role === 'PATIENT' && <MyDoctorCard />}
+      {user?.role === 'PATIENT' && <DoctorNotesCard />}
+      {user?.role === 'DOCTOR' && user.approvedAt && <MyReviews />}
 
       <Card style={{ gap: space.md }}>
         <Text variant="heading">About</Text>
@@ -177,7 +190,7 @@ export default function Profile() {
 
       {user && (
         <Button
-          label="Sign out"
+          label={t('profile.signOut')}
           variant="secondary"
           icon="log-out-outline"
           onPress={async () => {

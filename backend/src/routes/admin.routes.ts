@@ -283,7 +283,9 @@ adminRoutes.get('/doctors', async (_req, res, next) => {
                 WHERE a.doctor_id = u.id AND a.status = 'ACTIVE' AND a.doctor_accepted_at IS NOT NULL) AS patients,
               (SELECT COUNT(*)::int FROM assignments a
                 WHERE a.doctor_id = u.id AND a.status IN ('PENDING','ACTIVE')
-                  AND NOT (a.status = 'ACTIVE' AND a.doctor_accepted_at IS NOT NULL)) AS waiting
+                  AND NOT (a.status = 'ACTIVE' AND a.doctor_accepted_at IS NOT NULL)) AS waiting,
+              (SELECT AVG(rating)::float FROM reviews r WHERE r.doctor_id = u.id) AS rating,
+              (SELECT COUNT(*)::int FROM reviews r WHERE r.doctor_id = u.id) AS reviews
          FROM users u
          LEFT JOIN doctor_profiles p ON p.user_id = u.id
         WHERE u.role = 'DOCTOR'
@@ -324,7 +326,13 @@ adminRoutes.get('/doctors/:id', async (req, res, next) => {
         ORDER BY a.requested_at DESC`,
       [id]
     );
-    res.json({ doctor, patients });
+    const reviews = await query(
+      `SELECT r.rating, r.comment, r.updated_at, u.name AS patient_name
+         FROM reviews r JOIN users u ON u.id = r.patient_id
+        WHERE r.doctor_id = $1 ORDER BY r.updated_at DESC`,
+      [id]
+    );
+    res.json({ doctor, patients, reviews });
   } catch (error) {
     next(error);
   }
