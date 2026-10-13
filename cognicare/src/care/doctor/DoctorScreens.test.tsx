@@ -142,7 +142,7 @@ describe('one patient', () => {
     await fireEvent.press(view.getByText('Games'));
     expect(view.getByText('Accuracy in the exercises. Higher is better.')).toBeTruthy();
     // Zoya has played three sessions, last 21 days ago, so there is no direction yet.
-    expect(view.getByText(/not enough sessions yet to show a direction/)).toBeTruthy();
+    expect(view.getByText(/A trend shows after 5 sessions/)).toBeTruthy();
 
     // Notes.
     await fireEvent.press(view.getByText('Notes'));

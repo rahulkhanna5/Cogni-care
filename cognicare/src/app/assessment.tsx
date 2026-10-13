@@ -19,7 +19,7 @@ import { chart } from '@/charts/colors';
 import { DOMAIN_LABELS, type Domain } from '@/db/types';
 import { useSession } from '@/store/session';
 import { colors, space } from '@/theme/tokens';
-import { AnswerButton, Banner, Button, Card, Score, Screen, ScreenHeader, Text } from '@/ui';
+import { AnswerButton, Banner, Button, Card, Score, Screen, ScreenHeader, Skeleton, Text } from '@/ui';
 
 const draftKey = (playerId: number) => `assessment_draft_${playerId}`;
 
@@ -110,7 +110,13 @@ export default function Assessment() {
   if (loading) {
     return (
       <Screen scroll={false}>
-        <View />
+        <View accessible accessibilityLabel="Loading" style={{ gap: space.md, marginTop: space.lg }}>
+          <Skeleton width="50%" height={22} />
+          <Skeleton height={60} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} height={56} />
+          ))}
+        </View>
       </Screen>
     );
   }

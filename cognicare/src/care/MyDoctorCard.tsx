@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, Text } from '@/ui';
+import { Banner, Button, Card, Skeleton, Text } from '@/ui';
 import { describeRequest, visibleRequests } from './status';
 import { useMyRequests } from './useMyRequests';
 
@@ -45,9 +45,10 @@ export function MyDoctorCard() {
       {error && <Banner tone="error">{error}</Banner>}
 
       {loading ? (
-        <Text variant="body" color="textMuted">
-          Loading…
-        </Text>
+        <View accessible accessibilityLabel="Loading" style={{ gap: 8 }}>
+          <Skeleton width="60%" height={18} />
+          <Skeleton width="90%" />
+        </View>
       ) : (
         shown.map((a) => {
           const view = describeRequest(a);

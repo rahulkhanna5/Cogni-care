@@ -2,12 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { View } from 'react-native';
 
 import { LevelMeter } from '@/charts/LevelMeter';
-import { Sparkline } from '@/charts/Sparkline';
+import { SessionBars } from '@/charts/SessionBars';
 import { getGame } from '@/games/registry';
 import { colors, space } from '@/theme/tokens';
 import { Card, Text } from '@/ui';
 import type { GameTrend } from '../insight';
-import { formatDate, pct, shortDate } from './parts';
+import { formatDate, pct } from './parts';
 
 /** Points of accuracy that count as a real move, not noise. */
 const MOVE = 0.03;
@@ -50,14 +50,7 @@ export function GamesPanel({ trends }: { trends: GameTrend[] }) {
           <Card key={t.gameId} style={{ gap: space.md }}>
             <LevelMeter title={meta?.title ?? t.gameId} level={t.level} max={meta?.maxLevel ?? 15} />
 
-            <View style={{ gap: space.xs }}>
-              <Sparkline values={t.trend} />
-              {t.trend.length > 1 && (
-                <Text variant="caption" color="textMuted">
-                  {`${shortDate(t.firstAt)} to ${shortDate(t.lastAt)} · last ${t.trend.length} sessions`}
-                </Text>
-              )}
-            </View>
+            <SessionBars points={t.points} />
 
             {m && t.earlier !== null ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
@@ -74,7 +67,7 @@ export function GamesPanel({ trends }: { trends: GameTrend[] }) {
               </View>
             ) : (
               <Text variant="body" color="textMuted">
-                {`Average ${pct(t.meanAccuracy)} · not enough sessions yet to show a direction`}
+                {`${pct(t.meanAccuracy)} right on average. A trend shows after 5 sessions.`}
               </Text>
             )}
 

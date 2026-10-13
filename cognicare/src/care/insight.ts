@@ -36,6 +36,8 @@ export type GameTrend = {
   meanAccuracy: number;
   /** Oldest → newest, last 10. */
   trend: number[];
+  /** The same last 10 sessions with their date and level, for the bar chart. */
+  points: { at: string; accuracy: number; level: number }[];
   firstAt: string;
   lastAt: string;
   meanReactionMs: number | null;
@@ -82,6 +84,7 @@ export function gameTrends(sessions: ServerSession[]): GameTrend[] {
         level: last.level_end ?? last.level_start ?? 1,
         meanAccuracy: mean(acc),
         trend: acc.slice(-10),
+        points: rows.slice(-10).map((r) => ({ at: r.started_at, accuracy: r.accuracy ?? 0, level: r.level_start })),
         firstAt: rows[0]!.started_at,
         lastAt: last.started_at,
         meanReactionMs: reactions.length ? Math.round(mean(reactions)) : null,

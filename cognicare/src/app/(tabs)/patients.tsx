@@ -10,7 +10,7 @@ import { ReasonList } from '@/care/doctor/parts';
 import { needsLookFirst, statusLine, summarise, type PatientInsight } from '@/care/insight';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, Screen, SurfaceProvider, Text, TextField } from '@/ui';
+import { Banner, Button, Card, Screen, SkeletonList, SurfaceProvider, Text, TextField } from '@/ui';
 
 /** Past this many patients a search box earns its space. */
 const SEARCH_FROM = 6;
@@ -129,11 +129,7 @@ export default function Patients() {
           <Button label="Try again" variant="secondary" icon="refresh" busy={loading} onPress={load} />
         </>
       ) : loading ? (
-        <Card>
-          <Text variant="body" color="textMuted">
-            Loading…
-          </Text>
-        </Card>
+        <SkeletonList count={3} lines={1} avatar />
       ) : rows.length === 0 ? (
         waiting.length + withAdmin.length > 0 ? null : (
         <Card>

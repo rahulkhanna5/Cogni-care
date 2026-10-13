@@ -9,7 +9,7 @@ import { openRequestFor } from '@/care/status';
 import { useMyRequests } from '@/care/useMyRequests';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, Screen, ScreenHeader, Text } from '@/ui';
+import { Banner, Button, Card, Screen, ScreenHeader, SkeletonList, Text } from '@/ui';
 
 /**
  * Where a patient picks the doctor to share results with.
@@ -71,11 +71,7 @@ export default function FindDoctor() {
           {(loadError || error) && <Banner tone="error">{loadError ?? error}</Banner>}
 
           {loading ? (
-            <Card>
-              <Text variant="body" color="textMuted">
-                Loading doctors…
-              </Text>
-            </Card>
+            <SkeletonList count={3} lines={2} avatar />
           ) : loadError ? (
             <Button label="Try again" variant="secondary" icon="refresh" onPress={fetchDoctors} />
           ) : doctors.length === 0 ? (

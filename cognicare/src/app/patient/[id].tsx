@@ -12,7 +12,7 @@ import { agoText, bandTone, statusLine, summarise } from '@/care/insight';
 import { getGame } from '@/games/registry';
 import { useAuth } from '@/store/auth';
 import { space } from '@/theme/tokens';
-import { Banner, Button, Card, Screen, ScreenHeader, Text } from '@/ui';
+import { Banner, Button, Card, Screen, ScreenHeader, Skeleton, SkeletonList, Text } from '@/ui';
 
 type Tab = 'overview' | 'games' | 'checkins' | 'notes';
 
@@ -77,7 +77,10 @@ export default function PatientDetail() {
   if (loading) {
     return (
       <Screen>
-        <ScreenHeader title="Loading…" onBack={() => router.back()} />
+        <ScreenHeader title="Patient" onBack={() => router.back()} />
+        <Skeleton width="45%" height={12} />
+        <SkeletonList count={1} lines={1} />
+        <SkeletonList count={2} lines={4} />
       </Screen>
     );
   }

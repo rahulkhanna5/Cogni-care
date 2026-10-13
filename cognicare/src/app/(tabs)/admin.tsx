@@ -7,7 +7,7 @@ import * as adminApi from '@/api/admin.api';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/store/auth';
 import { colors, space } from '@/theme/tokens';
-import { Banner, Button, Card, InfoRow, Screen, Text } from '@/ui';
+import { Banner, Button, Card, InfoRow, Screen, SkeletonList, Text } from '@/ui';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -85,11 +85,7 @@ export default function Admin() {
       <SectionTitle icon="medkit-outline" title={`Doctor applications (${doctors.length})`} />
 
       {loading ? (
-        <Card>
-          <Text variant="body" color="textMuted">
-            Loading…
-          </Text>
-        </Card>
+        <SkeletonList count={2} lines={3} />
       ) : doctors.length === 0 ? (
         <Card>
           <Text variant="body" color="textMuted">
