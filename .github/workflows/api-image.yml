@@ -1,0 +1,35 @@
+# Builds the API's Docker image and publishes it to GitHub's container
+# registry (ghcr.io), free for a public repository. Azure Container Apps pulls
+# it from there, so no paid Azure registry is needed.
+name: API image
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/api-image.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ghcr.io/rahulkhanna5/cognicare-api:latest
+            ghcr.io/rahulkhanna5/cognicare-api:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/rahulkhanna5/Cogni-care
+            org.opencontainers.image.description=CogniCare API

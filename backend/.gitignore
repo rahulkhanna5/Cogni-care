@@ -7,3 +7,7 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Azure deploy package (scripts/azure-package.sh)
+deploy/
+deploy.zip
