@@ -4,6 +4,7 @@ import { query, queryOne } from '../db/pool.js';
 import { Errors } from '../lib/errors.js';
 import {
   assessmentSchema,
+  chatReportSchema,
   chatSchema,
   paginationSchema,
   remarkVisibilitySchema,
@@ -462,3 +463,21 @@ patientRoutes.post(
     }
   }
 );
+
+/**
+ * Anyone who may use the chat may flag a reply from it. Stored for admins to
+ * read (GET /admin/ai-reports); Play's AI-content policy requires the path.
+ */
+patientRoutes.post('/:patientId/chat/report', requirePatientAccess(), async (req, res, next) => {
+  try {
+    const { patientId } = patientScope(req);
+    const { reply, question } = chatReportSchema.parse(req.body);
+    await query(
+      'INSERT INTO ai_reports (reporter_id, patient_id, question, reply) VALUES ($1, $2, $3, $4)',
+      [req.user!.id, patientId, question ?? null, reply]
+    );
+    res.status(201).json({ reported: true });
+  } catch (error) {
+    next(error);
+  }
+});

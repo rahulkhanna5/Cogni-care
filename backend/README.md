@@ -38,6 +38,8 @@ loudly instead of leaking.
 | `GET /api/v1/admin/access-log` | ✗ | ✗ | yes | `requireRole('ADMIN')` |
 | `GET /api/v1/admin/users` | ✗ | ✗ | yes | `requireRole('ADMIN')` |
 | `GET /api/v1/doctors` | yes | yes | yes | no patient data; approved doctors only |
+| `POST /api/v1/patients/:patientId/chat/report` | self | active assignment | yes | `requirePatientAccess()`; stores the flagged AI reply |
+| `GET /api/v1/admin/ai-reports` | ✗ | ✗ | yes | `requireRole('ADMIN')` |
 
 Non-patient-data routes and their guards:
 

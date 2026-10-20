@@ -138,6 +138,12 @@ export const chatSchema = z.object({
     .max(20),
 });
 
+/** A flagged AI reply, with the question it answered for context. */
+export const chatReportSchema = z.object({
+  reply: z.string().trim().min(1).max(8000),
+  question: z.string().trim().max(2000).optional(),
+});
+
 export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

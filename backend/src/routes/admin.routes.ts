@@ -337,3 +337,24 @@ adminRoutes.get('/doctors/:id', async (req, res, next) => {
     next(error);
   }
 });
+
+/* ------------------------------ AI reply reports --------------------------- */
+
+adminRoutes.get('/ai-reports', async (req, res, next) => {
+  try {
+    const { limit, offset } = paginationSchema.parse(req.query);
+    const rows = await query(
+      `SELECT r.id, r.question, r.reply, r.created_at,
+              rep.name AS reporter_name, rep.role AS reporter_role, pat.name AS patient_name
+         FROM ai_reports r
+         LEFT JOIN users rep ON rep.id = r.reporter_id
+         JOIN users pat ON pat.id = r.patient_id
+        ORDER BY r.created_at DESC
+        LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+    res.json({ reports: rows });
+  } catch (error) {
+    next(error);
+  }
+});
