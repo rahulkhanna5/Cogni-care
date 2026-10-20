@@ -260,6 +260,18 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   language. Atkinson Hyperlegible has no Devanagari; Hindi falls back to the
   system font.
 
+- **Play Store requirements live in code, not only in the console.**
+  Unused permissions are stripped (`app.json` `blockedPermissions`; expo-audio
+  would otherwise add the microphone and a background media service, which
+  Play reviews and asks you to justify). Every AI chat reply has "Report this
+  reply" (Play's AI-content policy); reports land in `ai_reports` (migration
+  007), readable at `GET /admin/ai-reports`. The privacy policy, terms and an
+  account-deletion page that works without the app are built from
+  `legal/content.ts` by `cognicare/scripts/build-site.mjs` and published to
+  GitHub Pages by `.github/workflows/site.yml`; the API address comes from
+  `eas.json`'s production profile, so change it there, once. The `production`
+  EAS profile builds the AAB; version codes are EAS-managed (`remote`).
+
 ## Traps already paid for
 
 - **`authedFetch` calls that expire together must share one refresh.** Refresh
@@ -345,4 +357,3 @@ is public.
    alongside these (`users`, snake_case). They coexist; it is a stopgap.
 3. Not built: the deck's advanced level variants. Hindi/Punjabi check-in
    translations need clinical review.
-4. App icon and splash are still Expo defaults.
