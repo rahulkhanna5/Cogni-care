@@ -17,3 +17,18 @@ export const sendChatMessage = (accessToken: string, patientId: string, messages
     // The server tries several models in turn, each allowed up to 45s.
     timeoutMs: AI_TIMEOUT_MS,
   });
+
+/**
+ * Flags an AI reply as wrong or harmful. Google Play requires an in-app way to
+ * report AI-generated content; the server keeps the reply for an admin to read.
+ */
+export const reportChatReply = (
+  accessToken: string,
+  patientId: string,
+  report: { reply: string; question?: string }
+) =>
+  request<{ reported: true }>(`/patients/${patientId}/chat/report`, {
+    method: 'POST',
+    body: report,
+    accessToken,
+  });

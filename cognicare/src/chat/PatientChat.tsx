@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { sendChatMessage, type ChatTurn } from '@/api/chat.api';
+import { reportChatReply, sendChatMessage, type ChatTurn } from '@/api/chat.api';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/store/auth';
 import { colors, fonts, radius, space, TOUCH_MIN } from '@/theme/tokens';
@@ -37,6 +37,21 @@ export function PatientChat({ patientId, suggestions }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [reports, setReports] = useState<Record<number, ReportState>>({});
+
+  async function report(index: number) {
+    const reply = messages[index]?.content;
+    if (!reply || reports[index] === 'sending' || reports[index] === 'done') return;
+    const before = messages[index - 1];
+    const question = before?.role === 'user' ? before.content : undefined;
+    setReports((r) => ({ ...r, [index]: 'sending' }));
+    try {
+      await authedFetch((token) => reportChatReply(token, patientId, { reply, question }));
+      setReports((r) => ({ ...r, [index]: 'done' }));
+    } catch {
+      setReports((r) => ({ ...r, [index]: 'error' }));
+    }
+  }
 
   async function send(text: string) {
     const content = text.trim();
@@ -87,7 +102,9 @@ export function PatientChat({ patientId, suggestions }: Props) {
             ))}
           </View>
         ) : (
-          messages.map((m, i) => <Bubble key={i} turn={m} />)
+          messages.map((m, i) => (
+            <Bubble key={i} turn={m} report={reports[i]} onReport={() => report(i)} />
+          ))
         )}
 
         {sending && <Thinking />}
@@ -161,10 +178,20 @@ export function PatientChat({ patientId, suggestions }: Props) {
 // matters here — a few extra pixels of gap above it does not.
 const insetOffset = Platform.OS === 'ios' ? 100 : 0;
 
-function Bubble({ turn }: { turn: ChatTurn }) {
+type ReportState = 'sending' | 'done' | 'error';
+
+function Bubble({
+  turn,
+  report,
+  onReport,
+}: {
+  turn: ChatTurn;
+  report?: ReportState;
+  onReport: () => void;
+}) {
   const mine = turn.role === 'user';
   return (
-    <View style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
+    <View style={{ alignItems: mine ? 'flex-end' : 'flex-start', gap: 2 }}>
       <SurfaceProvider value={mine ? 'selected' : 'surface'}>
         <View
           style={{
@@ -185,6 +212,43 @@ function Bubble({ turn }: { turn: ChatTurn }) {
           <Text variant="body">{turn.content}</Text>
         </View>
       </SurfaceProvider>
+      {!mine && <ReportLink state={report} onPress={onReport} />}
+    </View>
+  );
+}
+
+/**
+ * Every AI reply can be flagged without leaving the app (Google Play's AI
+ * content policy). One tap sends it; the link then says it was received.
+ */
+function ReportLink({ state, onPress }: { state?: ReportState; onPress: () => void }) {
+  if (state === 'done') {
+    return (
+      <Text variant="caption" color="textMuted" style={{ paddingVertical: space.sm }}>
+        Reported. Thank you.
+      </Text>
+    );
+  }
+  return (
+    <View>
+      <Pressable
+        onPress={onPress}
+        disabled={state === 'sending'}
+        accessibilityRole="button"
+        accessibilityLabel="Report this reply as wrong or harmful"
+        hitSlop={8}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: TOUCH_MIN }}
+      >
+        <Ionicons name="flag-outline" size={18} color={colors.textMuted} />
+        <Text variant="caption" color="textMuted">
+          {state === 'sending' ? 'Sending…' : 'Report this reply'}
+        </Text>
+      </Pressable>
+      {state === 'error' && (
+        <Text variant="caption" color="danger">
+          Could not send the report. Please try again.
+        </Text>
+      )}
     </View>
   );
 }
