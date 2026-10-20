@@ -7,8 +7,8 @@
  * 2023). Bump LEGAL_VERSION whenever either text changes: the version a person
  * agreed to is stored with their account.
  */
-export const LEGAL_VERSION = '2026-10-13';
-export const LEGAL_UPDATED = '13 October 2026';
+export const LEGAL_VERSION = '2026-10-20';
+export const LEGAL_UPDATED = '20 October 2026';
 
 export type Section = { heading: string; body: string[] };
 
@@ -61,7 +61,7 @@ export const TERMS: Section[] = [
     heading: 'Stopping',
     body: [
       'You can stop sharing with a doctor at any time from your Profile, and it takes effect immediately.',
-      'You can ask the administrator to close your account and delete your shared data.',
+      'You can delete your account yourself at any time: in the app, open Settings and choose “Delete my account” (doctors: “Close my doctor account”), or use the account deletion page on our website. A patient’s account and shared results are deleted. A doctor’s account is closed and their notes are kept, because they are medical records.',
     ],
   },
 ];
@@ -88,6 +88,7 @@ export const PRIVACY: Section[] = [
     body: [
       'You. A doctor you asked, once an administrator approved and the doctor accepted. Administrators, to run the service; every time they open a patient’s results it is logged.',
       'If you or your doctor use “Ask about your results” or an AI-drafted note, a summary of your results and your name (not your email) is sent to an outside AI service to write the answer. That service handles it under its own terms. If you do not want this, do not use those features.',
+      'If you report an AI answer as wrong or harmful, that answer and the question before it are kept so we can check it.',
       'We share information with nobody else unless the law requires it.',
     ],
   },
@@ -95,19 +96,19 @@ export const PRIVACY: Section[] = [
     heading: 'Health information',
     body: [
       'Check-in answers and game results can say something about your health, so we treat them as sensitive. They travel encrypted and are stored on secured servers.',
-      'By ticking the box when you create an account, you agree to us processing this information for the purposes above. You can withdraw that agreement at any time by stopping sharing and asking us to delete your account.',
+      'By ticking the box when you create an account, you agree to us processing this information for the purposes above. You can withdraw that agreement at any time by stopping sharing and deleting your account.',
     ],
   },
   {
     heading: 'How long we keep it',
     body: [
-      'For as long as your account is open. When you close it, we delete your shared results, except the access log, which is kept so past access can still be checked.',
+      'For as long as your account is open. When you delete it, we delete your shared results, except the access log, which is kept so past access can still be checked.',
     ],
   },
   {
     heading: 'Your rights',
     body: [
-      'You can ask to see the information we hold about you, to correct it, to take a copy, or to have it deleted. Ask the administrator, through your doctor or the app.',
+      'You can delete your account yourself from Settings in the app, or from the account deletion page on our website. You can also ask to see the information we hold about you, to correct it, or to take a copy. Ask the administrator, through your doctor or the app.',
     ],
   },
 ];
