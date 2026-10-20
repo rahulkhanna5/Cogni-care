@@ -1,0 +1,51 @@
+# Publishes the privacy policy, terms and account deletion page to GitHub
+# Pages (https://rahulkhanna5.github.io/Cogni-care/). Google Play needs public
+# links for the privacy policy and for deleting an account without the app.
+# The pages are built from cognicare/src/legal/content.ts, so they always say
+# what the app says.
+#
+# One-time setup: repository Settings → Pages → Source: "GitHub Actions".
+# Optional repository variable SITE_CONTACT_EMAIL adds a contact address to
+# the deletion page for people who cannot sign in.
+name: Legal pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - cognicare/src/legal/**
+      - cognicare/scripts/build-site.mjs
+      - cognicare/eas.json
+      - .github/workflows/site.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The script reads only content.ts and eas.json: no npm install needed.
+      - run: node --experimental-strip-types cognicare/scripts/build-site.mjs site-dist
+        env:
+          SITE_CONTACT_EMAIL: ${{ vars.SITE_CONTACT_EMAIL }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
