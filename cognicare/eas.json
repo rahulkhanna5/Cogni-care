@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "appVersionSource": "local"
+    "appVersionSource": "remote"
   },
   "build": {
     "preview": {
@@ -10,8 +10,20 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://cogni-care-qvj2.onrender.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://cognicare-api.wittyplant-0ba54a0b.southeastasia.azurecontainerapps.io/api/v1"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://cognicare-api.wittyplant-0ba54a0b.southeastasia.azurecontainerapps.io/api/v1"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }

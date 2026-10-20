@@ -1,14 +1,21 @@
-# Builds a shareable Android APK on Expo's servers. Run it from the GitHub
-# "Actions" tab ("Run workflow"); the finished build and its install link
-# appear on expo.dev under the cognicare project.
+# Builds the Android app on Expo's servers. Run it from the GitHub "Actions"
+# tab ("Run workflow") and pick a profile:
+#   preview    - an APK to install directly on test phones
+#   production - the AAB to upload to Google Play
+# The finished build appears on expo.dev under the cognicare project.
 #
 # Needs one repository secret, EXPO_TOKEN (expo.dev → Account settings →
-# Access tokens). The backend needs no step here: Render redeploys it on
-# every push to main (see render.yaml).
-name: Android APK
+# Access tokens). The backend is built separately (api-image.yml).
+name: Android build
 
 on:
   workflow_dispatch:
+    inputs:
+      profile:
+        description: Build profile
+        type: choice
+        options: [preview, production]
+        default: preview
 
 jobs:
   build:
@@ -28,4 +35,4 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - run: npm ci
-      - run: eas build --platform android --profile preview --non-interactive --no-wait
+      - run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive --no-wait
