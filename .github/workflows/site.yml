@@ -5,8 +5,8 @@
 # what the app says.
 #
 # One-time setup: repository Settings → Pages → Source: "GitHub Actions".
-# Optional repository variable SITE_CONTACT_EMAIL adds a contact address to
-# the deletion page for people who cannot sign in.
+# The deletion page shows a contact address for people who cannot sign in;
+# a repository variable SITE_CONTACT_EMAIL overrides the default below.
 name: Legal pages
 
 on:
@@ -42,7 +42,8 @@ jobs:
       # The script reads only content.ts and eas.json: no npm install needed.
       - run: node --experimental-strip-types cognicare/scripts/build-site.mjs site-dist
         env:
-          SITE_CONTACT_EMAIL: ${{ vars.SITE_CONTACT_EMAIL }}
+          # The same address Play shows as the store contact.
+          SITE_CONTACT_EMAIL: ${{ vars.SITE_CONTACT_EMAIL || 'rahulkhanna6593@gmail.com' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
