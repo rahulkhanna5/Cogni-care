@@ -46,3 +46,4 @@ xcuserdata/
 # local (download them from mixkit.co — names are in scripts/cut-recordings.py);
 # the short clips cut from them, which the app ships, are committed.
 cognicare/assets/audio/source/originals/mixkit-*
+play-upload/
