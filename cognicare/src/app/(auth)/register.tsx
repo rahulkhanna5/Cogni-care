@@ -42,7 +42,7 @@ export default function Register() {
       : password.length < 10
         ? 'Your password needs at least 10 characters.'
         : !doctorFieldsOk
-          ? 'Add your specialty and registration number to continue.'
+          ? 'Add your specialty and registration ID to continue.'
           : !acceptTerms
             ? 'Tick the box to agree to the terms and conditions.'
             : !acceptPrivacy
@@ -131,7 +131,7 @@ export default function Register() {
           <>
             <TextField label="Specialty" value={specialty} onChangeText={setSpecialty} placeholder="e.g. Neurology" />
             <TextField
-              label="Registration / licence number"
+              label="Unique ID / registration ID"
               value={licenseNumber}
               onChangeText={setLicenseNumber}
               autoCapitalize="characters"
@@ -142,7 +142,7 @@ export default function Register() {
             <Card style={{ gap: space.md }}>
               <Text variant="heading">What happens next</Text>
               {[
-                'An administrator checks your registration number against the medical council register.',
+                'An administrator checks your registration ID.',
                 'Once approved, patients can ask to be connected to you.',
               ].map((step, i) => (
                 <View key={step} style={{ flexDirection: 'row', gap: space.md, alignItems: 'flex-start' }}>

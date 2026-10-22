@@ -38,7 +38,7 @@ export const TERMS: Section[] = [
   {
     heading: 'Specialists',
     body: [
-      'Specialists must give a true medical registration number. An administrator checks it before the specialist can be chosen by patients.',
+      'Specialists must give a true registration ID. An administrator checks it before the specialist can be chosen by patients.',
       'A specialist may only see a patient’s results when the patient asked them, an administrator approved it, and the specialist accepted. Specialists must use what they see only for that patient’s care, and keep it confidential.',
       'Notes a specialist writes are their own professional opinion. CogniCare does not check or endorse them.',
     ],
@@ -71,7 +71,7 @@ export const PRIVACY: Section[] = [
     heading: 'What we collect',
     body: [
       'Without an account: nothing. Your name, age, check-ins and game results stay on your phone.',
-      'With an account: your name, email address and password (stored scrambled, never readable), and the check-ins and game results you play while signed in. For specialists, also specialty, registration number and an optional short bio.',
+      'With an account: your name, email address and password (stored scrambled, never readable), and the check-ins and game results you play while signed in. For specialists, also specialty, registration ID and an optional short bio.',
       'We also keep a log of who looked at a patient’s results and when, so that access can be checked.',
     ],
   },

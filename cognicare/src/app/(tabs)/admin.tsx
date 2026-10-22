@@ -168,13 +168,13 @@ export default function Admin() {
                 review, so they are shown plainly rather than dressed up. */}
                 <View style={{ gap: space.xs }}>
                   <InfoRow label="Specialty" value={doctor.specialty} />
-                  <InfoRow label="Registration no." value={doctor.license_number} />
+                  <InfoRow label="Registration ID" value={doctor.license_number} />
                   {doctor.bio ? <InfoRow label="Bio" value={doctor.bio} /> : null}
                   <InfoRow label="Email confirmed" value={doctor.email_verified_at ? 'Yes' : 'Not yet'} />
                 </View>
 
                 <Banner tone="warning">
-                  Check the registration number against your medical council register before approving.
+                  Check the registration ID before approving.
                 </Banner>
 
                 {doctor.email_verified_at ? (

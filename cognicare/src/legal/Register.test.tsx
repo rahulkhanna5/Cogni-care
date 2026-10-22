@@ -54,7 +54,7 @@ it('a specialist must also confirm their registration details are true', async (
   await fireEvent.press(view.getByText('I am a specialist'));
   await fillPatient(view);
   await fireEvent.changeText(view.getByLabelText('Specialty'), 'Neurology');
-  await fireEvent.changeText(view.getByLabelText('Registration / licence number'), 'MC-12345');
+  await fireEvent.changeText(view.getByLabelText('Unique ID / registration ID'), 'MC-12345');
   await fireEvent.press(view.getByRole('checkbox', { name: /terms and conditions/ }));
   await fireEvent.press(view.getByRole('checkbox', { name: /privacy policy/ }));
 

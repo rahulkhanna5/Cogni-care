@@ -53,7 +53,7 @@ export default function Pending() {
           your email is confirmed.
         </Text>
         <Text variant="body" color="textMuted">
-          An administrator now reviews your specialty and registration number. Until
+          An administrator now reviews your specialty and registration ID. Until
           that is done you cannot be connected to patients, and no patient
           information is visible.
         </Text>

@@ -63,7 +63,7 @@ export default function AdminDoctor() {
 
       <Card style={{ gap: space.xs }}>
         <InfoRow label="Specialty" value={doctor.specialty ?? '—'} />
-        <InfoRow label="Registration no." value={doctor.license_number ?? '—'} />
+        <InfoRow label="Registration ID" value={doctor.license_number ?? '—'} />
         <InfoRow label="Email" value={doctor.email} />
         <InfoRow label="Joined" value={day(doctor.created_at)} />
         <InfoRow
