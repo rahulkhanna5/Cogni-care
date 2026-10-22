@@ -37,7 +37,7 @@ const connected: MyAssignment = {
   doctor_name: 'Dr Rao',
 };
 
-it('a patient rates a doctor: no stars, no save; stars and comment are sent for that connection', async () => {
+it('a patient rates a specialist: no stars, no save; stars and comment are sent for that connection', async () => {
   const onSaved = jest.fn();
   const view = await render(wrap(<RateDoctor assignment={connected} onSaved={onSaved} />));
   await fireEvent.press(view.getByText('Rate Dr Rao'));
@@ -68,7 +68,7 @@ const note = (o: Partial<Remark>): Remark => ({
   ...o,
 });
 
-it('the doctor who wrote a note can share it; a colleague’s note only says whether it is shared', async () => {
+it('the specialist who wrote a note can share it; a colleague’s note only says whether it is shared', async () => {
   const onChanged = jest.fn();
   const view = await render(
     wrap(

@@ -34,7 +34,7 @@ export default function FindDoctor() {
       const { doctors: rows } = await authedFetch((t) => care.listDoctors(t));
       setDoctors(rows);
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : 'Could not load the list of doctors.');
+      setLoadError(e instanceof ApiError ? e.message : 'Could not load the list of specialists.');
     } finally {
       setLoading(false);
     }
@@ -51,20 +51,20 @@ export default function FindDoctor() {
 
   return (
     <Screen>
-      <ScreenHeader title="Find a doctor" onBack={() => router.back()} />
+      <ScreenHeader title="Find a specialist" onBack={() => router.back()} />
 
       {signedOut ? (
         <Card style={{ gap: space.md }}>
           <Text variant="heading">Sign in first</Text>
           <Text variant="body" color="textMuted">
-            You need an account to share your results with a doctor.
+            You need an account to share your results with a specialist.
           </Text>
           <Button label="Sign in or create an account" onPress={() => router.push('/login')} />
         </Card>
       ) : (
         <>
           <Banner tone="info" icon="shield-checkmark-outline">
-            Asking a doctor does not share anything yet. Your request is checked first, and you can stop sharing at any
+            Asking a specialist does not share anything yet. Your request is checked first, and you can stop sharing at any
             time.
           </Banner>
 
@@ -76,9 +76,9 @@ export default function FindDoctor() {
             <Button label="Try again" variant="secondary" icon="refresh" onPress={fetchDoctors} />
           ) : doctors.length === 0 ? (
             <Card>
-              <Text variant="heading">No doctors yet</Text>
+              <Text variant="heading">No specialists yet</Text>
               <Text variant="body" color="textMuted">
-                Doctors appear here once they have registered and been approved.
+                Specialists appear here once they have registered and been approved.
               </Text>
             </Card>
           ) : (
@@ -123,12 +123,12 @@ export default function FindDoctor() {
                         color={open.status === 'ACTIVE' ? colors.success : colors.edge}
                       />
                       <Text variant="label">
-                        {open.status === 'ACTIVE' ? 'Your doctor' : 'Request sent · waiting for approval'}
+                        {open.status === 'ACTIVE' ? 'Your specialist' : 'Request sent · waiting for approval'}
                       </Text>
                     </View>
                   ) : (
                     <Button
-                      label="Ask this doctor"
+                      label="Ask this specialist"
                       icon="paper-plane-outline"
                       busy={busyId === d.id}
                       onPress={() => request(d.id)}

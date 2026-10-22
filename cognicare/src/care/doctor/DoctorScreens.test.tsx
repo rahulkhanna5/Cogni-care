@@ -97,7 +97,7 @@ jest.mock('@/store/auth', () => {
 const SAFE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 const wrap = (el: React.ReactElement) => <SafeAreaProvider initialMetrics={SAFE}>{el}</SafeAreaProvider>;
 
-describe('the doctor’s patient list', () => {
+describe('the specialist’s patient list', () => {
   it('puts the patient who needs a look first, and says why', async () => {
     const view = await render(wrap(<Patients />));
     expect(await view.findByText('Has not played in 21 days')).toBeTruthy();
@@ -114,7 +114,7 @@ describe('the doctor’s patient list', () => {
   });
 });
 
-describe('requests waiting on the doctor', () => {
+describe('requests waiting on the specialist', () => {
   it('shows the patient who asked, above the list, with Accept and Decline', async () => {
     const view = await render(wrap(<Patients />));
     expect(await view.findByText('1 patient is waiting for your answer')).toBeTruthy();

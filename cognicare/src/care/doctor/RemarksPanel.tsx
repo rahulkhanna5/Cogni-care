@@ -109,7 +109,7 @@ export function RemarksPanel({
         <Text variant="heading">Notes</Text>
         <Text variant="body" color="textMuted">
           Private to the care team unless you share a note. A shared note appears on the patient’s Profile as “Notes
-          from your doctor”.
+          from your specialist”.
         </Text>
       </View>
 

@@ -68,27 +68,27 @@ beforeEach(() => {
   ];
 });
 
-it('lists the approved doctors, and asking one sends the request and shows it waiting', async () => {
+it('lists the approved specialists, and asking one sends the request and shows it waiting', async () => {
   const view = await render(screen());
   expect(await view.findByText('Dr Rao')).toBeTruthy();
   expect(view.getByText('Neurology')).toBeTruthy();
   expect(view.getByText('Memory clinic lead.')).toBeTruthy();
   expect(view.getByText('Dr Iyer')).toBeTruthy();
 
-  const buttons = view.getAllByLabelText('Ask this doctor');
+  const buttons = view.getAllByLabelText('Ask this specialist');
   expect(buttons).toHaveLength(2);
   await fireEvent.press(buttons[0]);
 
   expect(mockRequestDoctor).toHaveBeenCalledWith('token', 'd1');
   expect(await view.findByText('Request sent · waiting for approval')).toBeTruthy();
   // Only the first doctor was asked; the other can still be asked.
-  expect(view.getAllByLabelText('Ask this doctor')).toHaveLength(1);
+  expect(view.getAllByLabelText('Ask this specialist')).toHaveLength(1);
 });
 
-it('says there are no doctors yet, rather than showing an empty page', async () => {
+it('says there are no specialists yet, rather than showing an empty page', async () => {
   mockDoctors = [];
   const view = await render(screen());
-  expect(await view.findByText('No doctors yet')).toBeTruthy();
+  expect(await view.findByText('No specialists yet')).toBeTruthy();
 });
 
 it('asks someone who is not signed in to sign in first, without calling the server', async () => {

@@ -109,7 +109,7 @@ export default function Profile() {
             <Text variant="heading">Playing without an account</Text>
             <Text variant="body" color="textMuted">
               Everything works and is saved on this phone. Sign in only if you want to
-              share your progress with a doctor.
+              share your progress with a specialist.
             </Text>
           </View>
           <Button label="Sign in or create an account" onPress={() => router.push('/login')} />
@@ -118,7 +118,7 @@ export default function Profile() {
 
       {pendingApproval && (
         <Banner tone="info">
-          Your doctor account is still being reviewed. Patient information stays hidden
+          Your specialist account is still being reviewed. Patient information stays hidden
           until an administrator approves it.
         </Banner>
       )}

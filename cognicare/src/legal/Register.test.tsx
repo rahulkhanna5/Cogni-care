@@ -49,9 +49,9 @@ it('will not create an account until both required boxes are ticked, and records
   );
 });
 
-it('a doctor must also confirm their registration details are true', async () => {
+it('a specialist must also confirm their registration details are true', async () => {
   const view = await render(wrap(<Register />));
-  await fireEvent.press(view.getByText('I am a doctor'));
+  await fireEvent.press(view.getByText('I am a specialist'));
   await fillPatient(view);
   await fireEvent.changeText(view.getByLabelText('Specialty'), 'Neurology');
   await fireEvent.changeText(view.getByLabelText('Registration / licence number'), 'MC-12345');

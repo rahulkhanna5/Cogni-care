@@ -12,7 +12,7 @@ type Row = Awaited<ReturnType<typeof allAssignments>>['assignments'][number];
 
 const GROUPS: { title: string; match: (r: Row) => boolean }[] = [
   { title: 'Waiting for you', match: (r) => r.status === 'PENDING' },
-  { title: 'Waiting for the doctor', match: (r) => r.status === 'ACTIVE' && !r.doctor_accepted_at },
+  { title: 'Waiting for the specialist', match: (r) => r.status === 'ACTIVE' && !r.doctor_accepted_at },
   { title: 'Connected', match: (r) => r.status === 'ACTIVE' && !!r.doctor_accepted_at },
   { title: 'Ended', match: (r) => r.status === 'REJECTED' || r.status === 'REVOKED' },
 ];
@@ -24,7 +24,7 @@ export function ConnectionsPanel({ rows }: { rows: Row[] }) {
     return (
       <Card>
         <Text variant="body" color="textMuted">
-          No patient has asked for a doctor yet.
+          No patient has asked for a specialist yet.
         </Text>
       </Card>
     );
@@ -56,7 +56,7 @@ export function ConnectionsPanel({ rows }: { rows: Row[] }) {
                   {[
                     `Asked ${day(r.requested_at)}`,
                     r.approved_at ? `approved ${day(r.approved_at)}` : null,
-                    r.doctor_accepted_at ? `doctor accepted ${day(r.doctor_accepted_at)}` : null,
+                    r.doctor_accepted_at ? `specialist accepted ${day(r.doctor_accepted_at)}` : null,
                     r.revoked_at ? `ended ${day(r.revoked_at)}` : null,
                   ]
                     .filter(Boolean)

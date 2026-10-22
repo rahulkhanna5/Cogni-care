@@ -46,7 +46,7 @@ export function describeRequest(
     case 'REJECTED':
       return {
         headline: 'Not approved',
-        detail: `Your request to ${a.doctor_name} was not approved. You can choose another doctor.`,
+        detail: `Your request to ${a.doctor_name} was not approved. You can choose another specialist.`,
         tone: 'warning',
         action: null,
       };
@@ -82,7 +82,7 @@ export function visibleRequests(all: MyAssignment[]): MyAssignment[] {
 /** Server error codes worth saying in the patient's own words. */
 export function requestErrorMessage(code: string | undefined, fallback: string): string {
   if (code === 'EMAIL_NOT_VERIFIED') return 'Please confirm your email address first, then try again.';
-  if (code === 'ASSIGNMENT_EXISTS') return 'You have already asked this doctor.';
-  if (code === 'NOT_FOUND') return 'That doctor is no longer available.';
+  if (code === 'ASSIGNMENT_EXISTS') return 'You have already asked this specialist.';
+  if (code === 'NOT_FOUND') return 'That specialist is no longer available.';
   return fallback;
 }

@@ -20,7 +20,7 @@ describe('describeRequest', () => {
     expect(v.action).toBe('withdraw');
   });
 
-  it('approved by an admin but not yet by the doctor says so, and shares nothing', () => {
+  it('approved by an admin but not yet by the specialist says so, and shares nothing', () => {
     const r = row({ status: 'ACTIVE', doctor_accepted_at: null });
     expect(awaitingDoctor(r)).toBe(true);
     const v = describeRequest(r);
@@ -29,27 +29,27 @@ describe('describeRequest', () => {
     expect(v.action).toBe('withdraw');
   });
 
-  it('once the doctor accepts it is sharing, and an older server reads the same', () => {
+  it('once the specialist accepts it is sharing, and an older server reads the same', () => {
     expect(awaitingDoctor(row({ status: 'ACTIVE', doctor_accepted_at: '2026-10-13T10:00:00Z' }))).toBe(false);
     expect(awaitingDoctor(row({ status: 'ACTIVE' }))).toBe(false); // field absent
     expect(describeRequest(row({ status: 'ACTIVE', doctor_accepted_at: '2026-10-13T10:00:00Z' })).action).toBe('stop');
   });
 
-  it('an active one names the doctor and offers to stop', () => {
+  it('an active one names the specialist and offers to stop', () => {
     const v = describeRequest(row({ status: 'ACTIVE' }));
     expect(v.headline).toBe('Sharing with Dr Rao');
     expect(v.action).toBe('stop');
   });
 
-  it('a refusal offers no action and points to another doctor', () => {
+  it('a refusal offers no action and points to another specialist', () => {
     const v = describeRequest(row({ status: 'REJECTED' }));
     expect(v.action).toBeNull();
-    expect(v.detail).toMatch(/another doctor/);
+    expect(v.detail).toMatch(/another specialist/);
   });
 });
 
 describe('requests list', () => {
-  it('finds the open request with a doctor, ignoring stopped and refused ones', () => {
+  it('finds the open request with a specialist, ignoring stopped and refused ones', () => {
     const all = [
       row({ id: 'old', status: 'REVOKED' }),
       row({ id: 'no', status: 'REJECTED' }),
@@ -69,7 +69,7 @@ describe('requests list', () => {
     expect(visibleRequests(all).map((a) => a.id)).toEqual(['active', 'refused-new']);
   });
 
-  it('does not show a refusal for a doctor who has since been asked again', () => {
+  it('does not show a refusal for a specialist who has since been asked again', () => {
     const all = [
       row({ id: 'again', status: 'PENDING', doctor_id: 'd1' }),
       row({ id: 'before', status: 'REJECTED', doctor_id: 'd1' }),

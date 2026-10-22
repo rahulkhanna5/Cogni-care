@@ -31,7 +31,7 @@ export function DoctorNotesCard() {
 
   return (
     <Card style={{ gap: space.md }}>
-      <Text variant="heading">Notes from your doctor</Text>
+      <Text variant="heading">Notes from your specialist</Text>
       {notes === null ? (
         <View accessible accessibilityLabel="Loading" style={{ gap: space.xs }}>
           <Skeleton width="50%" />
@@ -39,7 +39,7 @@ export function DoctorNotesCard() {
         </View>
       ) : notes.length === 0 ? (
         <Text variant="body" color="textMuted">
-          No notes yet. When your doctor shares a note with you, it appears here.
+          No notes yet. When your specialist shares a note with you, it appears here.
         </Text>
       ) : (
         notes.map((n, i) => (

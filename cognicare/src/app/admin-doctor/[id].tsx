@@ -30,7 +30,7 @@ export default function AdminDoctor() {
     let cancelled = false;
     authedFetch((t) => adminApi.getDoctor(t, id))
       .then((d) => !cancelled && setData(d))
-      .catch((e) => !cancelled && setError(e instanceof ApiError ? e.message : 'Could not load this doctor.'));
+      .catch((e) => !cancelled && setError(e instanceof ApiError ? e.message : 'Could not load this specialist.'));
     return () => {
       cancelled = true;
     };
@@ -39,7 +39,7 @@ export default function AdminDoctor() {
   if (error) {
     return (
       <Screen>
-        <ScreenHeader title="Doctor" onBack={() => router.back()} />
+        <ScreenHeader title="Specialist" onBack={() => router.back()} />
         <Banner tone="error">{error}</Banner>
       </Screen>
     );
@@ -47,7 +47,7 @@ export default function AdminDoctor() {
   if (!data) {
     return (
       <Screen>
-        <ScreenHeader title="Doctor" onBack={() => router.back()} />
+        <ScreenHeader title="Specialist" onBack={() => router.back()} />
         <SkeletonList count={3} lines={3} />
       </Screen>
     );
@@ -99,7 +99,7 @@ export default function AdminDoctor() {
       {patients.length === 0 ? (
         <Card>
           <Text variant="body" color="textMuted">
-            No patient has asked this doctor yet.
+            No patient has asked this specialist yet.
           </Text>
         </Card>
       ) : (
@@ -126,7 +126,7 @@ export default function AdminDoctor() {
                 label="Latest check-in"
                 value={p.latest_score == null ? 'None yet' : `${p.latest_score}/100 · ${cap(p.latest_band)}`}
               />
-              <InfoRow label="Notes by this doctor" value={String(p.remarks)} />
+              <InfoRow label="Notes by this specialist" value={String(p.remarks)} />
             </View>
           </Card>
         ))

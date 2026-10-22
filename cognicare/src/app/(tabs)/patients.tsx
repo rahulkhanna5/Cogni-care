@@ -135,7 +135,7 @@ export default function Patients() {
         <Card>
           <Text variant="heading">No patients yet</Text>
           <Text variant="body" color="textMuted">
-            Patients appear here once they have asked you to be their doctor, an administrator has approved it, and you
+            Patients appear here once they have asked you to be their specialist, an administrator has approved it, and you
             have accepted.
           </Text>
         </Card>

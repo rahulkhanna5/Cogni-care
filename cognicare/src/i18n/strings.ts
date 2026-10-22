@@ -33,10 +33,10 @@ export const EN = {
 
   'login.title': 'Welcome back',
   'login.subtitle': 'Sign in to continue.',
-  'login.create': 'New here? Create a patient or doctor account',
+  'login.create': 'New here? Create a patient or specialist account',
   'login.guest': 'Continue without an account',
   'login.guestNote':
-    'You can use the exercises without signing in. An account is only needed to share your progress with a doctor.',
+    'You can use the exercises without signing in. An account is only needed to share your progress with a specialist.',
 
   'welcome.title': 'Welcome',
   'welcome.subtitle': "A few brain exercises, a few minutes a day. Let's start with your name.",
@@ -54,14 +54,14 @@ export const EN = {
   'settings.thisPhone': 'This phone',
   'settings.erase': 'Erase everything on this phone',
   'settings.eraseNote':
-    'Removes names, check-ins and game results stored on this phone. Anything already shared with your doctor stays on the server.',
+    'Removes names, check-ins and game results stored on this phone. Anything already shared with your specialist stays on the server.',
   'settings.eraseConfirm': 'Yes, erase this phone',
   'settings.erased': 'Everything on this phone has been erased.',
   'settings.account': 'Your account',
   'settings.deletePatient': 'Delete my account',
   'settings.deletePatientNote':
-    'Deletes your account and everything shared from it: results, check-ins, doctor connections and notes. This cannot be undone.',
-  'settings.closeDoctor': 'Close my doctor account',
+    'Deletes your account and everything shared from it: results, check-ins, specialist connections and notes. This cannot be undone.',
+  'settings.closeDoctor': 'Close my specialist account',
   'settings.closeDoctorNote':
     'Ends every patient connection and stops you signing in. Notes you wrote stay in your patients’ records, as medical notes must.',
   'settings.password': 'Type your password to confirm',
@@ -111,10 +111,10 @@ export const HI: Record<Key, string> = {
 
   'login.title': 'फिर से स्वागत है',
   'login.subtitle': 'आगे बढ़ने के लिए साइन इन करें।',
-  'login.create': 'नए हैं? मरीज़ या डॉक्टर का खाता बनाएँ',
+  'login.create': 'नए हैं? मरीज़ या विशेषज्ञ का खाता बनाएँ',
   'login.guest': 'बिना खाते के आगे बढ़ें',
   'login.guestNote':
-    'आप बिना साइन इन किए अभ्यास कर सकते हैं। खाता सिर्फ़ डॉक्टर के साथ अपनी प्रगति साझा करने के लिए चाहिए।',
+    'आप बिना साइन इन किए अभ्यास कर सकते हैं। खाता सिर्फ़ विशेषज्ञ के साथ अपनी प्रगति साझा करने के लिए चाहिए।',
 
   'welcome.title': 'स्वागत है',
   'welcome.subtitle': 'रोज़ कुछ मिनट, दिमाग़ के कुछ अभ्यास। चलिए आपके नाम से शुरू करते हैं।',
@@ -132,14 +132,14 @@ export const HI: Record<Key, string> = {
   'settings.thisPhone': 'यह फ़ोन',
   'settings.erase': 'इस फ़ोन से सब कुछ मिटाएँ',
   'settings.eraseNote':
-    'इस फ़ोन पर रखे नाम, जाँच और खेल के नतीजे हट जाएँगे। जो डॉक्टर के साथ पहले से साझा है, वह सर्वर पर रहेगा।',
+    'इस फ़ोन पर रखे नाम, जाँच और खेल के नतीजे हट जाएँगे। जो विशेषज्ञ के साथ पहले से साझा है, वह सर्वर पर रहेगा।',
   'settings.eraseConfirm': 'हाँ, इस फ़ोन से मिटाएँ',
   'settings.erased': 'इस फ़ोन से सब कुछ मिटा दिया गया है।',
   'settings.account': 'आपका खाता',
   'settings.deletePatient': 'मेरा खाता हटाएँ',
   'settings.deletePatientNote':
-    'आपका खाता और उससे साझा की गई हर चीज़ हट जाएगी: नतीजे, जाँच, डॉक्टर से जुड़ाव और नोट्स। यह वापस नहीं हो सकता।',
-  'settings.closeDoctor': 'मेरा डॉक्टर खाता बंद करें',
+    'आपका खाता और उससे साझा की गई हर चीज़ हट जाएगी: नतीजे, जाँच, विशेषज्ञ से जुड़ाव और नोट्स। यह वापस नहीं हो सकता।',
+  'settings.closeDoctor': 'मेरा विशेषज्ञ खाता बंद करें',
   'settings.closeDoctorNote':
     'हर मरीज़ से जुड़ाव ख़त्म होगा और आप साइन इन नहीं कर पाएँगे। आपके लिखे नोट्स मरीज़ों के रिकॉर्ड में रहेंगे, जैसा मेडिकल नोट्स के लिए ज़रूरी है।',
   'settings.password': 'पुष्टि के लिए अपना पासवर्ड लिखें',
@@ -187,9 +187,9 @@ export const PA: Record<Key, string> = {
 
   'login.title': 'ਮੁੜ ਜੀ ਆਇਆਂ ਨੂੰ',
   'login.subtitle': 'ਅੱਗੇ ਵਧਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।',
-  'login.create': 'ਨਵੇਂ ਹੋ? ਮਰੀਜ਼ ਜਾਂ ਡਾਕਟਰ ਦਾ ਖਾਤਾ ਬਣਾਓ',
+  'login.create': 'ਨਵੇਂ ਹੋ? ਮਰੀਜ਼ ਜਾਂ ਮਾਹਰ ਦਾ ਖਾਤਾ ਬਣਾਓ',
   'login.guest': 'ਖਾਤੇ ਤੋਂ ਬਿਨਾਂ ਅੱਗੇ ਵਧੋ',
-  'login.guestNote': 'ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਕੀਤੇ ਬਿਨਾਂ ਅਭਿਆਸ ਕਰ ਸਕਦੇ ਹੋ। ਖਾਤਾ ਸਿਰਫ਼ ਡਾਕਟਰ ਨਾਲ ਆਪਣੀ ਤਰੱਕੀ ਸਾਂਝੀ ਕਰਨ ਲਈ ਚਾਹੀਦਾ ਹੈ।',
+  'login.guestNote': 'ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਕੀਤੇ ਬਿਨਾਂ ਅਭਿਆਸ ਕਰ ਸਕਦੇ ਹੋ। ਖਾਤਾ ਸਿਰਫ਼ ਮਾਹਰ ਨਾਲ ਆਪਣੀ ਤਰੱਕੀ ਸਾਂਝੀ ਕਰਨ ਲਈ ਚਾਹੀਦਾ ਹੈ।',
 
   'welcome.title': 'ਜੀ ਆਇਆਂ ਨੂੰ',
   'welcome.subtitle': 'ਰੋਜ਼ ਕੁਝ ਮਿੰਟ, ਦਿਮਾਗ਼ ਦੇ ਕੁਝ ਅਭਿਆਸ। ਆਓ ਤੁਹਾਡੇ ਨਾਮ ਤੋਂ ਸ਼ੁਰੂ ਕਰੀਏ।',
@@ -206,13 +206,13 @@ export const PA: Record<Key, string> = {
   'settings.legal': 'ਨਿਯਮ ਅਤੇ ਨਿੱਜਤਾ',
   'settings.thisPhone': 'ਇਹ ਫ਼ੋਨ',
   'settings.erase': 'ਇਸ ਫ਼ੋਨ ਤੋਂ ਸਭ ਕੁਝ ਮਿਟਾਓ',
-  'settings.eraseNote': 'ਇਸ ਫ਼ੋਨ ਉੱਤੇ ਰੱਖੇ ਨਾਮ, ਜਾਂਚ ਅਤੇ ਖੇਡਾਂ ਦੇ ਨਤੀਜੇ ਹਟ ਜਾਣਗੇ। ਜੋ ਡਾਕਟਰ ਨਾਲ ਪਹਿਲਾਂ ਸਾਂਝਾ ਹੈ, ਉਹ ਸਰਵਰ ਉੱਤੇ ਰਹੇਗਾ।',
+  'settings.eraseNote': 'ਇਸ ਫ਼ੋਨ ਉੱਤੇ ਰੱਖੇ ਨਾਮ, ਜਾਂਚ ਅਤੇ ਖੇਡਾਂ ਦੇ ਨਤੀਜੇ ਹਟ ਜਾਣਗੇ। ਜੋ ਮਾਹਰ ਨਾਲ ਪਹਿਲਾਂ ਸਾਂਝਾ ਹੈ, ਉਹ ਸਰਵਰ ਉੱਤੇ ਰਹੇਗਾ।',
   'settings.eraseConfirm': 'ਹਾਂ, ਇਸ ਫ਼ੋਨ ਤੋਂ ਮਿਟਾਓ',
   'settings.erased': 'ਇਸ ਫ਼ੋਨ ਤੋਂ ਸਭ ਕੁਝ ਮਿਟਾ ਦਿੱਤਾ ਗਿਆ ਹੈ।',
   'settings.account': 'ਤੁਹਾਡਾ ਖਾਤਾ',
   'settings.deletePatient': 'ਮੇਰਾ ਖਾਤਾ ਹਟਾਓ',
-  'settings.deletePatientNote': 'ਤੁਹਾਡਾ ਖਾਤਾ ਅਤੇ ਉਸ ਤੋਂ ਸਾਂਝੀ ਕੀਤੀ ਹਰ ਚੀਜ਼ ਹਟ ਜਾਵੇਗੀ: ਨਤੀਜੇ, ਜਾਂਚ, ਡਾਕਟਰ ਨਾਲ ਜੁੜਾਅ ਅਤੇ ਨੋਟ। ਇਹ ਵਾਪਸ ਨਹੀਂ ਹੋ ਸਕਦਾ।',
-  'settings.closeDoctor': 'ਮੇਰਾ ਡਾਕਟਰ ਖਾਤਾ ਬੰਦ ਕਰੋ',
+  'settings.deletePatientNote': 'ਤੁਹਾਡਾ ਖਾਤਾ ਅਤੇ ਉਸ ਤੋਂ ਸਾਂਝੀ ਕੀਤੀ ਹਰ ਚੀਜ਼ ਹਟ ਜਾਵੇਗੀ: ਨਤੀਜੇ, ਜਾਂਚ, ਮਾਹਰ ਨਾਲ ਜੁੜਾਅ ਅਤੇ ਨੋਟ। ਇਹ ਵਾਪਸ ਨਹੀਂ ਹੋ ਸਕਦਾ।',
+  'settings.closeDoctor': 'ਮੇਰਾ ਮਾਹਰ ਖਾਤਾ ਬੰਦ ਕਰੋ',
   'settings.closeDoctorNote': 'ਹਰ ਮਰੀਜ਼ ਨਾਲ ਜੁੜਾਅ ਖ਼ਤਮ ਹੋ ਜਾਵੇਗਾ ਅਤੇ ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਨਹੀਂ ਕਰ ਸਕੋਗੇ। ਤੁਹਾਡੇ ਲਿਖੇ ਨੋਟ ਮਰੀਜ਼ਾਂ ਦੇ ਰਿਕਾਰਡ ਵਿੱਚ ਰਹਿਣਗੇ, ਜਿਵੇਂ ਮੈਡੀਕਲ ਨੋਟਾਂ ਲਈ ਲਾਜ਼ਮੀ ਹੈ।',
   'settings.password': 'ਪੁਸ਼ਟੀ ਲਈ ਆਪਣਾ ਪਾਸਵਰਡ ਲਿਖੋ',
   'settings.confirmDelete': 'ਹਮੇਸ਼ਾ ਲਈ ਹਟਾਓ',

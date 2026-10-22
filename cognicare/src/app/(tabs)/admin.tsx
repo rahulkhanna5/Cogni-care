@@ -71,7 +71,7 @@ export default function Admin() {
       setAllDoctors(dr.doctors);
       setConnections(c.assignments);
     } catch (e) {
-      setDirError(e instanceof ApiError ? e.message : 'Could not load patients and doctors.');
+      setDirError(e instanceof ApiError ? e.message : 'Could not load patients and specialists.');
     }
     setLoading(false);
   }, [authedFetch]);
@@ -109,7 +109,7 @@ export default function Admin() {
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
         <StatTile value={loading ? '…' : String(allPatients.length)} label="Patients" />
-        <StatTile value={loading ? '…' : String(allDoctors.length)} label="Doctors" />
+        <StatTile value={loading ? '…' : String(allDoctors.length)} label="Specialists" />
         <StatTile value={loading ? '…' : String(connectedCount)} label="Connected" />
         <StatTile value={loading ? '…' : String(reviewCount)} label="To review" />
       </View>
@@ -119,7 +119,7 @@ export default function Admin() {
           { value: 'review', label: reviewCount ? `Review (${reviewCount})` : 'Review' },
           { value: 'connections', label: 'Connections' },
           { value: 'patients', label: 'Patients' },
-          { value: 'doctors', label: 'Doctors' },
+          { value: 'doctors', label: 'Specialists' },
         ]}
         value={section}
         onChange={setSection}
@@ -143,14 +143,14 @@ export default function Admin() {
         <>
           {/* ------------------------------ doctors ------------------------------ */}
 
-          <SectionTitle icon="medkit-outline" title={`Doctor applications (${doctors.length})`} />
+          <SectionTitle icon="medkit-outline" title={`Specialist applications (${doctors.length})`} />
 
           {loading ? (
             <SkeletonList count={2} lines={3} />
           ) : doctors.length === 0 ? (
             <Card>
               <Text variant="body" color="textMuted">
-                Nothing waiting. New doctor registrations appear here.
+                Nothing waiting. New specialist registrations appear here.
               </Text>
             </Card>
           ) : (
@@ -213,7 +213,7 @@ export default function Admin() {
           {loading ? null : assignments.length === 0 ? (
             <Card>
               <Text variant="body" color="textMuted">
-                Nothing waiting. Requests appear here when a patient asks to be connected to a doctor.
+                Nothing waiting. Requests appear here when a patient asks to be connected to a specialist.
               </Text>
             </Card>
           ) : (
@@ -224,7 +224,7 @@ export default function Admin() {
                   <PersonRow icon="medkit-outline" role="Doctor" name={a.doctor_name} />
                 </View>
                 <Text variant="caption" color="textMuted">
-                  Requested {formatDate(a.requested_at)}. Approving lets this doctor read this patient’s results.
+                  Requested {formatDate(a.requested_at)}. Approving lets this specialist read this patient’s results.
                 </Text>
 
                 <View style={{ flexDirection: 'row', gap: space.sm }}>

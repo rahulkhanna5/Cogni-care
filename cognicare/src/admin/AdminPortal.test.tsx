@@ -82,14 +82,14 @@ jest.mock('@/store/auth', () => {
 const SAFE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 const wrap = (el: React.ReactElement) => <SafeAreaProvider initialMetrics={SAFE}>{el}</SafeAreaProvider>;
 
-it('shows the counts, then connections, patients and doctors, each opening its detail', async () => {
+it('shows the counts, then connections, patients and specialists, each opening its detail', async () => {
   const view = await render(wrap(<Admin />));
   expect(await view.findByLabelText('Patients: 1')).toBeTruthy();
   expect(view.getByLabelText('Connected: 1')).toBeTruthy();
 
   await fireEvent.press(view.getByRole('tab', { name: 'Connections' }));
   expect(view.getByText('Connected (1)')).toBeTruthy();
-  expect(view.getByText(/doctor accepted/)).toBeTruthy();
+  expect(view.getByText(/specialist accepted/)).toBeTruthy();
 
   await fireEvent.press(view.getByRole('tab', { name: 'Patients' }));
   expect(view.getByText('asha@x.com')).toBeTruthy();
@@ -97,7 +97,7 @@ it('shows the counts, then connections, patients and doctors, each opening its d
   await fireEvent.press(view.getByLabelText('Asha. Open details'));
   expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/patient/[id]', params: { id: 'p1' } });
 
-  await fireEvent.press(view.getByRole('tab', { name: 'Doctors' }));
+  await fireEvent.press(view.getByRole('tab', { name: 'Specialists' }));
   expect(view.getByText(/Approved/)).toBeTruthy();
   await fireEvent.press(view.getByLabelText('Dr Rao. Open details'));
   expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/admin-doctor/[id]', params: { id: 'd1' } });

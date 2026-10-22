@@ -14,7 +14,7 @@ export function DoctorsPanel({ doctors }: { doctors: AdminDoctor[] }) {
     return (
       <Card>
         <Text variant="body" color="textMuted">
-          No doctor accounts yet.
+          No specialist accounts yet.
         </Text>
       </Card>
     );

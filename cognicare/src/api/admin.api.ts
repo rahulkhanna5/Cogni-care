@@ -160,9 +160,9 @@ export function connectionLabel(c: { status: ConnectionStatus; doctor_accepted_a
   tone: 'success' | 'warning' | 'muted';
 } {
   if (c.status === 'ACTIVE' && c.doctor_accepted_at) return { text: 'Connected', tone: 'success' };
-  if (c.status === 'ACTIVE') return { text: 'Waiting for the doctor', tone: 'warning' };
+  if (c.status === 'ACTIVE') return { text: 'Waiting for the specialist', tone: 'warning' };
   if (c.status === 'PENDING')
-    return { text: c.doctor_accepted_at ? 'Doctor accepted · waiting for you' : 'Waiting for you', tone: 'warning' };
+    return { text: c.doctor_accepted_at ? 'Specialist accepted · waiting for you' : 'Waiting for you', tone: 'warning' };
   if (c.status === 'REJECTED') return { text: 'Declined', tone: 'muted' };
   return { text: 'Stopped', tone: 'muted' };
 }

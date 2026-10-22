@@ -67,12 +67,12 @@ it('a wrong password says so and deletes nothing', async () => {
   expect(mockSignOut).not.toHaveBeenCalled();
 });
 
-it('a doctor closes rather than deletes, and keeps the phone data', async () => {
+it('a specialist closes rather than deletes, and keeps the phone data', async () => {
   mockRole = 'DOCTOR';
   mockDelete.mockResolvedValueOnce({ deleted: false, closed: true });
   const view = await render(wrap(<Settings />));
   expect(view.getByText(/Notes you wrote stay in your patients’ records/)).toBeTruthy();
-  await fireEvent.press(view.getByText('Close my doctor account'));
+  await fireEvent.press(view.getByText('Close my specialist account'));
   await fireEvent.changeText(view.getByLabelText('Type your password to confirm'), 'pw');
   await fireEvent.press(view.getByText('Close my account'));
   expect(mockDelete).toHaveBeenCalled();

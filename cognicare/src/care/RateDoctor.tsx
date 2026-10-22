@@ -69,7 +69,7 @@ export function RateDoctor({ assignment, onSaved }: { assignment: care.MyAssignm
         placeholder="What is helping, or what could be better"
       />
       <Text variant="caption" color="textMuted">
-        Only your doctor and the administrator see this.
+        Only your specialist and the administrator see this.
       </Text>
       {error && <Banner tone="error">{error}</Banner>}
       {saved && <Banner tone="success">Thank you. Your rating is saved.</Banner>}

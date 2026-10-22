@@ -37,9 +37,9 @@ export function MyDoctorCard() {
   return (
     <Card style={{ gap: space.md }}>
       <View style={{ gap: space.xs }}>
-        <Text variant="heading">Your doctor</Text>
+        <Text variant="heading">Your specialist</Text>
         <Text variant="body" color="textMuted">
-          Choose a doctor to share your results with. You stay in control.
+          Choose a specialist to share your results with. You stay in control.
         </Text>
       </View>
 
@@ -114,13 +114,13 @@ export function MyDoctorCard() {
 
       {!loading && shown.length === 0 && (
         <Text variant="body" color="textMuted">
-          You are not sharing with a doctor yet.
+          You are not sharing with a specialist yet.
         </Text>
       )}
 
       <Button
         label={
-          shown.some((a) => a.status === 'ACTIVE' || a.status === 'PENDING') ? 'Choose another doctor' : 'Find a doctor'
+          shown.some((a) => a.status === 'ACTIVE' || a.status === 'PENDING') ? 'Choose another specialist' : 'Find a specialist'
         }
         icon="search-outline"
         variant={shown.some((a) => a.status === 'ACTIVE' || a.status === 'PENDING') ? 'secondary' : 'primary'}

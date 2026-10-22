@@ -16,7 +16,7 @@ export const TERMS: Section[] = [
   {
     heading: 'What CogniCare is',
     body: [
-      'CogniCare offers brain-training exercises and a self-report check-in for adults with mild memory or thinking difficulties.',
+      'CogniCare offers brain-training exercises and a weekly self-reflection check-in for adults who want to keep their memory and attention active.',
       'It is not a medical device. It does not diagnose, treat or prevent any illness, and its scores are not a medical assessment. Always talk to a doctor about your health.',
       'In an emergency, contact your local emergency number, not the app.',
     ],
@@ -30,17 +30,17 @@ export const TERMS: Section[] = [
   {
     heading: 'Your account',
     body: [
-      'An account is only needed to share your results with a doctor. Give your real name and an email address you use, and keep your password to yourself.',
+      'An account is only needed to share your results with a specialist. Give your real name and an email address you use, and keep your password to yourself.',
       'You must be 18 or over to create an account. A family member or carer may help you set it up.',
       'You are responsible for what is done with your account. Tell us if you think someone else has used it.',
     ],
   },
   {
-    heading: 'Doctors',
+    heading: 'Specialists',
     body: [
-      'Doctors must give a true medical registration number. An administrator checks it before the doctor can be chosen by patients.',
-      'A doctor may only see a patient’s results when the patient asked them, an administrator approved it, and the doctor accepted. Doctors must use what they see only for that patient’s care, and keep it confidential.',
-      'Notes a doctor writes are their own professional opinion. CogniCare does not check or endorse them.',
+      'Specialists must give a true medical registration number. An administrator checks it before the specialist can be chosen by patients.',
+      'A specialist may only see a patient’s results when the patient asked them, an administrator approved it, and the specialist accepted. Specialists must use what they see only for that patient’s care, and keep it confidential.',
+      'Notes a specialist writes are their own professional opinion. CogniCare does not check or endorse them.',
     ],
   },
   {
@@ -60,8 +60,8 @@ export const TERMS: Section[] = [
   {
     heading: 'Stopping',
     body: [
-      'You can stop sharing with a doctor at any time from your Profile, and it takes effect immediately.',
-      'You can delete your account yourself at any time: in the app, open Settings and choose “Delete my account” (doctors: “Close my doctor account”), or use the account deletion page on our website. A patient’s account and shared results are deleted. A doctor’s account is closed and their notes are kept, because they are medical records.',
+      'You can stop sharing with a specialist at any time from your Profile, and it takes effect immediately.',
+      'You can delete your account yourself at any time: in the app, open Settings and choose “Delete my account” (specialists: “Close my specialist account”), or use the account deletion page on our website. A patient’s account and shared results are deleted. A specialist’s account is closed and their notes are kept, because they are medical records.',
     ],
   },
 ];
@@ -71,23 +71,23 @@ export const PRIVACY: Section[] = [
     heading: 'What we collect',
     body: [
       'Without an account: nothing. Your name, age, check-ins and game results stay on your phone.',
-      'With an account: your name, email address and password (stored scrambled, never readable), and the check-ins and game results you play while signed in. For doctors, also specialty, registration number and an optional short bio.',
+      'With an account: your name, email address and password (stored scrambled, never readable), and the check-ins and game results you play while signed in. For specialists, also specialty, registration number and an optional short bio.',
       'We also keep a log of who looked at a patient’s results and when, so that access can be checked.',
     ],
   },
   {
     heading: 'Why we use it',
     body: [
-      'To show your results to you, and to the doctor you chose, so they can follow how you are doing.',
-      'To check that doctors are genuine, and to keep the service secure.',
+      'To show your results to you, and to the specialist you chose, so they can follow how you are doing.',
+      'To check that specialists are genuine, and to keep the service secure.',
       'We do not sell your information, show you advertising, or use it for anything else.',
     ],
   },
   {
     heading: 'Who can see it',
     body: [
-      'You. A doctor you asked, once an administrator approved and the doctor accepted. Administrators, to run the service; every time they open a patient’s results it is logged.',
-      'If you or your doctor use “Ask about your results” or an AI-drafted note, a summary of your results and your name (not your email) is sent to an outside AI service to write the answer. That service handles it under its own terms. If you do not want this, do not use those features.',
+      'You. A specialist you asked, once an administrator approved and the specialist accepted. Administrators, to run the service; every time they open a patient’s results it is logged.',
+      'If you or your specialist use “Ask about your results” or an AI-drafted note, a summary of your results and your name (not your email) is sent to an outside AI service to write the answer. That service handles it under its own terms. If you do not want this, do not use those features.',
       'If you report an AI answer as wrong or harmful, that answer and the question before it are kept so we can check it.',
       'We share information with nobody else unless the law requires it.',
     ],
@@ -108,7 +108,7 @@ export const PRIVACY: Section[] = [
   {
     heading: 'Your rights',
     body: [
-      'You can delete your account yourself from Settings in the app, or from the account deletion page on our website. You can also ask to see the information we hold about you, to correct it, or to take a copy. Ask the administrator, through your doctor or the app.',
+      'You can delete your account yourself from Settings in the app, or from the account deletion page on our website. You can also ask to see the information we hold about you, to correct it, or to take a copy. Ask the administrator, through your specialist or the app.',
     ],
   },
 ];

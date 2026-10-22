@@ -58,7 +58,7 @@ it('a request still with the administrator can be answered, and says so', async 
   expect(view.getByText('Accept')).toBeTruthy();
 });
 
-it('one the doctor already accepted shows as waiting for the administrator, with no buttons', async () => {
+it('one the specialist already accepted shows as waiting for the administrator, with no buttons', async () => {
   const view = await render(
     wrap(
       <IncomingRequests

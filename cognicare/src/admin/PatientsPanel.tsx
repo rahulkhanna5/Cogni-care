@@ -55,7 +55,7 @@ export function PatientsPanel({ patients }: { patients: AdminPatient[] }) {
 
           {p.doctors.length === 0 ? (
             <Text variant="body" color="textMuted">
-              Not connected to a doctor
+              Not connected to a specialist
             </Text>
           ) : (
             p.doctors.map((d) => (

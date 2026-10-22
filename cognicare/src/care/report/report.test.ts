@@ -123,7 +123,7 @@ describe('exports', () => {
     expect(html).toContain('Not a diagnostic assessment');
   });
 
-  it('a doctor export has one row per patient with the connection dates', () => {
+  it('a specialist export has one row per patient with the connection dates', () => {
     const data: AdminDoctorDetail = {
       doctor: {
         id: 'd1',
@@ -174,9 +174,9 @@ describe('connection wording', () => {
   it('says who the connection is waiting on', () => {
     expect(connectionLabel({ status: 'PENDING', doctor_accepted_at: null }).text).toBe('Waiting for you');
     expect(connectionLabel({ status: 'PENDING', doctor_accepted_at: 'x' }).text).toBe(
-      'Doctor accepted · waiting for you'
+      'Specialist accepted · waiting for you'
     );
-    expect(connectionLabel({ status: 'ACTIVE', doctor_accepted_at: null }).text).toBe('Waiting for the doctor');
+    expect(connectionLabel({ status: 'ACTIVE', doctor_accepted_at: null }).text).toBe('Waiting for the specialist');
     expect(connectionLabel({ status: 'ACTIVE', doctor_accepted_at: 'x' }).text).toBe('Connected');
     expect(connectionLabel({ status: 'REVOKED' }).text).toBe('Stopped');
   });

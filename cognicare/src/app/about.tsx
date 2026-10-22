@@ -36,16 +36,15 @@ export default function About() {
       <ScreenHeader title="Why this works" onBack={() => router.back()} />
 
       <Card>
-        <Text variant="heading">Mild Cognitive Impairment</Text>
+        <Text variant="heading">Memory and attention</Text>
         <Text variant="body" color="textMuted">
-          A noticeable decline in memory, attention, language or planning — more than
-          expected for someone’s age, but not enough to stop them living
-          independently. It carries an increased risk of progressing to dementia.
+          Memory, attention, language and planning can all change as we get older.
+          Regular mental exercise helps keep these skills active.
         </Text>
       </Card>
 
       <Card style={{ gap: space.md }}>
-        <Text variant="heading">What changes, and why</Text>
+        <Text variant="heading">How the mind changes with age</Text>
         {[
           [
             'Attention',
@@ -73,8 +72,8 @@ export default function About() {
         <Text variant="heading">Neuroplasticity</Text>
         <Text variant="body" color="textMuted">
           The brain can form new connections, strengthen weak ones and reorganise
-          itself. In MCI the brain cells are still alive — they are simply not
-          communicating efficiently.
+          itself. With age the brain cells stay alive — they may simply not
+          communicate as efficiently.
         </Text>
         <Text variant="body" color="textMuted">
           Regular exercises aim to improve communication between brain regions,

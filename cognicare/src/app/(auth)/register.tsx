@@ -93,7 +93,7 @@ export default function Register() {
       <RoleToggle
         options={[
           { value: 'PATIENT', label: 'I am a patient' },
-          { value: 'DOCTOR', label: 'I am a doctor' },
+          { value: 'DOCTOR', label: 'I am a specialist' },
         ]}
         value={role}
         onChange={setRole}
