@@ -53,7 +53,7 @@ export async function draftRemark(summary: PatientSummary): Promise<DraftedRemar
 }
 
 const DRAFT_INSTRUCTIONS = `
-You are drafting a note FOR A DOCTOR to review. The doctor will edit it before
+You are drafting a note FOR A SPECIALIST to review. The specialist will edit it before
 it is saved, so be useful and specific rather than cautious and vague — but
 never step outside the limits above.
 
@@ -84,14 +84,14 @@ export async function answerChat(
 ): Promise<string> {
   const persona =
     audience === 'DOCTOR'
-      ? `You are answering a clinician's questions about this patient's practice
+      ? `You are answering a specialist's questions about this patient's practice
 data. Be concise and specific. It is fine to use terms like "false alarms" and
 "inhibition" — they will be understood.`
       : `You are answering the person's questions about THEIR OWN practice
 results. Address them as "you". Be warm, plain, and encouraging without
 overpromising. Avoid clinical jargon; if you must use a term, explain it in
 the same sentence. Never speculate about their health — if they ask whether
-their memory is getting worse, tell them that is a question for their doctor,
+their memory is getting worse, tell them that is a question for their specialist,
 and point them at what the practice data does and does not show.`;
 
   const messages: ChatMessage[] = [

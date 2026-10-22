@@ -52,15 +52,15 @@ adminRoutes.post('/doctors/:id/approve', async (req, res, next) => {
       `SELECT * FROM users WHERE id = $1 AND role = 'DOCTOR'`,
       [id]
     );
-    if (!doctor) throw Errors.notFound('Doctor');
+    if (!doctor) throw Errors.notFound('Specialist');
     if (config.requireEmailVerification && !doctor.email_verified_at) {
       throw Errors.conflict(
         'EMAIL_NOT_VERIFIED',
-        'This doctor has not confirmed their email address yet.'
+        'This specialist has not confirmed their email address yet.'
       );
     }
     if (doctor.approved_at) {
-      throw Errors.conflict('ALREADY_APPROVED', 'This doctor is already approved.');
+      throw Errors.conflict('ALREADY_APPROVED', 'This specialist is already approved.');
     }
 
     const updated = await queryOne<UserRow>(
@@ -98,7 +98,7 @@ adminRoutes.post('/doctors/:id/revoke-approval', async (req, res, next) => {
         WHERE id = $1 AND role = 'DOCTOR' RETURNING *`,
       [id]
     );
-    if (!updated) throw Errors.notFound('Doctor');
+    if (!updated) throw Errors.notFound('Specialist');
 
     // Their existing assignments must not survive the loss of approval.
     await query(
@@ -308,7 +308,7 @@ adminRoutes.get('/doctors/:id', async (req, res, next) => {
         WHERE u.id = $1 AND u.role = 'DOCTOR'`,
       [id]
     );
-    if (!doctor) throw Errors.notFound('Doctor');
+    if (!doctor) throw Errors.notFound('Specialist');
 
     const patients = await query(
       `SELECT a.id AS assignment_id, a.status, a.requested_at, a.approved_at, a.doctor_accepted_at,

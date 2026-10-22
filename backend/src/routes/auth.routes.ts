@@ -168,7 +168,7 @@ authRoutes.post('/delete-account', loginLimiter, authenticate, async (req, res, 
       } else {
         await query(
           `UPDATE assignments SET status = 'REVOKED', revoked_at = now(), revoked_by = $1,
-                  revoke_reason = 'Doctor closed their account'
+                  revoke_reason = 'Specialist closed their account'
             WHERE doctor_id = $1 AND status IN ('PENDING','ACTIVE')`,
           [user.id],
           client

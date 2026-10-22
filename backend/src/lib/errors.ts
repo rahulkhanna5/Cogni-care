@@ -49,11 +49,11 @@ export const Errors = {
     new AppError(
       403,
       'DOCTOR_PENDING_APPROVAL',
-      'Your doctor account is awaiting review by an administrator.'
+      'Your specialist account is awaiting review by an administrator.'
     ),
 
   doctorRejected: () =>
-    new AppError(403, 'DOCTOR_NOT_APPROVED', 'Your doctor account has not been approved.'),
+    new AppError(403, 'DOCTOR_NOT_APPROVED', 'Your specialist account has not been approved.'),
 
   noAssignment: () =>
     new AppError(

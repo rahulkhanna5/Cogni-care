@@ -43,7 +43,7 @@ assignmentRoutes.post('/', requireRole('PATIENT'), async (req, res, next) => {
         WHERE id = $1 AND role = 'DOCTOR' AND approved_at IS NOT NULL AND is_active`,
       [doctorId]
     );
-    if (!doctor) throw Errors.notFound('Doctor');
+    if (!doctor) throw Errors.notFound('Specialist');
 
     const existing = await queryOne<{ id: string; status: string }>(
       `SELECT id, status FROM assignments
@@ -53,7 +53,7 @@ assignmentRoutes.post('/', requireRole('PATIENT'), async (req, res, next) => {
     if (existing) {
       throw Errors.conflict(
         'ASSIGNMENT_EXISTS',
-        `A ${existing.status.toLowerCase()} request already exists for this doctor.`
+        `A ${existing.status.toLowerCase()} request already exists for this specialist.`
       );
     }
 
@@ -153,7 +153,7 @@ assignmentRoutes.put('/:id/review', requireRole('PATIENT'), async (req, res, nex
     );
     if (!a) throw Errors.notFound('Connection');
     if (!a.doctor_accepted_at || !['ACTIVE', 'REVOKED'].includes(a.status)) {
-      throw Errors.conflict('NOT_CONNECTED', 'You can rate a doctor once you have been connected to them.');
+      throw Errors.conflict('NOT_CONNECTED', 'You can rate a specialist once you have been connected to them.');
     }
     const row = await queryOne(
       `INSERT INTO reviews (assignment_id, patient_id, doctor_id, rating, comment)
@@ -259,7 +259,7 @@ assignmentRoutes.post('/:id/approve', requireRole('ADMIN'), async (req, res, nex
     if (!doctor?.approved_at) {
       throw Errors.conflict(
         'DOCTOR_NOT_APPROVED',
-        'Approve the doctor before activating their assignments.'
+        'Approve the specialist before activating their assignments.'
       );
     }
 
