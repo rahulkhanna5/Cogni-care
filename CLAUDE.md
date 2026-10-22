@@ -272,6 +272,17 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   `eas.json`'s production profile, so change it there, once. The `production`
   EAS profile builds the AAB; version codes are EAS-managed (`remote`).
 
+- **Wording: "specialist", not "doctor" (v1.0.1).** Everything people read says
+  specialist, "Few / Some / Many / Significant difficulties" (not impairment
+  bands) and "memory and attention" (not MCI), so the store can list the app
+  under Education. Only VISIBLE text changed: the `DOCTOR` role, `doctor_*`
+  columns, `/doctors` routes, file and function names are unchanged, and the
+  Daily Order "doctor's appointment" routine keeps its word (it is matched to its
+  drawing by exact words). Generic disclaimers ("talk to a doctor") keep the real
+  word. The tag `play-v1-health` is the previous wording; `git checkout
+  play-v1-health` restores it. Data safety still declares health information:
+  the check-in and sharing are unchanged, so the declarations stay true.
+
 ## Traps already paid for
 
 - **`authedFetch` calls that expire together must share one refresh.** Refresh
