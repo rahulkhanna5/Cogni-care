@@ -74,7 +74,7 @@ export default function Patients() {
       setError(
         e instanceof ApiError
           ? { code: e.code, message: e.message }
-          : { code: 'UNKNOWN', message: 'Could not load your patients.' }
+          : { code: 'UNKNOWN', message: 'Could not load your members.' }
       );
       setLoading(false);
     }
@@ -97,15 +97,15 @@ export default function Patients() {
   return (
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.sm }}>
-        <Text variant="display">Your patients</Text>
+        <Text variant="display">Your members</Text>
         <Text variant="body" color="textMuted">
           {rows.length === 0
             ? user?.name
               ? `Signed in as ${user.name}`
               : ' '
             : needLook > 0
-              ? `${rows.length} ${rows.length === 1 ? 'patient' : 'patients'} · ${needLook} to look at`
-              : `${rows.length} ${rows.length === 1 ? 'patient' : 'patients'} · nothing stands out`}
+              ? `${rows.length} ${rows.length === 1 ? 'member' : 'members'} · ${needLook} to look at`
+              : `${rows.length} ${rows.length === 1 ? 'member' : 'members'} · nothing stands out`}
         </Text>
       </View>
 
@@ -118,7 +118,7 @@ export default function Patients() {
           <Banner tone="info">
             <Text variant="label">Awaiting approval</Text>
             <Text variant="body">
-              An administrator is reviewing your registration. Patients cannot be assigned to you until that is done.
+              An administrator is reviewing your registration. Members cannot be assigned to you until that is done.
             </Text>
           </Banner>
           <Button label="Check again" variant="secondary" icon="refresh" busy={loading} onPress={load} />
@@ -133,9 +133,9 @@ export default function Patients() {
       ) : rows.length === 0 ? (
         waiting.length + withAdmin.length > 0 ? null : (
         <Card>
-          <Text variant="heading">No patients yet</Text>
+          <Text variant="heading">No members yet</Text>
           <Text variant="body" color="textMuted">
-            Patients appear here once they have asked you to be their specialist, an administrator has approved it, and you
+            Members appear here once they have asked you to be their specialist, an administrator has approved it, and you
             have accepted.
           </Text>
         </Card>
@@ -144,7 +144,7 @@ export default function Patients() {
         <>
           {rows.length >= SEARCH_FROM && (
             <TextField
-              label="Find a patient"
+              label="Find a member"
               value={search}
               onChangeText={setSearch}
               placeholder="Start typing a name"
@@ -153,7 +153,7 @@ export default function Patients() {
 
           {shown.length === 0 && (
             <Text variant="body" color="textMuted">
-              No patient matches that name.
+              No member matches that name.
             </Text>
           )}
 

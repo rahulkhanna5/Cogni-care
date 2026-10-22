@@ -24,7 +24,7 @@ export function ConnectionsPanel({ rows }: { rows: Row[] }) {
     return (
       <Card>
         <Text variant="body" color="textMuted">
-          No patient has asked for a specialist yet.
+          No member has asked for a specialist yet.
         </Text>
       </Card>
     );

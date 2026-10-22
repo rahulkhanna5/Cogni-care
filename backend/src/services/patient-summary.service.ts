@@ -132,7 +132,7 @@ export async function buildPatientSummary(patientId: string): Promise<PatientSum
   );
 
   return {
-    name: patient?.name ?? 'This patient',
+    name: patient?.name ?? 'This member',
     totalSessions: games.reduce((sum, g) => sum + Number(g.plays), 0),
     games: games.map((g) => ({
       gameId: g.game_id,
@@ -169,7 +169,7 @@ const day = (iso: string) => iso.slice(0, 10);
  * empty sections the model would be tempted to fill in.
  */
 export function renderSummary(summary: PatientSummary): string {
-  const lines: string[] = [`Patient: ${summary.name}`, ''];
+  const lines: string[] = [`Member: ${summary.name}`, ''];
 
   lines.push('GAME PRACTICE');
   if (summary.games.length === 0) {

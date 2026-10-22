@@ -25,7 +25,7 @@ export function PatientsPanel({ patients }: { patients: AdminPatient[] }) {
     return (
       <Card>
         <Text variant="body" color="textMuted">
-          No patient accounts yet.
+          No member accounts yet.
         </Text>
       </Card>
     );
@@ -33,10 +33,10 @@ export function PatientsPanel({ patients }: { patients: AdminPatient[] }) {
 
   return (
     <View style={{ gap: space.md }}>
-      <TextField label="Find a patient" value={q} onChangeText={setQ} placeholder="Name or email" />
+      <TextField label="Find a member" value={q} onChangeText={setQ} placeholder="Name or email" />
       {shown.length === 0 && (
         <Text variant="body" color="textMuted">
-          No patient matches that.
+          No member matches that.
         </Text>
       )}
       {shown.map((p) => (

@@ -80,7 +80,7 @@ export default function AdminDoctor() {
       </Card>
 
       <View style={{ flexDirection: 'row', gap: space.sm }}>
-        <StatTile value={String(connected.length)} label="Patients" />
+        <StatTile value={String(connected.length)} label="Members" />
         <StatTile value={String(waiting.length)} label="Waiting" />
         <StatTile value={String(patients.reduce((a, p) => a + p.remarks, 0))} label="Notes written" />
       </View>
@@ -91,15 +91,15 @@ export default function AdminDoctor() {
       />
 
       <Card style={{ gap: space.md }}>
-        <Text variant="heading">Ratings from patients</Text>
+        <Text variant="heading">Ratings from members</Text>
         <ReviewList reviews={data.reviews ?? []} />
       </Card>
 
-      <Text variant="heading">Patients</Text>
+      <Text variant="heading">Members</Text>
       {patients.length === 0 ? (
         <Card>
           <Text variant="body" color="textMuted">
-            No patient has asked this specialist yet.
+            No member has asked this specialist yet.
           </Text>
         </Card>
       ) : (

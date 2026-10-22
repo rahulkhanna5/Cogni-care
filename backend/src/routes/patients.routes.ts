@@ -129,7 +129,7 @@ patientRoutes.get('/:patientId', requirePatientAccess(), async (req, res, next) 
       `SELECT id, name, email, created_at FROM users WHERE id = $1 AND role = 'PATIENT'`,
       [patientId]
     );
-    if (!patient) throw Errors.notFound('Patient');
+    if (!patient) throw Errors.notFound('Member');
     res.json({ patient });
   } catch (error) {
     next(error);
@@ -164,7 +164,7 @@ patientRoutes.get('/:patientId/assessments', requirePatientAccess(), async (req,
 function requireSelf(req: Request, _res: Response, next: NextFunction) {
   const { patientId } = patientScope(req);
   if (req.user!.id !== patientId) {
-    return next(Errors.forbidden('Only the patient can submit their own results.'));
+    return next(Errors.forbidden('Only the member can submit their own results.'));
   }
   next();
 }
@@ -341,7 +341,7 @@ patientRoutes.post(
       if (summary.games.length === 0 && summary.checkIns.length === 0) {
         throw Errors.conflict(
           'NO_DATA',
-          'This patient has not shared any results yet, so there is nothing to summarise.'
+          'This member has not shared any results yet, so there is nothing to summarise.'
         );
       }
 

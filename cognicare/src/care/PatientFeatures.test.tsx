@@ -37,7 +37,7 @@ const connected: MyAssignment = {
   doctor_name: 'Dr Rao',
 };
 
-it('a patient rates a specialist: no stars, no save; stars and comment are sent for that connection', async () => {
+it('a member rates a specialist: no stars, no save; stars and comment are sent for that connection', async () => {
   const onSaved = jest.fn();
   const view = await render(wrap(<RateDoctor assignment={connected} onSaved={onSaved} />));
   await fireEvent.press(view.getByText('Rate Dr Rao'));
@@ -81,7 +81,7 @@ it('the specialist who wrote a note can share it; a colleague’s note only says
     )
   );
   expect(view.getAllByRole('checkbox')).toHaveLength(1);
-  expect(view.getByText('Shared with the patient')).toBeTruthy(); // Dr Iyer's, read-only
+  expect(view.getByText('Shared with the member')).toBeTruthy(); // Dr Iyer's, read-only
 
   await fireEvent.press(view.getByRole('checkbox'));
   expect(mockShare).toHaveBeenCalledWith('token', 'p1', 'r1', true);

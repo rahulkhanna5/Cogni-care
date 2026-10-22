@@ -84,7 +84,7 @@ export function requirePatientAccess(paramName = 'patientId') {
       // Take the first value rather than letting an array reach a SQL binding.
       const raw = req.params[paramName];
       const patientId = Array.isArray(raw) ? raw[0] : raw;
-      if (!patientId) throw Errors.notFound('Patient');
+      if (!patientId) throw Errors.notFound('Member');
 
       const decision = await canAccessPatient(user.id, user.role, patientId);
 
@@ -123,7 +123,7 @@ export function requirePatientAccess(paramName = 'patientId') {
 export function patientScope(req: Request): { patientId: string; assignmentId: string | null } {
   if (!req.patientAccess) {
     throw new Error(
-      'patientScope() called without requirePatientAccess() on the route — refusing to serve patient data.'
+      'patientScope() called without requirePatientAccess() on the route — refusing to serve member data.'
     );
   }
   return req.patientAccess;

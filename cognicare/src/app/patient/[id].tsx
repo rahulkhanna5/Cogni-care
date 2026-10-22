@@ -71,7 +71,7 @@ export default function PatientDetail() {
           .then((x) => !cancelled && setRounds(x.rounds))
           .catch(() => undefined);
       } catch (e) {
-        if (!cancelled) setError(e instanceof ApiError ? e.message : 'Could not load this patient’s records.');
+        if (!cancelled) setError(e instanceof ApiError ? e.message : 'Could not load this member’s records.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,7 +87,7 @@ export default function PatientDetail() {
   if (loading) {
     return (
       <Screen>
-        <ScreenHeader title="Patient" onBack={() => router.back()} />
+        <ScreenHeader title="Member" onBack={() => router.back()} />
         <Skeleton width="45%" height={12} />
         <SkeletonList count={1} lines={1} />
         <SkeletonList count={2} lines={4} />
@@ -108,7 +108,7 @@ export default function PatientDetail() {
 
   return (
     <Screen>
-      <ScreenHeader title={patient?.name ?? 'Patient'} onBack={() => router.back()} />
+      <ScreenHeader title={patient?.name ?? 'Member'} onBack={() => router.back()} />
       <Text variant="caption" color="textMuted">
         {patient?.email}
       </Text>
@@ -134,7 +134,7 @@ export default function PatientDetail() {
       </View>
 
       <Button
-        label="Chat about this patient"
+        label="Chat about this member"
         variant="secondary"
         icon="chatbox-ellipses-outline"
         onPress={() => router.push({ pathname: '/patient/[id]/chat', params: { id, name: patient?.name ?? '' } })}

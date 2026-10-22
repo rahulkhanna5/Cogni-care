@@ -47,10 +47,10 @@ export function DoctorsPanel({ doctors }: { doctors: AdminDoctor[] }) {
               {!d.is_active ? 'Disabled' : d.approved_at ? `Approved ${day(d.approved_at)}` : 'Waiting for approval'}
             </Text>
           </View>
-          <InfoRow label="Patients" value={String(d.patients)} />
+          <InfoRow label="Members" value={String(d.patients)} />
           <InfoRow label="Requests waiting" value={String(d.waiting)} />
           <InfoRow
-            label="Patient rating"
+            label="Member rating"
             value={d.rating != null && d.reviews ? `${d.rating.toFixed(1)} of 5 (${d.reviews})` : 'No ratings yet'}
           />
         </Card>

@@ -89,7 +89,7 @@ describe('exports', () => {
     expect(csv([['a,b', 'say "hi"', 'x\ny', 3, null]])).toBe('"a,b","say ""hi""","x\ny",3,');
   });
 
-  it('a patient CSV has every check-in and round, dated, oldest first, misses and wrong taps apart', () => {
+  it('a member CSV has every check-in and round, dated, oldest first, misses and wrong taps apart', () => {
     const text = patientCsv({
       patient,
       sessions,
@@ -98,13 +98,13 @@ describe('exports', () => {
     });
     const lines = text.split('\r\n');
     expect(lines[0]).toBe(
-      'patient,email,date,type,game,level,round,hits,misses,false_alarms,accuracy_pct,reaction_ms,checkin_score,checkin_band'
+      'member,email,date,type,game,level,round,hits,misses,false_alarms,accuracy_pct,reaction_ms,checkin_score,checkin_band'
     );
     expect(lines[1]).toBe('"Asha, R",asha@x.com,2026-09-30,check-in,,,,,,,,,48,moderate');
     expect(lines[2]).toBe('"Asha, R",asha@x.com,2026-10-01,round,Blink Trail,3,1,4,2,1,50,700,,');
   });
 
-  it('the patient report is dated and lists stuck levels', () => {
+  it('the member report is dated and lists stuck levels', () => {
     const html = patientReportHtml(
       {
         patient,
@@ -123,7 +123,7 @@ describe('exports', () => {
     expect(html).toContain('Not a diagnostic assessment');
   });
 
-  it('a specialist export has one row per patient with the connection dates', () => {
+  it('a specialist export has one row per member with the connection dates', () => {
     const data: AdminDoctorDetail = {
       doctor: {
         id: 'd1',
@@ -160,7 +160,7 @@ describe('exports', () => {
     const lines = doctorCsv(data).split('\r\n');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe('Dr Rao,Asha,asha@x.com,ACTIVE,2026-09-10,2026-09-11,2026-09-12,,12,2026-10-12,81,30,mild,2');
-    expect(doctorReportHtml(data)).toContain('Patients (1)');
+    expect(doctorReportHtml(data)).toContain('Members (1)');
   });
 
   it('names files by person and date', () => {

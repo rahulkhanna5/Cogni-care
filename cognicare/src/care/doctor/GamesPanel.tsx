@@ -32,7 +32,7 @@ export function GamesPanel({ trends }: { trends: GameTrend[] }) {
       <Card>
         <Text variant="heading">No sessions shared yet</Text>
         <Text variant="body" color="textMuted">
-          Game results appear here once the patient has played and shared them.
+          Game results appear here once the member has played and shared them.
         </Text>
       </Card>
     );

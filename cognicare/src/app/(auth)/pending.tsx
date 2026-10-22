@@ -54,7 +54,7 @@ export default function Pending() {
         </Text>
         <Text variant="body" color="textMuted">
           An administrator now reviews your specialty and registration ID. Until
-          that is done you cannot be connected to patients, and no patient
+          that is done you cannot be connected to members, and no member
           information is visible.
         </Text>
         <Text variant="caption" color="textMuted">

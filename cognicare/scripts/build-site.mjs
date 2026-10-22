@@ -92,17 +92,17 @@ page('terms.html', 'Terms of use', `<h1>Terms of use</h1>
 ${sections(TERMS)}`);
 
 page('index.html', 'CogniCare', `<h1>CogniCare</h1>
-<p>Gentle brain exercises for adults with mild memory or thinking difficulties, with a weekly check-in you can share with your doctor if you choose.</p>
-<p class="muted">CogniCare is not a medical device and does not diagnose or treat any illness.</p>`);
+<p>Gentle brain exercises for adults who want to keep their memory and attention active, with a weekly check-in you can share with a specialist if you choose.</p>
+<p class="muted">CogniCare is not a medical device and does not diagnose or treat any condition.</p>`);
 
 page('delete-account.html', 'Delete your account', `<h1>Delete your CogniCare account</h1>
 <p>You can delete your account in the app: open <b>Profile</b>, then <b>Settings</b>, and choose <b>Delete my account</b>. If you no longer have the app, you can do it here instead.</p>
 
 <h2>What is deleted</h2>
 <ul>
-<li><b>Patients:</b> your account, your shared check-ins and game results, and your connections to doctors are deleted for good.</li>
-<li><b>Doctors:</b> your account is closed and every patient connection ends at once. Notes you wrote are kept, because they are part of patients’ medical records.</li>
-<li>The record of who viewed a patient’s results is kept, so past access can still be checked.</li>
+<li><b>Members:</b> your account, your shared check-ins and game results, and your connections to specialists are deleted for good.</li>
+<li><b>Specialists:</b> your account is closed and every member connection ends at once. Notes you wrote are kept, because they are part of members’ records.</li>
+<li>The record of who viewed a member’s results is kept, so past access can still be checked.</li>
 <li>Exercises played without an account were only ever on your phone. Uninstalling the app removes them.</li>
 </ul>
 
@@ -141,7 +141,7 @@ f.addEventListener('submit', async (e) => {
     const done = await call('/auth/delete-account', { password }, session.accessToken);
     f.reset();
     say(done.deleted ? 'Your account and your shared results have been deleted.'
-                     : 'Your doctor account has been closed and every patient connection has ended.', 'ok');
+                     : 'Your specialist account has been closed and every member connection has ended.', 'ok');
   } catch (err) {
     say(err.message === 'Failed to fetch' ? 'Could not reach CogniCare. Check your connection and try again.' : err.message, 'err');
   } finally { go.disabled = false; }

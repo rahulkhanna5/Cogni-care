@@ -272,8 +272,9 @@ Expo host at runtime — never hardcode `localhost`, that is the phone itself.
   `eas.json`'s production profile, so change it there, once. The `production`
   EAS profile builds the AAB; version codes are EAS-managed (`remote`).
 
-- **Wording: "specialist", not "doctor" (v1.0.1).** Everything people read says
-  specialist, "Few / Some / Many / Significant difficulties" (not impairment
+- **Wording: "specialist" not "doctor", "member" not "patient" (v1.0.1).** Everything
+  people read says specialist / member (the `PATIENT` role, `patient_id`, `/patients`
+  routes and `patients.tsx` are unchanged), "Few / Some / Many / Significant difficulties" (not impairment
   bands) and "memory and attention" (not MCI), so the store can list the app
   under Education. Only VISIBLE text changed: the `DOCTOR` role, `doctor_*`
   columns, `/doctors` routes, file and function names are unchanged, and the

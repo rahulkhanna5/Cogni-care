@@ -66,8 +66,8 @@ export function IncomingRequests({
       {requests.length > 0 && (
         <Text variant="heading">
           {requests.length === 1
-            ? '1 patient is waiting for your answer'
-            : `${requests.length} patients are waiting for your answer`}
+            ? '1 member is waiting for your answer'
+            : `${requests.length} members are waiting for your answer`}
         </Text>
       )}
       {error ? <Banner tone="error">{error}</Banner> : null}

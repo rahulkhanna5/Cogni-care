@@ -71,7 +71,7 @@ export default function Admin() {
       setAllDoctors(dr.doctors);
       setConnections(c.assignments);
     } catch (e) {
-      setDirError(e instanceof ApiError ? e.message : 'Could not load patients and specialists.');
+      setDirError(e instanceof ApiError ? e.message : 'Could not load members and specialists.');
     }
     setLoading(false);
   }, [authedFetch]);
@@ -103,12 +103,12 @@ export default function Admin() {
       <View style={{ gap: space.xs, marginTop: space.sm }}>
         <Text variant="display">Admin</Text>
         <Text variant="body" color="textMuted">
-          Approvals, who is connected to whom, and how every patient is doing.
+          Approvals, who is connected to whom, and how every member is doing.
         </Text>
       </View>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-        <StatTile value={loading ? '…' : String(allPatients.length)} label="Patients" />
+        <StatTile value={loading ? '…' : String(allPatients.length)} label="Members" />
         <StatTile value={loading ? '…' : String(allDoctors.length)} label="Specialists" />
         <StatTile value={loading ? '…' : String(connectedCount)} label="Connected" />
         <StatTile value={loading ? '…' : String(reviewCount)} label="To review" />
@@ -118,7 +118,7 @@ export default function Admin() {
         tabs={[
           { value: 'review', label: reviewCount ? `Review (${reviewCount})` : 'Review' },
           { value: 'connections', label: 'Connections' },
-          { value: 'patients', label: 'Patients' },
+          { value: 'patients', label: 'Members' },
           { value: 'doctors', label: 'Specialists' },
         ]}
         value={section}
@@ -208,12 +208,12 @@ export default function Admin() {
 
           {/* ---------------------------- assignments ---------------------------- */}
 
-          <SectionTitle icon="people-outline" title={`Patient assignments (${assignments.length})`} />
+          <SectionTitle icon="people-outline" title={`Member assignments (${assignments.length})`} />
 
           {loading ? null : assignments.length === 0 ? (
             <Card>
               <Text variant="body" color="textMuted">
-                Nothing waiting. Requests appear here when a patient asks to be connected to a specialist.
+                Nothing waiting. Requests appear here when a member asks to be connected to a specialist.
               </Text>
             </Card>
           ) : (
@@ -224,7 +224,7 @@ export default function Admin() {
                   <PersonRow icon="medkit-outline" role="Doctor" name={a.doctor_name} />
                 </View>
                 <Text variant="caption" color="textMuted">
-                  Requested {formatDate(a.requested_at)}. Approving lets this specialist read this patient’s results.
+                  Requested {formatDate(a.requested_at)}. Approving lets this specialist read this member’s results.
                 </Text>
 
                 <View style={{ flexDirection: 'row', gap: space.sm }}>

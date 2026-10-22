@@ -7,7 +7,7 @@
  */
 export const EN = {
   'tab.review': 'Admin',
-  'tab.patients': 'Patients',
+  'tab.patients': 'Members',
   'tab.today': 'Today',
   'tab.games': 'Games',
   'tab.checkin': 'Check-in',
@@ -33,7 +33,7 @@ export const EN = {
 
   'login.title': 'Welcome back',
   'login.subtitle': 'Sign in to continue.',
-  'login.create': 'New here? Create a patient or specialist account',
+  'login.create': 'New here? Create a member or specialist account',
   'login.guest': 'Continue without an account',
   'login.guestNote':
     'You can use the exercises without signing in. An account is only needed to share your progress with a specialist.',
@@ -63,7 +63,7 @@ export const EN = {
     'Deletes your account and everything shared from it: results, check-ins, specialist connections and notes. This cannot be undone.',
   'settings.closeDoctor': 'Close my specialist account',
   'settings.closeDoctorNote':
-    'Ends every patient connection and stops you signing in. Notes you wrote stay in your patients’ records, as medical notes must.',
+    'Ends every member connection and stops you signing in. Notes you wrote stay in your members’ records, as medical notes must.',
   'settings.password': 'Type your password to confirm',
   'settings.confirmDelete': 'Delete for ever',
   'settings.confirmClose': 'Close my account',
@@ -85,7 +85,7 @@ export type Key = keyof typeof EN;
 
 export const HI: Record<Key, string> = {
   'tab.review': 'एडमिन',
-  'tab.patients': 'मरीज़',
+  'tab.patients': 'सदस्य',
   'tab.today': 'आज',
   'tab.games': 'खेल',
   'tab.checkin': 'जाँच',
@@ -111,7 +111,7 @@ export const HI: Record<Key, string> = {
 
   'login.title': 'फिर से स्वागत है',
   'login.subtitle': 'आगे बढ़ने के लिए साइन इन करें।',
-  'login.create': 'नए हैं? मरीज़ या विशेषज्ञ का खाता बनाएँ',
+  'login.create': 'नए हैं? सदस्य या विशेषज्ञ का खाता बनाएँ',
   'login.guest': 'बिना खाते के आगे बढ़ें',
   'login.guestNote':
     'आप बिना साइन इन किए अभ्यास कर सकते हैं। खाता सिर्फ़ विशेषज्ञ के साथ अपनी प्रगति साझा करने के लिए चाहिए।',
@@ -141,7 +141,7 @@ export const HI: Record<Key, string> = {
     'आपका खाता और उससे साझा की गई हर चीज़ हट जाएगी: नतीजे, जाँच, विशेषज्ञ से जुड़ाव और नोट्स। यह वापस नहीं हो सकता।',
   'settings.closeDoctor': 'मेरा विशेषज्ञ खाता बंद करें',
   'settings.closeDoctorNote':
-    'हर मरीज़ से जुड़ाव ख़त्म होगा और आप साइन इन नहीं कर पाएँगे। आपके लिखे नोट्स मरीज़ों के रिकॉर्ड में रहेंगे, जैसा मेडिकल नोट्स के लिए ज़रूरी है।',
+    'हर सदस्य से जुड़ाव ख़त्म होगा और आप साइन इन नहीं कर पाएँगे। आपके लिखे नोट्स सदस्यों के रिकॉर्ड में रहेंगे, जैसा मेडिकल नोट्स के लिए ज़रूरी है।',
   'settings.password': 'पुष्टि के लिए अपना पासवर्ड लिखें',
   'settings.confirmDelete': 'हमेशा के लिए हटाएँ',
   'settings.confirmClose': 'मेरा खाता बंद करें',
@@ -161,7 +161,7 @@ export const HI: Record<Key, string> = {
 
 export const PA: Record<Key, string> = {
   'tab.review': 'ਐਡਮਿਨ',
-  'tab.patients': 'ਮਰੀਜ਼',
+  'tab.patients': 'ਮੈਂਬਰ',
   'tab.today': 'ਅੱਜ',
   'tab.games': 'ਖੇਡਾਂ',
   'tab.checkin': 'ਜਾਂਚ',
@@ -187,7 +187,7 @@ export const PA: Record<Key, string> = {
 
   'login.title': 'ਮੁੜ ਜੀ ਆਇਆਂ ਨੂੰ',
   'login.subtitle': 'ਅੱਗੇ ਵਧਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।',
-  'login.create': 'ਨਵੇਂ ਹੋ? ਮਰੀਜ਼ ਜਾਂ ਮਾਹਰ ਦਾ ਖਾਤਾ ਬਣਾਓ',
+  'login.create': 'ਨਵੇਂ ਹੋ? ਮੈਂਬਰ ਜਾਂ ਮਾਹਰ ਦਾ ਖਾਤਾ ਬਣਾਓ',
   'login.guest': 'ਖਾਤੇ ਤੋਂ ਬਿਨਾਂ ਅੱਗੇ ਵਧੋ',
   'login.guestNote': 'ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਕੀਤੇ ਬਿਨਾਂ ਅਭਿਆਸ ਕਰ ਸਕਦੇ ਹੋ। ਖਾਤਾ ਸਿਰਫ਼ ਮਾਹਰ ਨਾਲ ਆਪਣੀ ਤਰੱਕੀ ਸਾਂਝੀ ਕਰਨ ਲਈ ਚਾਹੀਦਾ ਹੈ।',
 
@@ -213,7 +213,7 @@ export const PA: Record<Key, string> = {
   'settings.deletePatient': 'ਮੇਰਾ ਖਾਤਾ ਹਟਾਓ',
   'settings.deletePatientNote': 'ਤੁਹਾਡਾ ਖਾਤਾ ਅਤੇ ਉਸ ਤੋਂ ਸਾਂਝੀ ਕੀਤੀ ਹਰ ਚੀਜ਼ ਹਟ ਜਾਵੇਗੀ: ਨਤੀਜੇ, ਜਾਂਚ, ਮਾਹਰ ਨਾਲ ਜੁੜਾਅ ਅਤੇ ਨੋਟ। ਇਹ ਵਾਪਸ ਨਹੀਂ ਹੋ ਸਕਦਾ।',
   'settings.closeDoctor': 'ਮੇਰਾ ਮਾਹਰ ਖਾਤਾ ਬੰਦ ਕਰੋ',
-  'settings.closeDoctorNote': 'ਹਰ ਮਰੀਜ਼ ਨਾਲ ਜੁੜਾਅ ਖ਼ਤਮ ਹੋ ਜਾਵੇਗਾ ਅਤੇ ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਨਹੀਂ ਕਰ ਸਕੋਗੇ। ਤੁਹਾਡੇ ਲਿਖੇ ਨੋਟ ਮਰੀਜ਼ਾਂ ਦੇ ਰਿਕਾਰਡ ਵਿੱਚ ਰਹਿਣਗੇ, ਜਿਵੇਂ ਮੈਡੀਕਲ ਨੋਟਾਂ ਲਈ ਲਾਜ਼ਮੀ ਹੈ।',
+  'settings.closeDoctorNote': 'ਹਰ ਮੈਂਬਰ ਨਾਲ ਜੁੜਾਅ ਖ਼ਤਮ ਹੋ ਜਾਵੇਗਾ ਅਤੇ ਤੁਸੀਂ ਸਾਈਨ ਇਨ ਨਹੀਂ ਕਰ ਸਕੋਗੇ। ਤੁਹਾਡੇ ਲਿਖੇ ਨੋਟ ਮੈਂਬਰਾਂ ਦੇ ਰਿਕਾਰਡ ਵਿੱਚ ਰਹਿਣਗੇ, ਜਿਵੇਂ ਮੈਡੀਕਲ ਨੋਟਾਂ ਲਈ ਲਾਜ਼ਮੀ ਹੈ।',
   'settings.password': 'ਪੁਸ਼ਟੀ ਲਈ ਆਪਣਾ ਪਾਸਵਰਡ ਲਿਖੋ',
   'settings.confirmDelete': 'ਹਮੇਸ਼ਾ ਲਈ ਹਟਾਓ',
   'settings.confirmClose': 'ਮੇਰਾ ਖਾਤਾ ਬੰਦ ਕਰੋ',

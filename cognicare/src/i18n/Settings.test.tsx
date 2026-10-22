@@ -42,7 +42,7 @@ it('switching to Hindi changes the words at once and is remembered', async () =>
   expect(mockSetSetting).toHaveBeenCalledWith({}, 'language', 'hi');
 });
 
-it('a patient deletes their account only after the password, then is signed out and the phone erased', async () => {
+it('a member deletes their account only after the password, then is signed out and the phone erased', async () => {
   mockDelete.mockResolvedValueOnce({ deleted: true, closed: false });
   const view = await render(wrap(<Settings />));
   await fireEvent.press(view.getByText('Delete my account'));
@@ -71,7 +71,7 @@ it('a specialist closes rather than deletes, and keeps the phone data', async ()
   mockRole = 'DOCTOR';
   mockDelete.mockResolvedValueOnce({ deleted: false, closed: true });
   const view = await render(wrap(<Settings />));
-  expect(view.getByText(/Notes you wrote stay in your patients’ records/)).toBeTruthy();
+  expect(view.getByText(/Notes you wrote stay in your members’ records/)).toBeTruthy();
   await fireEvent.press(view.getByText('Close my specialist account'));
   await fireEvent.changeText(view.getByLabelText('Type your password to confirm'), 'pw');
   await fireEvent.press(view.getByText('Close my account'));

@@ -41,9 +41,9 @@ it('draws nothing when no one is waiting', async () => {
   expect(view.queryByText(/waiting for your answer/)).toBeNull();
 });
 
-it('names the patient and says what accepting means', async () => {
+it('names the member and says what accepting means', async () => {
   const view = await render(wrap(<IncomingRequests requests={[request()]} onAnswered={jest.fn()} />));
-  expect(view.getByText('1 patient is waiting for your answer')).toBeTruthy();
+  expect(view.getByText('1 member is waiting for your answer')).toBeTruthy();
   expect(view.getByText('Meera')).toBeTruthy();
   expect(view.getByText(/approved by an administrator/)).toBeTruthy();
   expect(view.getByText(/If you decline, nothing is shared/)).toBeTruthy();

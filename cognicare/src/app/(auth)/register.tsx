@@ -92,7 +92,7 @@ export default function Register() {
 
       <RoleToggle
         options={[
-          { value: 'PATIENT', label: 'I am a patient' },
+          { value: 'PATIENT', label: 'I am a member' },
           { value: 'DOCTOR', label: 'I am a specialist' },
         ]}
         value={role}
@@ -143,7 +143,7 @@ export default function Register() {
               <Text variant="heading">What happens next</Text>
               {[
                 'An administrator checks your registration ID.',
-                'Once approved, patients can ask to be connected to you.',
+                'Once approved, members can ask to be connected to you.',
               ].map((step, i) => (
                 <View key={step} style={{ flexDirection: 'row', gap: space.md, alignItems: 'flex-start' }}>
                   <View
@@ -166,8 +166,8 @@ export default function Register() {
                 </View>
               ))}
               <Text variant="caption" color="textMuted">
-                You can sign in while you wait. No patient information is visible until
-                both your account and each patient connection are approved.
+                You can sign in while you wait. No member information is visible until
+                both your account and each member connection are approved.
               </Text>
             </Card>
           </>

@@ -36,7 +36,7 @@ export type PatientData = {
 /** Every check-in and every round, one row each, oldest first. */
 export function patientCsv({ patient, rounds, assessments }: PatientData): string {
   const head = [
-    'patient',
+    'member',
     'email',
     'date',
     'type',
@@ -98,8 +98,8 @@ export function patientCsv({ patient, rounds, assessments }: PatientData): strin
 export function doctorCsv({ doctor, patients }: AdminDoctorDetail): string {
   const head = [
     'doctor',
-    'patient',
-    'patient_email',
+    'member',
+    'member_email',
     'status',
     'requested',
     'admin_approved',
@@ -239,10 +239,10 @@ export function doctorReportHtml({ doctor, patients }: AdminDoctorDetail, now = 
   )} · ${doctor.approved_at ? `approved ${esc(day(doctor.approved_at))}` : 'not approved'}</div>
   <div class="muted">CogniCare report generated ${esc(day(now.toISOString()))}</div>
 
-  <h2>Patients (${patients.length})</h2>
+  <h2>Members (${patients.length})</h2>
   ${table(
     [
-      'Patient',
+      'Member',
       'Status',
       'Requested',
       'Connected',

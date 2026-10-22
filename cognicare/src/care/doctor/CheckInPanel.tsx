@@ -23,7 +23,7 @@ export function CheckInPanel({ assessments }: { assessments: ServerAssessment[] 
       <Card>
         <Text variant="heading">No check-in shared yet</Text>
         <Text variant="body" color="textMuted">
-          The patient’s self-reported check-in appears here once they have completed one.
+          The member’s self-reported check-in appears here once they have completed one.
         </Text>
       </Card>
     );

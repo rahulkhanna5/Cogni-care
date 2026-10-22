@@ -143,16 +143,16 @@ export function RemarksPanel({
               <Checkbox
                 checked={r.visible_to_patient}
                 onChange={(v) => share(r.id, v)}
-                label={r.visible_to_patient ? 'Shared with the patient. Tap to make private.' : 'Share this note with the patient'}
+                label={r.visible_to_patient ? 'Shared with the member. Tap to make private.' : 'Share this note with the member'}
               >
-                <Text variant="label">{sharing === r.id ? 'Saving…' : 'Share with the patient'}</Text>
+                <Text variant="label">{sharing === r.id ? 'Saving…' : 'Share with the member'}</Text>
                 <Text variant="caption" color="textMuted">
-                  {r.visible_to_patient ? 'The patient can read this note.' : 'Only the care team can read this note.'}
+                  {r.visible_to_patient ? 'The member can read this note.' : 'Only the care team can read this note.'}
                 </Text>
               </Checkbox>
             ) : (
               <Text variant="caption" color="textMuted">
-                {r.visible_to_patient ? 'Shared with the patient' : 'Private'}
+                {r.visible_to_patient ? 'Shared with the member' : 'Private'}
               </Text>
             )}
             {r.plan && (
@@ -198,7 +198,7 @@ export function RemarksPanel({
             label="Observations"
             value={draftBody}
             onChangeText={setDraftBody}
-            placeholder="What you are seeing in this patient's results…"
+            placeholder="What you are seeing in this member's results…"
             multiline
             minLines={4}
           />

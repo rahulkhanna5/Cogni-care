@@ -84,7 +84,7 @@ export async function answerChat(
 ): Promise<string> {
   const persona =
     audience === 'DOCTOR'
-      ? `You are answering a specialist's questions about this patient's practice
+      ? `You are answering a specialist's questions about this member's practice
 data. Be concise and specific. It is fine to use terms like "false alarms" and
 "inhibition" — they will be understood.`
       : `You are answering the person's questions about THEIR OWN practice

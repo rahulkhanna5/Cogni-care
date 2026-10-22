@@ -118,7 +118,7 @@ export default function Profile() {
 
       {pendingApproval && (
         <Banner tone="info">
-          Your specialist account is still being reviewed. Patient information stays hidden
+          Your specialist account is still being reviewed. Member information stays hidden
           until an administrator approves it.
         </Banner>
       )}

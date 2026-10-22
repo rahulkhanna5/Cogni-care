@@ -97,8 +97,8 @@ jest.mock('@/store/auth', () => {
 const SAFE = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 const wrap = (el: React.ReactElement) => <SafeAreaProvider initialMetrics={SAFE}>{el}</SafeAreaProvider>;
 
-describe('the specialist’s patient list', () => {
-  it('puts the patient who needs a look first, and says why', async () => {
+describe('the specialist’s member list', () => {
+  it('puts the member who needs a look first, and says why', async () => {
     const view = await render(wrap(<Patients />));
     expect(await view.findByText('Has not played in 21 days')).toBeTruthy();
     expect(await view.findByText('Check-in 8 points worse')).toBeTruthy();
@@ -110,21 +110,21 @@ describe('the specialist’s patient list', () => {
       .filter((n): n is string => !!n && /^(Zoya|Asha)/.test(n));
     expect(names[0]).toMatch(/^Zoya/);
     expect(names[1]).toMatch(/^Asha/);
-    expect(view.getByText('2 patients · 1 to look at')).toBeTruthy();
+    expect(view.getByText('2 members · 1 to look at')).toBeTruthy();
   });
 });
 
 describe('requests waiting on the specialist', () => {
-  it('shows the patient who asked, above the list, with Accept and Decline', async () => {
+  it('shows the member who asked, above the list, with Accept and Decline', async () => {
     const view = await render(wrap(<Patients />));
-    expect(await view.findByText('1 patient is waiting for your answer')).toBeTruthy();
+    expect(await view.findByText('1 member is waiting for your answer')).toBeTruthy();
     expect(view.getByText('Nila')).toBeTruthy();
     expect(view.getByText('Accept')).toBeTruthy();
     expect(view.getByText('Decline')).toBeTruthy();
   });
 });
 
-describe('one patient', () => {
+describe('one member', () => {
   it('opens on a plain-language summary, then the detail sits behind tabs', async () => {
     const view = await render(wrap(<PatientDetail />));
 

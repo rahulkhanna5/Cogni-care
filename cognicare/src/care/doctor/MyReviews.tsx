@@ -39,7 +39,7 @@ export function ReviewList({ reviews }: { reviews: doctorApi.Review[] }) {
     <View style={{ gap: space.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
         <Stars value={avg} size={24} />
-        <Text variant="label">{`${avg.toFixed(1)} from ${reviews.length} ${reviews.length === 1 ? 'patient' : 'patients'}`}</Text>
+        <Text variant="label">{`${avg.toFixed(1)} from ${reviews.length} ${reviews.length === 1 ? 'member' : 'members'}`}</Text>
       </View>
       {reviews.map((r, i) => (
         <View
@@ -76,7 +76,7 @@ export function MyReviews() {
   );
   return (
     <Card style={{ gap: space.md }}>
-      <Text variant="heading">Ratings from your patients</Text>
+      <Text variant="heading">Ratings from your members</Text>
       {reviews === null ? (
         <Text variant="body" color="textMuted">
           Loading…

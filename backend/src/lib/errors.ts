@@ -59,7 +59,7 @@ export const Errors = {
     new AppError(
       403,
       'NO_ACTIVE_ASSIGNMENT',
-      'You do not have an approved assignment for this patient.'
+      'You do not have an approved assignment for this member.'
     ),
 
   accountDisabled: () => new AppError(403, 'ACCOUNT_DISABLED', 'This account has been disabled.'),

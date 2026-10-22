@@ -15,13 +15,13 @@ export default function PatientChatScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <View style={{ paddingHorizontal: space.gutter, paddingTop: space.md }}>
-        <ScreenHeader title={name ? `Chat about ${name}` : 'Chat about this patient'} onBack={() => router.back()} />
+        <ScreenHeader title={name ? `Chat about ${name}` : 'Chat about this member'} onBack={() => router.back()} />
       </View>
 
       <PatientChat
         patientId={id}
         suggestions={[
-          'How is this patient doing overall?',
+          'How is this member doing overall?',
           'Which game shows the most misses or false alarms?',
           'What changed since the last check-in?',
         ]}

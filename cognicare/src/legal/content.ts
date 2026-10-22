@@ -38,8 +38,8 @@ export const TERMS: Section[] = [
   {
     heading: 'Specialists',
     body: [
-      'Specialists must give a true registration ID. An administrator checks it before the specialist can be chosen by patients.',
-      'A specialist may only see a patient’s results when the patient asked them, an administrator approved it, and the specialist accepted. Specialists must use what they see only for that patient’s care, and keep it confidential.',
+      'Specialists must give a true registration ID. An administrator checks it before the specialist can be chosen by members.',
+      'A specialist may only see a member’s results when the member asked them, an administrator approved it, and the specialist accepted. Specialists must use what they see only for that member’s care, and keep it confidential.',
       'Notes a specialist writes are their own professional opinion. CogniCare does not check or endorse them.',
     ],
   },
@@ -61,7 +61,7 @@ export const TERMS: Section[] = [
     heading: 'Stopping',
     body: [
       'You can stop sharing with a specialist at any time from your Profile, and it takes effect immediately.',
-      'You can delete your account yourself at any time: in the app, open Settings and choose “Delete my account” (specialists: “Close my specialist account”), or use the account deletion page on our website. A patient’s account and shared results are deleted. A specialist’s account is closed and their notes are kept, because they are medical records.',
+      'You can delete your account yourself at any time: in the app, open Settings and choose “Delete my account” (specialists: “Close my specialist account”), or use the account deletion page on our website. A member’s account and shared results are deleted. A specialist’s account is closed and their notes are kept, because they are medical records.',
     ],
   },
 ];
@@ -72,7 +72,7 @@ export const PRIVACY: Section[] = [
     body: [
       'Without an account: nothing. Your name, age, check-ins and game results stay on your phone.',
       'With an account: your name, email address and password (stored scrambled, never readable), and the check-ins and game results you play while signed in. For specialists, also specialty, registration ID and an optional short bio.',
-      'We also keep a log of who looked at a patient’s results and when, so that access can be checked.',
+      'We also keep a log of who looked at a member’s results and when, so that access can be checked.',
     ],
   },
   {
@@ -86,7 +86,7 @@ export const PRIVACY: Section[] = [
   {
     heading: 'Who can see it',
     body: [
-      'You. A specialist you asked, once an administrator approved and the specialist accepted. Administrators, to run the service; every time they open a patient’s results it is logged.',
+      'You. A specialist you asked, once an administrator approved and the specialist accepted. Administrators, to run the service; every time they open a member’s results it is logged.',
       'If you or your specialist use “Ask about your results” or an AI-drafted note, a summary of your results and your name (not your email) is sent to an outside AI service to write the answer. That service handles it under its own terms. If you do not want this, do not use those features.',
       'If you report an AI answer as wrong or harmful, that answer and the question before it are kept so we can check it.',
       'We share information with nobody else unless the law requires it.',

@@ -31,7 +31,7 @@ const checkIn = (daysBack: number, total: number, band: ServerAssessment['band']
 });
 
 describe('summarise', () => {
-  it('a patient who plays regularly and is steady needs no attention', () => {
+  it('a member who plays regularly and is steady needs no attention', () => {
     const sessions = [1, 2, 4, 6, 9, 12, 15, 18].map((d) => session(d, 0.8));
     const i = summarise(sessions, [checkIn(5, 30, 'mild'), checkIn(40, 31, 'mild')], NOW);
     expect(i.attention).toEqual([]);
@@ -96,7 +96,7 @@ describe('statusLine', () => {
 });
 
 describe('ordering and colour', () => {
-  it('puts patients with something to look at first, then by name', () => {
+  it('puts members with something to look at first, then by name', () => {
     const quiet = summarise(
       [1, 2].map((d) => session(d, 0.8)),
       [],
